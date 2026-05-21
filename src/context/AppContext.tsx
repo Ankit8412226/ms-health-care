@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Product, Doctor, LabTest, PRODUCTS } from "@/data/mockData";
 
 export interface CartItem {
@@ -77,17 +78,18 @@ export type PageName =
   | "about"
   | "contact"
   | "faq"
-  | "privacy";
+  | "privacy"
+  | "terms";
 
 export type AuthMode = "login" | "signup" | "forgot" | "otp";
 
 interface AppContextType {
   activePage: PageName;
-  setActivePage: (page: PageName) => void;
+  setActivePage: (page: PageName, query?: string) => void;
   selectedProductId: string;
   setSelectedProductId: (id: string) => void;
   cart: CartItem[];
-  addToCart: (product: Product, qty?: number) => void;
+  addToCart: (product: Product, qty?: number, showCrossSell?: boolean) => void;
   removeFromCart: (productId: string) => void;
   updateCartQty: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -116,12 +118,33 @@ interface AppContextType {
   discountPercentage: number;
   applyCoupon: (code: string) => boolean;
   removeCoupon: () => void;
+  addedProduct: Product | null;
+  setAddedProduct: (product: Product | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [activePage, setActivePageState] = useState<PageName>("home");
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Deriving activePage from current pathname
+  const getActivePageFromPath = (path: string): PageName => {
+    const cleanPath = path.replace(/^\//, "");
+    if (!cleanPath) return "home";
+    const validPages: PageName[] = [
+      "home", "shop", "details", "cart", "checkout", "success",
+      "dashboard", "doctors", "labtests", "auth", "upload",
+      "about", "contact", "faq", "privacy", "terms"
+    ];
+    if (validPages.includes(cleanPath as PageName)) {
+      return cleanPath as PageName;
+    }
+    return "home";
+  };
+
+  const activePage = getActivePageFromPath(pathname);
+
   const [selectedProductId, setSelectedProductId] = useState<string>("p1");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -134,6 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [otpEmail, setOtpEmail] = useState<string>("");
   const [couponCode, setCouponCode] = useState<string>("");
   const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+  const [addedProduct, setAddedProduct] = useState<Product | null>(null);
 
   const [addresses, setAddresses] = useState<UserAddress[]>([
     {
@@ -173,13 +197,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [doctorAppointments, setDoctorAppointments] = useState<DoctorAppointment[]>([]);
   const [labAppointments, setLabAppointments] = useState<LabAppointment[]>([]);
 
-  // Smooth scroll to top when changing views
-  const setActivePage = (page: PageName) => {
-    setActivePageState(page);
+  // Push route using next/navigation router
+  const setActivePage = (page: PageName, query?: string) => {
+    const basePath = page === "home" ? "/" : `/${page}`;
+    const targetPath = query ? `${basePath}?${query}` : basePath;
+    router.push(targetPath);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const addToCart = (product: Product, qty: number = 1) => {
+  const addToCart = (product: Product, qty: number = 1, showCrossSell: boolean = true) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -191,6 +217,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { product, quantity: qty }];
     });
+
+    if (showCrossSell) {
+      setAddedProduct(product);
+    }
   };
 
   const removeFromCart = (productId: string) => {
@@ -399,6 +429,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         discountPercentage,
         applyCoupon,
         removeCoupon,
+        addedProduct,
+        setAddedProduct,
       }}
     >
       {children}

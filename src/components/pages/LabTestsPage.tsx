@@ -30,7 +30,7 @@ export default function LabTestsPage() {
     setTimeout(() => {
       setSuccessMsg("");
       setSelectedTest(null);
-      setActivePage("dashboard");
+      setActivePage("dashboard", "tab=labs");
     }, 3000);
   };
 

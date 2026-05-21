@@ -39,6 +39,13 @@ export default function DetailPage() {
       );
       matches = [...matches, ...categoryMatches];
     }
+
+    if (matches.length < 4) {
+      const otherProducts = PRODUCTS.filter(
+        (p) => p.id !== product.id && !matches.some(m => m.id === p.id)
+      );
+      matches = [...matches, ...otherProducts];
+    }
     return matches.slice(0, 4);
   };
 

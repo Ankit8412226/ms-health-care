@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { PRODUCTS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
+import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Package, Upload, Heart, MapPin, Stethoscope, FlaskConical,
   LogOut, Phone, Mail, User, ShieldCheck, ClipboardCheck
@@ -21,12 +23,34 @@ export default function DashboardPage() {
     deleteAddress
   } = useApp();
 
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
   const [activeSubTab, setActiveSubTab] = useState<"orders" | "rx" | "appointments" | "labs" | "wish" | "addr">("orders");
+
+  useEffect(() => {
+    if (tabParam === "wish") {
+      setActiveSubTab("wish");
+    } else if (tabParam === "orders") {
+      setActiveSubTab("orders");
+    } else if (tabParam === "rx") {
+      setActiveSubTab("rx");
+    } else if (tabParam === "appointments") {
+      setActiveSubTab("appointments");
+    } else if (tabParam === "labs") {
+      setActiveSubTab("labs");
+    } else if (tabParam === "addr") {
+      setActiveSubTab("addr");
+    }
+  }, [tabParam]);
 
   const wProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      {/* Dynamic Health & Offer Slider Banner */}
+      <SliderBanner />
+
       <div className="grid lg:grid-cols-12 gap-8">
         {/* User Card Sidebar */}
         <div className="lg:col-span-4 space-y-6">
@@ -57,27 +81,27 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Sub Navigation List */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-4 shadow-sm space-y-1">
+          {/* Sub Navigation List - Responsive Grid/Col */}
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2 lg:space-y-1">
             {[
               { id: "orders", label: "My Orders", icon: Package },
               { id: "rx", label: "My Prescriptions", icon: Upload },
-              { id: "appointments", label: "Doctor Appointments", icon: Stethoscope },
-              { id: "labs", label: "Lab Package Bookings", icon: FlaskConical },
+              { id: "appointments", label: "Consults", icon: Stethoscope },
+              { id: "labs", label: "Lab Bookings", icon: FlaskConical },
               { id: "wish", label: "My Wishlist", icon: Heart },
               { id: "addr", label: "Saved Addresses", icon: MapPin },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveSubTab(id as any)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-colors ${
+                className={`flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-[10px] sm:text-xs font-bold text-center sm:text-left transition-colors ${
                   activeSubTab === id
                     ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40"
                 }`}
               >
-                <Icon className="w-4.5 h-4.5" />
-                {label}
+                <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-500" />
+                <span className="truncate">{label}</span>
               </button>
             ))}
           </div>
@@ -87,14 +111,14 @@ export default function DashboardPage() {
         <div className="lg:col-span-8 space-y-6">
           {activeSubTab === "orders" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">My Orders</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">My Orders</h3>
               {orders.length === 0 ? (
-                <p className="text-sm text-gray-400">No orders placed yet.</p>
+                <p className="text-sm text-gray-400 text-center lg:text-left">No orders placed yet.</p>
               ) : (
                 orders.map((order) => (
-                  <div key={order.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
-                    <div className="flex flex-wrap justify-between items-baseline gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
-                      <div>
+                  <div key={order.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4 text-center sm:text-left">
+                    <div className="flex flex-col sm:flex-row justify-between items-center sm:items-baseline gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <div className="flex flex-col items-center sm:items-start">
                         <span className="text-xs text-gray-400">Order ID: <strong className="text-gray-700 dark:text-white">{order.id}</strong></span>
                         <p className="text-[10px] text-gray-400 mt-0.5">Placed on: {order.date}</p>
                       </div>
@@ -105,14 +129,14 @@ export default function DashboardPage() {
 
                     <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-32 overflow-y-auto pr-2">
                       {order.items.map((item) => (
-                        <div key={item.product.id} className="py-2 flex justify-between text-xs">
-                          <span className="text-gray-600 dark:text-gray-300 truncate max-w-[200px]">{item.product.name} ({item.quantity})</span>
+                        <div key={item.product.id} className="py-2 flex flex-col sm:flex-row justify-between items-center sm:items-start text-xs gap-1">
+                          <span className="text-gray-600 dark:text-gray-300 truncate max-w-xs">{item.product.name} ({item.quantity})</span>
                           <span className="font-semibold text-gray-800 dark:text-white">₹{item.product.price * item.quantity}</span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs">
+                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
                       <span className="text-gray-400">Paid using: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>
                       <span className="text-sm font-bold text-gray-800 dark:text-white">Total Amount: ₹{order.total}</span>
                     </div>
@@ -124,28 +148,30 @@ export default function DashboardPage() {
 
           {activeSubTab === "rx" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">My Prescriptions</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">My Prescriptions</h3>
               {prescriptions.length === 0 ? (
-                <p className="text-sm text-gray-400">No prescriptions uploaded yet.</p>
+                <p className="text-sm text-gray-400 text-center lg:text-left">No prescriptions uploaded yet.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {prescriptions.map((rx) => (
-                    <div key={rx.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="text-xs font-bold text-gray-800 dark:text-white truncate max-w-[150px]">{rx.name}</span>
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">
+                    <div key={rx.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start w-full gap-2">
+                        <span className="text-xs font-bold text-gray-800 dark:text-white truncate max-w-[200px]">{rx.name}</span>
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full text-center">
                           {rx.status}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400">Uploaded on: {rx.date}</p>
                       {rx.extractedMedicines && (
-                        <div className="pt-2.5 border-t border-gray-100 dark:border-gray-800 space-y-1">
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">OCR MATCHED DRUGS:</span>
-                          {rx.extractedMedicines.map((med) => (
-                            <span key={med} className="inline-block text-[10px] font-medium bg-gray-50 dark:bg-gray-850 px-2 py-0.5 rounded mr-1 mb-1">
-                              {med}
-                            </span>
-                          ))}
+                        <div className="pt-2.5 border-t border-gray-100 dark:border-gray-800 space-y-1.5 w-full">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block text-center sm:text-left">OCR MATCHED DRUGS:</span>
+                          <div className="flex flex-wrap justify-center sm:justify-start gap-1">
+                            {rx.extractedMedicines.map((med) => (
+                              <span key={med} className="inline-block text-[10px] font-medium bg-gray-50 dark:bg-gray-850 px-2.5 py-0.5 rounded text-gray-700 dark:text-gray-300">
+                                {med}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -157,14 +183,14 @@ export default function DashboardPage() {
 
           {activeSubTab === "appointments" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Doctor Consultations</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">Doctor Consultations</h3>
               {doctorAppointments.length === 0 ? (
-                <p className="text-sm text-gray-400 font-medium">No appointments booked yet.</p>
+                <p className="text-sm text-gray-400 font-medium text-center lg:text-left">No appointments booked yet.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {doctorAppointments.map((appt) => (
-                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center">
+                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 pb-2 border-b border-gray-50 dark:border-gray-800/50">
                         <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                           {appt.type} CONSULT
                         </span>
@@ -174,7 +200,7 @@ export default function DashboardPage() {
                         <span className="text-sm font-bold text-gray-800 dark:text-white block">{appt.doctor.name}</span>
                         <span className="text-xs text-gray-400">{appt.doctor.specialty}</span>
                       </div>
-                      <div className="pt-2 border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500">
+                      <div className="pt-2 w-full border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500 text-center sm:text-left">
                         Date: <strong>{appt.date}</strong> | Slot: <strong>{appt.slot}</strong>
                       </div>
                     </div>
@@ -186,15 +212,15 @@ export default function DashboardPage() {
 
           {activeSubTab === "labs" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Lab Test Bookings</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">Lab Test Bookings</h3>
               {labAppointments.length === 0 ? (
-                <p className="text-sm text-gray-400 font-medium">No diagnostics packages booked yet.</p>
+                <p className="text-sm text-gray-400 font-medium text-center lg:text-left">No diagnostics packages booked yet.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {labAppointments.map((appt) => (
-                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">
+                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 pb-2 border-b border-gray-50 dark:border-gray-800/50">
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
                           HOME COLLECTION
                         </span>
                         <span className="text-[10px] font-bold text-gray-400">{appt.status}</span>
@@ -203,7 +229,7 @@ export default function DashboardPage() {
                         <span className="text-sm font-bold text-gray-800 dark:text-white block">{appt.test.name}</span>
                         <span className="text-xs text-gray-400">Patient: {appt.patientName}</span>
                       </div>
-                      <div className="pt-2 border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500">
+                      <div className="pt-2 w-full border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500 text-center sm:text-left">
                         Date: <strong>{appt.date}</strong> | Slot: <strong>{appt.slot}</strong>
                       </div>
                     </div>
@@ -215,9 +241,9 @@ export default function DashboardPage() {
 
           {activeSubTab === "wish" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">My Wishlist</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">My Wishlist</h3>
               {wProducts.length === 0 ? (
-                <p className="text-sm text-gray-400">Wishlist empty.</p>
+                <p className="text-sm text-gray-400 text-center lg:text-left">Wishlist empty.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   {wProducts.map((product) => (
@@ -230,10 +256,10 @@ export default function DashboardPage() {
 
           {activeSubTab === "addr" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Saved Addresses</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">Saved Addresses</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 {addresses.map((addr) => (
-                  <div key={addr.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm relative">
+                  <div key={addr.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left pb-14 sm:pb-5 relative">
                     <span className="text-xs font-bold text-gray-800 dark:text-white block">{addr.name}</span>
                     <span className="text-[10px] text-gray-400 block mt-0.5">{addr.phone}</span>
                     <p className="text-xs text-gray-500 mt-2">
@@ -241,9 +267,9 @@ export default function DashboardPage() {
                     </p>
                     <button
                       onClick={() => deleteAddress(addr.id)}
-                      className="absolute bottom-4 right-4 text-xs font-bold text-red-500 hover:underline"
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 text-xs font-bold text-red-500 hover:underline"
                     >
-                      Delete
+                      Delete Address
                     </button>
                   </div>
                 ))}

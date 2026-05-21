@@ -32,7 +32,7 @@ export default function DoctorsPage() {
     setTimeout(() => {
       setSuccessMsg("");
       setSelectedDoc(null);
-      setActivePage("dashboard");
+      setActivePage("dashboard", "tab=appointments");
     }, 3000);
   };
 

@@ -61,9 +61,9 @@ export default function ProductCard({ product }: { product: Product }) {
       </button>
 
       {/* Info */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col items-center sm:items-start text-center sm:text-left">
         <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mb-1 uppercase tracking-wider">{product.manufacturer}</div>
-        <button onClick={handleView} className="text-left">
+        <button onClick={handleView} className="text-center sm:text-left">
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
             {product.name}
           </h3>
@@ -71,7 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="text-[11px] text-gray-400 mt-1">{product.packSize}</div>
 
         {/* Rating */}
-        <div className="flex items-center gap-1.5 mt-2">
+        <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-2">
           <div className="flex items-center gap-0.5 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
             <Star className="w-3 h-3 fill-emerald-500 text-emerald-500" />
             <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{product.rating}</span>
@@ -80,7 +80,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Price */}
-        <div className="flex items-baseline gap-2 mt-3">
+        <div className="flex items-baseline justify-center sm:justify-start gap-2 mt-3">
           <span className="text-lg font-black text-gray-900 dark:text-white">₹{product.price}</span>
           {discount > 0 && (
             <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>

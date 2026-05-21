@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
-  Phone, ChevronDown, Shield, Truck, Package, User,
+  Phone, ChevronDown, ChevronRight, Shield, Truck, Package, User,
   Bell, LogOut, Settings, ClipboardList, Upload,
   Stethoscope, FlaskConical, Home
 } from "lucide-react";
@@ -50,7 +50,7 @@ export default function Header() {
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
           ? "shadow-xl shadow-black/10 dark:shadow-black/30 backdrop-blur-xl bg-white/90 dark:bg-gray-950/90 border-b border-gray-200/50 dark:border-gray-800/50"
-          : "bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-900"
+          : "bg-white/85 dark:bg-gray-950/85 backdrop-blur-md border-b border-gray-100/50 dark:border-gray-900/50"
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center h-16 gap-4">
@@ -123,7 +123,7 @@ export default function Header() {
 
               {/* Wishlist */}
               <button
-                onClick={() => setActivePage("dashboard")}
+                onClick={() => setActivePage("dashboard", "tab=wish")}
                 className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 <Heart className="w-5 h-5" />
@@ -170,13 +170,13 @@ export default function Header() {
                         <div className="text-xs text-gray-400 truncate">{user.email}</div>
                       </div>
                       {[
-                        { label: "Dashboard", icon: User, page: "dashboard" as const },
-                        { label: "My Orders", icon: Package, page: "dashboard" as const },
-                        { label: "Upload Prescription", icon: Upload, page: "upload" as const },
+                        { label: "Dashboard", icon: User, page: "dashboard" as const, query: undefined },
+                        { label: "My Orders", icon: Package, page: "dashboard" as const, query: "tab=orders" },
+                        { label: "Upload Prescription", icon: Upload, page: "upload" as const, query: undefined },
                       ].map((item) => (
                         <button
                           key={item.label}
-                          onClick={() => { setActivePage(item.page); setUserMenuOpen(false); }}
+                          onClick={() => { setActivePage(item.page, item.query); setUserMenuOpen(false); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
                           <item.icon className="w-4 h-4 text-emerald-600" />
@@ -236,21 +236,95 @@ export default function Header() {
 
         {/* Mobile nav drawer */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
-            <div className="px-4 py-3 space-y-1">
-              {NAV_LINKS.map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => { setActivePage(link.page); setMobileOpen(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                    activePage === link.page
-                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
+          <div className="fixed inset-0 z-[100] lg:hidden bg-black/80 backdrop-blur-md animate-fade-in">
+            {/* Backdrop click closer */}
+            <div className="absolute inset-0" onClick={() => setMobileOpen(false)} />
+            
+            <div className="absolute top-0 left-0 bottom-0 w-full bg-white dark:bg-gray-950 shadow-2xl p-6 flex flex-col justify-between animate-slide-in-left">
+              <div className="space-y-6">
+                {/* Header of sidebar */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                      <span className="text-white font-black text-xs">MS</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-black gradient-text leading-none">MS Care</div>
+                      <div className="text-[9px] text-gray-550 dark:text-gray-400 leading-none font-medium tracking-wider mt-0.5 uppercase">TRUSTED PHARMACY</div>
+                    </div>
+                  </div>
+                  {/* Close icon */}
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="p-2 rounded-xl text-gray-400 hover:text-gray-650 dark:hover:text-gray-250 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Nav Links */}
+                <div className="space-y-2 pt-4">
+                  {[
+                    { label: "Home", page: "home" as const },
+                    ...NAV_LINKS,
+                    { label: "Shop All", page: "shop" as const },
+                    { label: "Lab Checkups", page: "labtests" as const },
+                    { label: "Online Consult", page: "doctors" as const },
+                  ].map((link) => (
+                    <button
+                      key={link.label}
+                      onClick={() => { setActivePage(link.page); setMobileOpen(false); }}
+                      className={`w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-between ${
+                        activePage === link.page
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom section of sidebar */}
+              <div className="border-t border-gray-100 dark:border-gray-900 pt-6 space-y-4">
+                {user ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-sm font-bold">
+                        {user.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-gray-800 dark:text-white leading-tight truncate">{user.name}</div>
+                        <div className="text-xs text-gray-400 truncate mt-0.5">{user.email}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setActivePage("dashboard"); setMobileOpen(false); }}
+                      className="w-full py-2.5 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 text-gray-750 dark:text-gray-300 text-xs font-bold rounded-xl transition-all text-center"
+                    >
+                      Go to Dashboard
+                    </button>
+                    <button
+                      onClick={() => { logout(); setMobileOpen(false); }}
+                      className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-400 text-xs font-bold rounded-xl transition-all text-center"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setActivePage("auth"); setMobileOpen(false); }}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all text-center shadow-lg shadow-emerald-500/25"
+                  >
+                    Login / Sign Up
+                  </button>
+                )}
+                <div className="text-[10px] text-center text-gray-400">
+                  24/7 Helpline: 1800-123-CARE
+                </div>
+              </div>
             </div>
           </div>
         )}

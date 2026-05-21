@@ -4,6 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { PRODUCTS, CATEGORIES, TESTIMONIALS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
 import Marquee from "@/components/magicui/marquee";
+import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Search, ArrowRight, Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf,
   ShieldCheck, Truck, Clock, CreditCard, Upload,
@@ -40,11 +41,11 @@ function BmiCalculatorWidget() {
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 shadow-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+      <div className="flex flex-col items-center sm:flex-row gap-3 mb-6 text-center sm:text-left">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg flex-shrink-0">
           <Activity className="w-5 h-5 text-white" />
         </div>
-        <div>
+        <div className="text-center sm:text-left">
           <h3 className="font-bold text-gray-900 dark:text-white">BMI Calculator</h3>
           <p className="text-xs text-gray-400">Body Mass Index — Instant Assessment</p>
         </div>
@@ -185,9 +186,9 @@ export default function HomePage() {
   const featured = PRODUCTS.filter((p) => p.bestSeller);
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-12 pb-12">
       {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 w-full border-0">
         {/* Decorative blobs */}
         <div className="absolute top-10 right-10 w-72 h-72 bg-emerald-300/20 dark:bg-emerald-500/10 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-teal-300/20 dark:bg-teal-500/10 rounded-full blur-3xl" style={{ animationDelay: "3s" }} />
@@ -195,7 +196,7 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
               <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-semibold px-4 py-2 rounded-full">
                 <ShieldCheck className="w-4 h-4" />
                 India&apos;s #1 Licensed Online Pharmacy
@@ -212,7 +213,7 @@ export default function HomePage() {
               </p>
 
               {/* Search bar */}
-              <div className="relative max-w-lg">
+              <div className="relative w-full max-w-lg mx-auto md:mx-0">
                 <input
                   placeholder="Search medicines, vitamins, health products..."
                   className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl pl-5 pr-14 py-4 text-base shadow-xl shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
@@ -226,7 +227,7 @@ export default function HomePage() {
               </div>
 
               {/* CTA buttons */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 <button
                   onClick={() => setActivePage("shop")}
                   className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105"
@@ -242,7 +243,7 @@ export default function HomePage() {
               </div>
 
               {/* Trust stats */}
-              <div className="flex items-center gap-6 pt-4">
+              <div className="flex items-center justify-center md:justify-start gap-6 pt-4 w-full">
                 {[
                   { num: "50L+", label: "Customers" },
                   { num: "1M+", label: "Orders" },
@@ -299,6 +300,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Dynamic Health & Offer Slider Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <SliderBanner fullWidth={false} />
+      </div>
+
       {/* ===== CATEGORIES ===== */}
       <section className="py-16 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -329,7 +335,7 @@ export default function HomePage() {
       {/* ===== FEATURED PRODUCTS ===== */}
       <section className="py-16 bg-gray-50 dark:bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left mb-10 gap-4 w-full">
             <div>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white">Featured Products</h2>
               <p className="text-gray-500 mt-1">Top-rated medicines &amp; health essentials</p>
@@ -354,7 +360,7 @@ export default function HomePage() {
       {/* ===== ALL PRODUCTS PREVIEW ===== */}
       <section className="py-16 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left mb-10 gap-4 w-full">
             <div>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white">Trending Medicines</h2>
               <p className="text-gray-500 mt-1">Most ordered this week</p>
@@ -380,7 +386,7 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 text-xs font-semibold px-4 py-2 rounded-full">
                 <Sparkles className="w-3.5 h-3.5" />
                 Our Clinical Vision
@@ -391,14 +397,14 @@ export default function HomePage() {
               <p className="text-gray-300 text-sm leading-relaxed">
                 At MS Care, our vision is to solve chronic medical supply chains by combining deep pharmaceutical expertise, rigorous quality control operations, and intelligent AI automation. We believe everyone deserves direct access to genuine healthcare without regulatory compromises.
               </p>
-              <div className="space-y-4 pt-4">
+              <div className="space-y-4 pt-4 w-full">
                 {[
                   { title: "Clinical Grade Sourcing", desc: "Every drug strip is certified through licensed batch verification pipelines." },
                   { title: "AI-Powered Diagnostics", desc: "Automated OCR prescription verification system built for error-free patient dosage limits." },
                   { title: "Eco-Conscious Packaging", desc: "We utilize climate-controlled, sustainable packaging to safeguard pharmaceutical potency." }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4 items-start">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs font-bold mt-1">
+                  <div key={idx} className="flex flex-col sm:flex-row gap-3 items-center md:items-start text-center md:text-left">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs font-bold sm:mt-1 flex-shrink-0">
                       {idx + 1}
                     </div>
                     <div>
@@ -447,11 +453,11 @@ export default function HomePage() {
       </section>
 
       {/* ===== HEALTH UTILITY TOOLS ===== */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-900/50 border-y border-gray-100 dark:border-gray-900">
+      <section className="py-20 bg-gray-50 dark:bg-gray-900/50 border-y border-gray-150 dark:border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left intro text */}
-            <div className="lg:col-span-5 space-y-6">
+            <div className="lg:col-span-5 space-y-6 flex flex-col items-center lg:items-start text-center lg:text-left">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Interactive Health</span>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-tight">
                 Evaluate Your Wellness Instantly
@@ -459,12 +465,12 @@ export default function HomePage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                 Use our automated health metric calculators to screen key variables like BMI. Knowledge is the first step toward preventive healthcare.
               </p>
-              <div className="flex gap-4">
-                <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-150 dark:border-gray-800 flex-1">
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-150 dark:border-gray-800 flex-1 flex flex-col items-center text-center sm:items-start sm:text-left">
                   <span className="text-2xl font-black text-emerald-600">18.5 - 24.9</span>
                   <span className="text-[10px] text-gray-400 block mt-1">Healthy BMI Index Range</span>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-150 dark:border-gray-800 flex-1">
+                <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-150 dark:border-gray-800 flex-1 flex flex-col items-center text-center sm:items-start sm:text-left">
                   <span className="text-2xl font-black text-cyan-600">2-3 Litres</span>
                   <span className="text-[10px] text-gray-400 block mt-1">Recommended Water Intake</span>
                 </div>
@@ -482,7 +488,7 @@ export default function HomePage() {
       {/* ===== HEALTH & WELLNESS BLOG ===== */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-between text-center md:text-left mb-12 gap-4 w-full">
             <div>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-2">Health Library</span>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white">Wellness &amp; Health Insights</h2>
@@ -523,17 +529,17 @@ export default function HomePage() {
                     {post.category}
                   </span>
                 </div>
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div className="p-6 flex-1 flex flex-col justify-between items-center text-center md:items-start md:text-left space-y-4">
                   <div className="space-y-2">
-                    <span className="text-[10px] text-gray-400 font-bold block">{post.readTime}</span>
+                    <span className="text-[10px] text-gray-400 font-bold block text-center md:text-left">{post.readTime}</span>
                     <h3 className="text-base font-bold text-gray-850 dark:text-white leading-snug group-hover:text-emerald-600 transition-colors">
                       {post.title}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3 text-center md:text-left">
                       {post.desc}
                     </p>
                   </div>
-                  <button onClick={() => setActivePage("shop")} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 hover:gap-2 transition-all">
+                  <button onClick={() => setActivePage("shop")} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center md:justify-start gap-1.5 hover:gap-2 transition-all">
                     Read Article <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -655,12 +661,12 @@ export default function HomePage() {
       <section className="py-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="text-white space-y-6">
+            <div className="text-white space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
               <h2 className="text-3xl sm:text-4xl font-black leading-tight">Download the MS Care App</h2>
               <p className="text-emerald-100 text-lg leading-relaxed">
                 Get exclusive app-only discounts, real-time order tracking, instant prescription uploads, and 24/7 doctor consultations.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 <button className="flex items-center gap-3 bg-black/30 hover:bg-black/50 backdrop-blur rounded-xl px-5 py-3 transition-all hover:scale-105">
                   <Play className="w-7 h-7" />
                   <div className="text-left">
@@ -676,7 +682,7 @@ export default function HomePage() {
                   </div>
                 </button>
               </div>
-              <div className="flex items-center gap-4 text-sm text-emerald-100">
+              <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-emerald-100 w-full">
                 <span>★ 4.9 Rating</span>
                 <span>•</span>
                 <span>10M+ Downloads</span>
