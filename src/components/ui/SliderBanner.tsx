@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Sparkles, ShieldCheck, Clock, HeartPulse, Truck, Calendar, Baby, Leaf } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useApp, PageName } from "@/context/AppContext";
 import Image from "next/image";
 
@@ -118,6 +117,9 @@ export default function SliderBanner({ fullWidth = false }: { fullWidth?: boolea
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
   }, []);
@@ -125,6 +127,27 @@ export default function SliderBanner({ fullWidth = false }: { fullWidth?: boolea
   const prevSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const diffX = touchStartX.current - touchEndX.current;
+    const swipeThreshold = 50;
+    if (diffX > swipeThreshold) {
+      nextSlide();
+    } else if (diffX < -swipeThreshold) {
+      prevSlide();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
 
   useEffect(() => {
     if (!isPaused) {
@@ -142,6 +165,9 @@ export default function SliderBanner({ fullWidth = false }: { fullWidth?: boolea
     <div
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       className={`relative w-full overflow-hidden group ${
         fullWidth
           ? "border-0 shadow-none bg-transparent"

@@ -54,12 +54,12 @@
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
 
   @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(calc(-100% - var(--gap))); }
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(calc(-100% - var(--gap)), 0, 0); }
   }
   @keyframes marquee-vertical {
-    from { transform: translateY(0); }
-    to { transform: translateY(calc(-100% - var(--gap))); }
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(0, calc(-100% - var(--gap)), 0); }
   }
 
   --animate-border-beam: border-beam var(--duration) infinite linear;
@@ -69,8 +69,8 @@
 
   --animate-float: float 6s ease-in-out infinite;
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -20px, 0); }
   }
 
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
@@ -87,14 +87,14 @@
 
   --animate-slide-up: slide-up 0.5s ease-out;
   @keyframes slide-up {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from { transform: translate3d(0, 30px, 0); opacity: 0; }
+    to { transform: translate3d(0, 0, 0); opacity: 1; }
   }
 
   --animate-scale-in: scale-in 0.3s ease-out;
   @keyframes scale-in {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from { transform: scale3d(0.95, 0.95, 1); opacity: 0; }
+    to { transform: scale3d(1, 1, 1); opacity: 1; }
   }
 
   --animate-fade-in: fade-in 0.25s ease-out;
@@ -111,8 +111,8 @@
 
   --animate-slide-in-left: slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   @keyframes slide-in-left {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from { transform: translate3d(-100%, 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
   }
 }
 
@@ -220,3 +220,11 @@
 /* Line clamp utilities */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+/* Disable backdrop blur effects on mobile for scroll performance */
+@media (max-width: 767px) {
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

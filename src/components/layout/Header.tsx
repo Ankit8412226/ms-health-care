@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useApp } from "@/context/AppContext";
+import { useApp, PageName } from "@/context/AppContext";
 import { PRODUCTS, type Product } from "@/data/mockData";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
@@ -50,6 +50,174 @@ const NAV_LINKS = [
   { label: "Upload Rx", page: "upload" as const },
 ];
 
+interface SearchDropdownProps {
+  trimmedQ: string;
+  resultProducts: Product[];
+  hasResults: boolean;
+  setSearchQuery: (q: string) => void;
+  setDropdownOpen: (open: boolean) => void;
+  closeDropdown: () => void;
+  setActivePage: (page: PageName, query?: string) => void;
+  setSelectedProductId: (id: string) => void;
+}
+
+function SearchDropdown({
+  trimmedQ,
+  resultProducts,
+  hasResults,
+  setSearchQuery,
+  setDropdownOpen,
+  closeDropdown,
+  setActivePage,
+  setSelectedProductId,
+}: SearchDropdownProps) {
+  return (
+    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-[200] animate-scale-in">
+      {/* ── Idle state: show trending + categories ── */}
+      {trimmedQ.length < 2 && (
+        <div className="p-4 space-y-4">
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Trending Searches</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {TRENDING_SEARCHES.map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery(term);
+                    setDropdownOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 transition-all"
+                >
+                  <Clock className="w-3 h-3 opacity-50" />
+                  {term}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Tag className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Browse Categories</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {QUICK_CATEGORIES.map(({ label, cat }) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setActivePage("shop");
+                    closeDropdown();
+                  }}
+                  className="text-[11px] font-semibold px-2 py-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-colors border border-emerald-100 dark:border-emerald-900/40 text-center"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Active search results ── */}
+      {trimmedQ.length >= 2 && (
+        <div className="max-h-[420px] overflow-y-auto">
+          {!hasResults ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+              <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <Search className="w-6 h-6 opacity-40" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">No medicines found</p>
+                <p className="text-xs text-gray-400 mt-1">Try searching by brand name or composition</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Section header */}
+              <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                <Pill className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  Medicines &amp; Products
+                </span>
+                <span className="ml-auto text-[10px] text-gray-400">{resultProducts.length} found</span>
+              </div>
+
+              {/* Result rows */}
+              <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
+                {resultProducts.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedProductId(p.id);
+                      setActivePage("details", `id=${p.id}`);
+                      closeDropdown();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 transition-colors text-left group"
+                  >
+                    {/* Product image */}
+                    <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 shadow-sm">
+                      <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+
+                    {/* Product info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate leading-snug">
+                        <Highlight text={p.name} query={trimmedQ} />
+                      </p>
+                      {p.saltComposition && (
+                        <p className="flex items-center gap-1 mt-0.5">
+                          <span className="shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Salt</span>
+                          <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                            <Highlight text={p.saltComposition} query={trimmedQ} />
+                          </span>
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">₹{p.price}</span>
+                        {p.originalPrice > p.price && (
+                          <span className="text-[10px] text-gray-400 line-through">₹{p.originalPrice}</span>
+                        )}
+                        {p.prescriptionRequired && (
+                          <span className="text-[9px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">Rx</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Footer CTA */}
+              <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (trimmedQ) {
+                      setActivePage("shop");
+                      closeDropdown();
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all rounded-xl py-2.5 shadow-sm"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  See all results for &ldquo;{trimmedQ}&rdquo;
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Header() {
   const { activePage, setActivePage, cart, wishlist, user, logout, setSelectedProductId } = useApp();
   const [dark, setDark] = useState(false);
@@ -60,6 +228,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   /* derived search results */
   const trimmedQ = searchQuery.trim();
@@ -74,7 +243,10 @@ export default function Header() {
   /* close on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedInsideDesktop = searchRef.current && searchRef.current.contains(target);
+      const clickedInsideMobile = mobileSearchRef.current && mobileSearchRef.current.contains(target);
+      if (!clickedInsideDesktop && !clickedInsideMobile) {
         setDropdownOpen(false);
       }
     };
@@ -91,14 +263,38 @@ export default function Header() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  /* Lock body scrolling when mobile menu drawer is open */
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   useEffect(() => {
     const root = document.documentElement;
-    dark ? root.classList.add("dark") : root.classList.remove("dark");
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
   }, [dark]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
+    const onScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      setScrolled((prevScrolled) => {
+        if (prevScrolled !== isScrolled) {
+          return isScrolled;
+        }
+        return prevScrolled;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -144,10 +340,10 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    setDropdownOpen(e.target.value.trim().length >= 2);
+                    setDropdownOpen(true);
                   }}
                   onFocus={() => {
-                    if (searchQuery.trim().length >= 2) setDropdownOpen(true);
+                    setDropdownOpen(true);
                   }}
                   placeholder="Search medicines, salt compositions..."
                   className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all placeholder:text-gray-400"
@@ -159,133 +355,17 @@ export default function Header() {
                   <Search className="w-4 h-4" />
                 </button>
 
-                {/* ── Search Dropdown ─────────────────────────────────────── */}
                 {dropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-[200] animate-scale-in">
-
-                    {/* ── Idle state: show trending + categories ── */}
-                    {trimmedQ.length < 2 && (
-                      <div className="p-4 space-y-4">
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Trending Searches</span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {TRENDING_SEARCHES.map((term) => (
-                              <button
-                                key={term}
-                                onClick={() => { setSearchQuery(term); setDropdownOpen(true); }}
-                                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 transition-all"
-                              >
-                                <Clock className="w-3 h-3 opacity-50" />
-                                {term}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <Tag className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Browse Categories</span>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {QUICK_CATEGORIES.map(({ label, cat }) => (
-                              <button
-                                key={cat}
-                                onClick={() => { setActivePage("shop"); closeDropdown(); }}
-                                className="text-[11px] font-semibold px-2 py-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-colors border border-emerald-100 dark:border-emerald-900/40 text-center"
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── Active search results ── */}
-                    {trimmedQ.length >= 2 && (
-                      <div className="max-h-[420px] overflow-y-auto">
-                        {!hasResults ? (
-                          <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <Search className="w-6 h-6 opacity-40" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">No medicines found</p>
-                              <p className="text-xs text-gray-400 mt-1">Try searching by brand name or composition</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Section header */}
-                            <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-                              <Pill className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                                Medicines &amp; Products
-                              </span>
-                              <span className="ml-auto text-[10px] text-gray-400">{resultProducts.length} found</span>
-                            </div>
-
-                            {/* Result rows */}
-                            <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
-                              {resultProducts.map((p) => (
-                                <button
-                                  key={p.id}
-                                  onClick={() => { setSelectedProductId(p.id); setActivePage("details", `id=${p.id}`); closeDropdown(); }}
-                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 transition-colors text-left group"
-                                >
-                                  {/* Product image */}
-                                  <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 shadow-sm">
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                                  </div>
-
-                                  {/* Product info */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate leading-snug">
-                                      <Highlight text={p.name} query={trimmedQ} />
-                                    </p>
-                                    {p.saltComposition && (
-                                      <p className="flex items-center gap-1 mt-0.5">
-                                        <span className="shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Salt</span>
-                                        <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
-                                          <Highlight text={p.saltComposition} query={trimmedQ} />
-                                        </span>
-                                      </p>
-                                    )}
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">₹{p.price}</span>
-                                      {p.originalPrice > p.price && (
-                                        <span className="text-[10px] text-gray-400 line-through">₹{p.originalPrice}</span>
-                                      )}
-                                      {p.prescriptionRequired && (
-                                        <span className="text-[9px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">Rx</span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                                </button>
-                              ))}
-                            </div>
-
-                            {/* Footer CTA */}
-                            <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
-                              <button
-                                onClick={() => { setActivePage("shop"); closeDropdown(); }}
-                                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all rounded-xl py-2.5 shadow-sm"
-                              >
-                                <Search className="w-3.5 h-3.5" />
-                                See all results for &ldquo;{trimmedQ}&rdquo;
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <SearchDropdown
+                    trimmedQ={trimmedQ}
+                    resultProducts={resultProducts}
+                    hasResults={hasResults}
+                    setSearchQuery={setSearchQuery}
+                    setDropdownOpen={setDropdownOpen}
+                    closeDropdown={closeDropdown}
+                    setActivePage={setActivePage}
+                    setSelectedProductId={setSelectedProductId}
+                  />
                 )}
               </div>
             </div>
@@ -422,18 +502,39 @@ export default function Header() {
 
           {/* Mobile search bar */}
           {searchOpen && (
-            <div className="md:hidden pb-3">
+            <div className="md:hidden pb-3" ref={mobileSearchRef}>
               <div className="relative">
                 <input
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    setDropdownOpen(true);
+                  }}
                   placeholder="Search medicines, vitamins..."
                   autoFocus
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all placeholder:text-gray-400"
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 text-white p-1.5 rounded-lg">
+                <button
+                  onClick={() => { if (searchQuery.trim()) { setActivePage("shop"); closeDropdown(); } }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition-colors"
+                >
                   <Search className="w-4 h-4" />
                 </button>
+                {dropdownOpen && (
+                  <SearchDropdown
+                    trimmedQ={trimmedQ}
+                    resultProducts={resultProducts}
+                    hasResults={hasResults}
+                    setSearchQuery={setSearchQuery}
+                    setDropdownOpen={setDropdownOpen}
+                    closeDropdown={closeDropdown}
+                    setActivePage={setActivePage}
+                    setSelectedProductId={setSelectedProductId}
+                  />
+                )}
               </div>
             </div>
           )}
