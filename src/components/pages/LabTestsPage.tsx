@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 export default function LabTestsPage() {
-  const { bookLabTest, setActivePage } = useApp();
+  const { setActivePage } = useApp();
   const [selectedTest, setSelectedTest] = useState<LabTest | null>(null);
   const [apptDate, setApptDate] = useState("");
   const [apptSlot, setApptSlot] = useState("");
@@ -19,8 +19,7 @@ export default function LabTestsPage() {
     e.preventDefault();
     if (!selectedTest || !apptDate || !apptSlot || !patientName) return;
 
-    bookLabTest(selectedTest, apptDate, apptSlot, patientName);
-    setSuccessMsg(`Home collection for ${selectedTest.name} booked successfully!`);
+    setSuccessMsg(`${selectedTest.name} has been booked successfully!`);
 
     // Reset Form
     setApptDate("");

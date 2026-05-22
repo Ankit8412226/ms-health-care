@@ -6,8 +6,8 @@ import { PRODUCTS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
-  Package, Upload, Heart, MapPin, Stethoscope, FlaskConical,
-  LogOut, Phone, Mail, User, ShieldCheck, ClipboardCheck
+  Package, Upload, Heart, MapPin,
+  LogOut, CheckCircle2, Clock, Truck
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -16,8 +16,6 @@ export default function DashboardPage() {
     logout,
     orders,
     prescriptions,
-    doctorAppointments,
-    labAppointments,
     wishlist,
     addresses,
     deleteAddress
@@ -26,7 +24,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 
-  const [activeSubTab, setActiveSubTab] = useState<"orders" | "rx" | "appointments" | "labs" | "wish" | "addr">("orders");
+  const [activeSubTab, setActiveSubTab] = useState<"orders" | "rx" | "wish" | "addr">("orders");
 
   useEffect(() => {
     if (tabParam === "wish") {
@@ -35,10 +33,6 @@ export default function DashboardPage() {
       setActiveSubTab("orders");
     } else if (tabParam === "rx") {
       setActiveSubTab("rx");
-    } else if (tabParam === "appointments") {
-      setActiveSubTab("appointments");
-    } else if (tabParam === "labs") {
-      setActiveSubTab("labs");
     } else if (tabParam === "addr") {
       setActiveSubTab("addr");
     }
@@ -62,6 +56,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">{user?.name}</h2>
             <p className="text-xs text-gray-400 mt-1">{user?.email}</p>
 
+          {/* Stats */}
             <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 grid grid-cols-2 gap-4 text-xs">
               <div className="text-center">
                 <span className="text-gray-400 font-bold block">Orders</span>
@@ -81,15 +76,13 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Sub Navigation List - Responsive Grid/Col */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2 lg:space-y-1">
+          {/* Sub Navigation */}
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-1 gap-2 lg:space-y-1">
             {[
               { id: "orders", label: "My Orders", icon: Package },
-              { id: "rx", label: "My Prescriptions", icon: Upload },
-              { id: "appointments", label: "Consults", icon: Stethoscope },
-              { id: "labs", label: "Lab Bookings", icon: FlaskConical },
-              { id: "wish", label: "My Wishlist", icon: Heart },
-              { id: "addr", label: "Saved Addresses", icon: MapPin },
+              { id: "rx",     label: "My Prescriptions", icon: Upload },
+              { id: "wish",   label: "My Wishlist", icon: Heart },
+              { id: "addr",   label: "Saved Addresses", icon: MapPin },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -100,7 +93,7 @@ export default function DashboardPage() {
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40"
                 }`}
               >
-                <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-500" />
+                <Icon className="w-4 h-4 text-emerald-500" />
                 <span className="truncate">{label}</span>
               </button>
             ))}
@@ -115,33 +108,45 @@ export default function DashboardPage() {
               {orders.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center lg:text-left">No orders placed yet.</p>
               ) : (
-                orders.map((order) => (
-                  <div key={order.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4 text-center sm:text-left">
-                    <div className="flex flex-col sm:flex-row justify-between items-center sm:items-baseline gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
-                      <div className="flex flex-col items-center sm:items-start">
-                        <span className="text-xs text-gray-400">Order ID: <strong className="text-gray-700 dark:text-white">{order.id}</strong></span>
-                        <p className="text-[10px] text-gray-400 mt-0.5">Placed on: {order.date}</p>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full">
-                        {order.status}
-                      </span>
-                    </div>
-
-                    <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-32 overflow-y-auto pr-2">
-                      {order.items.map((item) => (
-                        <div key={item.product.id} className="py-2 flex flex-col sm:flex-row justify-between items-center sm:items-start text-xs gap-1">
-                          <span className="text-gray-600 dark:text-gray-300 truncate max-w-xs">{item.product.name} ({item.quantity})</span>
-                          <span className="font-semibold text-gray-800 dark:text-white">₹{item.product.price * item.quantity}</span>
+                orders.map((order) => {
+                  const statusColor =
+                    order.status === "Delivered" ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400" :
+                    order.status === "Out for Delivery" ? "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400" :
+                    order.status === "Processing" ? "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400" :
+                    "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
+                  const StatusIcon =
+                    order.status === "Delivered" ? CheckCircle2 :
+                    order.status === "Out for Delivery" ? Truck :
+                    Clock;
+                  return (
+                    <div key={order.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                        <div>
+                          <span className="text-xs text-gray-400">Order ID: <strong className="text-gray-700 dark:text-white">{order.id}</strong></span>
+                          <p className="text-[10px] text-gray-400 mt-0.5">Placed on: {order.date}</p>
                         </div>
-                      ))}
-                    </div>
+                        <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${statusColor}`}>
+                          <StatusIcon className="w-3.5 h-3.5" />
+                          {order.status}
+                        </span>
+                      </div>
 
-                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
-                      <span className="text-gray-400">Paid using: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>
-                      <span className="text-sm font-bold text-gray-800 dark:text-white">Total Amount: ₹{order.total}</span>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-32 overflow-y-auto pr-2">
+                        {order.items.map((item) => (
+                          <div key={item.product.id} className="py-2 flex justify-between items-center text-xs gap-1">
+                            <span className="text-gray-600 dark:text-gray-300 truncate max-w-xs">{item.product.name} <span className="text-gray-400">×{item.quantity}</span></span>
+                            <span className="font-semibold text-gray-800 dark:text-white shrink-0">₹{item.product.price * item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
+                        <span className="text-gray-400">Paid via: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>
+                        <span className="text-sm font-bold text-gray-800 dark:text-white">Total: ₹{order.total}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}
@@ -174,64 +179,6 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeSubTab === "appointments" && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">Doctor Consultations</h3>
-              {doctorAppointments.length === 0 ? (
-                <p className="text-sm text-gray-400 font-medium text-center lg:text-left">No appointments booked yet.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {doctorAppointments.map((appt) => (
-                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
-                      <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 pb-2 border-b border-gray-50 dark:border-gray-800/50">
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                          {appt.type} CONSULT
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-400">{appt.status}</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-gray-800 dark:text-white block">{appt.doctor.name}</span>
-                        <span className="text-xs text-gray-400">{appt.doctor.specialty}</span>
-                      </div>
-                      <div className="pt-2 w-full border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500 text-center sm:text-left">
-                        Date: <strong>{appt.date}</strong> | Slot: <strong>{appt.slot}</strong>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeSubTab === "labs" && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-center lg:text-left">Lab Test Bookings</h3>
-              {labAppointments.length === 0 ? (
-                <p className="text-sm text-gray-400 font-medium text-center lg:text-left">No diagnostics packages booked yet.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {labAppointments.map((appt) => (
-                    <div key={appt.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
-                      <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 pb-2 border-b border-gray-50 dark:border-gray-800/50">
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                          HOME COLLECTION
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-400">{appt.status}</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-gray-800 dark:text-white block">{appt.test.name}</span>
-                        <span className="text-xs text-gray-400">Patient: {appt.patientName}</span>
-                      </div>
-                      <div className="pt-2 w-full border-t border-gray-100 dark:border-gray-850 text-xs text-gray-500 text-center sm:text-left">
-                        Date: <strong>{appt.date}</strong> | Slot: <strong>{appt.slot}</strong>
-                      </div>
                     </div>
                   ))}
                 </div>

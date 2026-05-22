@@ -1,20 +1,48 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
 import { PRODUCTS, CATEGORIES, TESTIMONIALS } from "@/data/mockData";
+import type { Product } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
 import Marquee from "@/components/magicui/marquee";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Search, ArrowRight, Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf,
   ShieldCheck, Truck, Clock, CreditCard, Upload,
-  Star, ChevronRight, Smartphone, Play, CheckCircle2
+  Star, ChevronRight, Smartphone, Play, CheckCircle2, TrendingUp, Tag, X
 } from "lucide-react";
 import Image from "next/image";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldCheck,
 };
+
+/* ── search helpers ──────────────────────────────────────────────────────── */
+const HERO_TRENDING = ["Paracetamol", "Vitamin D3", "Metformin", "Cetaphil", "Omron BP"];
+
+function heroSearchProducts(q: string): Product[] {
+  const lq = q.toLowerCase();
+  return PRODUCTS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(lq) ||
+      (p.saltComposition && p.saltComposition.toLowerCase().includes(lq))
+  ).slice(0, 6);
+}
+
+function HeroHighlight({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-emerald-200 dark:bg-emerald-800/70 text-emerald-800 dark:text-emerald-200 rounded px-0.5 not-italic font-bold">
+        {text.slice(idx, idx + query.length)}
+      </mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
 
 // ──────────────────────────────────────────────
 // Inline Sub-Components
@@ -182,8 +210,40 @@ function HomeFaqWidget() {
 }
 
 export default function HomePage() {
-  const { setActivePage } = useApp();
+  const { setActivePage, setSelectedProductId } = useApp();
   const featured = PRODUCTS.filter((p) => p.bestSeller);
+
+  /* hero search state */
+  const [heroQ, setHeroQ] = useState("");
+  const [heroOpen, setHeroOpen] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  const trimmedHeroQ = heroQ.trim();
+  const heroResults = trimmedHeroQ.length >= 2 ? heroSearchProducts(trimmedHeroQ) : [];
+
+  const closeHero = useCallback(() => {
+    setHeroOpen(false);
+  }, []);
+
+  /* close on outside click */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (heroRef.current && !heroRef.current.contains(e.target as Node)) {
+        setHeroOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  /* close on Escape */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHeroOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <div className="space-y-12 pb-12">
@@ -213,17 +273,142 @@ export default function HomePage() {
               </p>
 
               {/* Search bar */}
-              <div className="relative w-full max-w-lg mx-auto md:mx-0">
-                <input
-                  placeholder="Search medicines, vitamins, health products..."
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl pl-5 pr-14 py-4 text-base shadow-xl shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                />
-                <button
-                  onClick={() => setActivePage("shop")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-emerald-500/30 hover:scale-105"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
+              <div className="relative w-full max-w-lg mx-auto md:mx-0" ref={heroRef}>
+                <div className="relative">
+                  <input
+                    value={heroQ}
+                    onChange={(e) => {
+                      setHeroQ(e.target.value);
+                      setHeroOpen(true);
+                    }}
+                    onFocus={() => setHeroOpen(true)}
+                    placeholder="Search medicines, salt compositions..."
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl pl-5 pr-14 py-4 text-base shadow-xl shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
+                  {heroQ ? (
+                    <button
+                      onClick={() => { setHeroQ(""); setHeroOpen(false); }}
+                      className="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  ) : null}
+                  <button
+                    onClick={() => { if (heroQ.trim()) { setActivePage("shop"); closeHero(); } else { setActivePage("shop"); } }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-emerald-500/30 hover:scale-105"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* ── Hero Search Dropdown ────────────────────── */}
+                {heroOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-[100] animate-scale-in">
+
+                    {/* Idle: trending chips */}
+                    {trimmedHeroQ.length < 2 && (
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Trending</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {HERO_TRENDING.map((term) => (
+                            <button
+                              key={term}
+                              onClick={() => { setHeroQ(term); setHeroOpen(true); }}
+                              className="text-xs font-medium px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 transition-all"
+                            >
+                              {term}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => { setActivePage("shop"); closeHero(); }}
+                          className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 py-2 border-t border-gray-100 dark:border-gray-800 mt-1 pt-3"
+                        >
+                          <Tag className="w-3.5 h-3.5" /> Browse all medicines
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Active search results */}
+                    {trimmedHeroQ.length >= 2 && (
+                      <div className="max-h-[400px] overflow-y-auto">
+                        {heroResults.length === 0 ? (
+                          <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
+                            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                              <Search className="w-5 h-5 opacity-40" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">No medicines found</p>
+                              <p className="text-xs text-gray-400 mt-1">Try brand name or salt like &ldquo;Paracetamol&rdquo;</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Section label */}
+                            <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                              <Pill className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Medicines &amp; Products</span>
+                              <span className="ml-auto text-[10px] text-gray-400">{heroResults.length} found</span>
+                            </div>
+
+                            {/* Result rows */}
+                            <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
+                              {heroResults.map((p) => (
+                                <button
+                                  key={p.id}
+                                  onClick={() => { setSelectedProductId(p.id); setActivePage("details", `id=${p.id}`); setHeroQ(""); closeHero(); }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 transition-colors text-left group"
+                                >
+                                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 shadow-sm">
+                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                      <HeroHighlight text={p.name} query={trimmedHeroQ} />
+                                    </p>
+                                    {p.saltComposition && (
+                                      <p className="flex items-center gap-1 mt-0.5">
+                                        <span className="shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Salt</span>
+                                        <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                                          <HeroHighlight text={p.saltComposition} query={trimmedHeroQ} />
+                                        </span>
+                                      </p>
+                                    )}
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">₹{p.price}</span>
+                                      {p.originalPrice > p.price && (
+                                        <span className="text-[10px] text-gray-400 line-through">₹{p.originalPrice}</span>
+                                      )}
+                                      {p.prescriptionRequired && (
+                                        <span className="text-[9px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">Rx</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Footer CTA */}
+                            <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
+                              <button
+                                onClick={() => { setActivePage("shop"); closeHero(); }}
+                                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all rounded-xl py-3 shadow-sm"
+                              >
+                                <Search className="w-4 h-4" />
+                                See all results for &ldquo;{trimmedHeroQ}&rdquo;
+                                <ArrowRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* CTA buttons */}

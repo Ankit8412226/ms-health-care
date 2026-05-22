@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 
 export default function DoctorsPage() {
-  const { bookDoctor, setActivePage } = useApp();
+  const { setActivePage } = useApp();
   const [selectedDoc, setSelectedDoc] = useState<Doctor | null>(null);
   const [apptDate, setApptDate] = useState("");
   const [apptSlot, setApptSlot] = useState("");
@@ -21,7 +21,6 @@ export default function DoctorsPage() {
     e.preventDefault();
     if (!selectedDoc || !apptDate || !apptSlot || !patientName) return;
 
-    bookDoctor(selectedDoc, apptDate, apptSlot, apptType, patientName);
     setSuccessMsg(`Your appointment with ${selectedDoc.name} has been scheduled successfully!`);
 
     // Reset Form
@@ -32,7 +31,7 @@ export default function DoctorsPage() {
     setTimeout(() => {
       setSuccessMsg("");
       setSelectedDoc(null);
-      setActivePage("dashboard", "tab=appointments");
+      setActivePage("dashboard");
     }, 3000);
   };
 

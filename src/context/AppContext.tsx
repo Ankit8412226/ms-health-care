@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Product, Doctor, LabTest, PRODUCTS } from "@/data/mockData";
+import { Product, Doctor, LabTest, PRODUCTS, DOCTORS, LAB_TESTS } from "@/data/mockData";
 
 export interface CartItem {
   product: Product;
@@ -110,10 +110,6 @@ interface AppContextType {
   placeOrder: (addressId: string, paymentMethod: string, prescriptionUrl?: string) => void;
   prescriptions: Prescription[];
   uploadPrescription: (name: string, url: string) => void;
-  doctorAppointments: DoctorAppointment[];
-  bookDoctor: (doctor: Doctor, date: string, slot: string, type: "Chat" | "Video" | "Audio", patient: string) => void;
-  labAppointments: LabAppointment[];
-  bookLabTest: (test: LabTest, date: string, slot: string, patient: string) => void;
   couponCode: string;
   discountPercentage: number;
   applyCoupon: (code: string) => boolean;
@@ -147,7 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [selectedProductId, setSelectedProductId] = useState<string>("p1");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>(["p3", "p5", "p6"]);
   const [user, setUser] = useState<{ name: string; email: string; phone: string } | null>({
     name: "Ankit Kumar",
     email: "ankit@mscare.com",
@@ -182,20 +178,90 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([
+  const [orders, setOrders] = useState<Order[]>([
     {
-      id: "rx1",
-      name: "Dermatology_Consultation.pdf",
-      url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100",
-      date: "2026-05-18",
-      status: "Verified",
-      extractedMedicines: ["Cetaphil Gentle Skin Cleanser"],
+      id: "OD-482910",
+      items: [
+        { product: PRODUCTS[0], quantity: 2 },
+        { product: PRODUCTS[7], quantity: 1 },
+      ],
+      subtotal: 335,
+      discount: 0,
+      deliveryFee: 0,
+      total: 335,
+      address: {
+        id: "a1", name: "Ankit Kumar", phone: "+91 98765 43210",
+        flat: "Penthouse C, Cloud Heights", area: "Sector 62, Noida",
+        city: "Uttar Pradesh", pincode: "201301", isDefault: true,
+      },
+      paymentMethod: "UPI",
+      date: "2026-05-20",
+      status: "Delivered",
+    },
+    {
+      id: "OD-519834",
+      items: [
+        { product: PRODUCTS[1], quantity: 1 },
+        { product: PRODUCTS[3], quantity: 1 },
+      ],
+      subtotal: 560,
+      discount: 112,
+      deliveryFee: 0,
+      total: 448,
+      address: {
+        id: "a1", name: "Ankit Kumar", phone: "+91 98765 43210",
+        flat: "Penthouse C, Cloud Heights", area: "Sector 62, Noida",
+        city: "Uttar Pradesh", pincode: "201301", isDefault: true,
+      },
+      paymentMethod: "Credit Card",
+      date: "2026-05-15",
+      status: "Delivered",
+    },
+    {
+      id: "OD-537201",
+      items: [
+        { product: PRODUCTS[2], quantity: 1 },
+      ],
+      subtotal: 1999,
+      discount: 0,
+      deliveryFee: 0,
+      total: 1999,
+      address: {
+        id: "a2", name: "Ankit Kumar (Office)", phone: "+91 98765 00000",
+        flat: "Tech Hub, Tower A, 4th Floor", area: "DLF Phase 3, Gurgaon",
+        city: "Haryana", pincode: "122002", isDefault: false,
+      },
+      paymentMethod: "COD",
+      date: "2026-05-22",
+      status: "Out for Delivery",
     },
   ]);
 
-  const [doctorAppointments, setDoctorAppointments] = useState<DoctorAppointment[]>([]);
-  const [labAppointments, setLabAppointments] = useState<LabAppointment[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([
+    {
+      id: "rx1",
+      name: "Diabetes_Management_May2026.pdf",
+      url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100",
+      date: "2026-05-18",
+      status: "Verified",
+      extractedMedicines: ["Metformin Glycomet 500mg SR", "Paracetamol Crocin Advance 650mg"],
+    },
+    {
+      id: "rx2",
+      name: "Dermatology_Consultation_Apr2026.pdf",
+      url: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=100",
+      date: "2026-04-30",
+      status: "Verified",
+      extractedMedicines: ["Cetaphil Gentle Skin Cleanser"],
+    },
+    {
+      id: "rx3",
+      name: "Cardiology_Followup_May2026.pdf",
+      url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100",
+      date: "2026-05-22",
+      status: "Processing (OCR)",
+    },
+  ]);
 
   // Push route using next/navigation router
   const setActivePage = (page: PageName, query?: string) => {
@@ -342,35 +408,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   };
 
-  const bookDoctor = (
-    doctor: Doctor,
-    date: string,
-    slot: string,
-    type: "Chat" | "Video" | "Audio",
-    patient: string
-  ) => {
-    const newAppt: DoctorAppointment = {
-      id: `APT-${Math.floor(10000 + Math.random() * 90000)}`,
-      doctor,
-      date,
-      slot,
-      type,
-      patientName: patient,
-      status: "Scheduled",
-    };
-    setDoctorAppointments((prev) => [newAppt, ...prev]);
+  const bookLabTest = (test: LabTest, date: string, slot: string, patient: string) => {
+    // doctor/lab booking removed — kept for compatibility if called from DoctorsPage/LabTestsPage
+    void test; void date; void slot; void patient;
   };
 
-  const bookLabTest = (test: LabTest, date: string, slot: string, patient: string) => {
-    const newAppt: LabAppointment = {
-      id: `LAB-${Math.floor(10000 + Math.random() * 90000)}`,
-      test,
-      date,
-      slot,
-      patientName: patient,
-      status: "Scheduled",
-    };
-    setLabAppointments((prev) => [newAppt, ...prev]);
+  const bookDoctor = (doctor: Doctor, date: string, slot: string, type: "Chat" | "Video" | "Audio", patient: string) => {
+    // doctor booking removed — kept for compatibility if called externally
+    void doctor; void date; void slot; void type; void patient;
   };
 
   const applyCoupon = (code: string) => {
@@ -421,10 +466,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         placeOrder,
         prescriptions,
         uploadPrescription,
-        doctorAppointments,
-        bookDoctor,
-        labAppointments,
-        bookLabTest,
         couponCode,
         discountPercentage,
         applyCoupon,
