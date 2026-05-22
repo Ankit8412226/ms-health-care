@@ -1,8 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Product, Doctor, LabTest, PRODUCTS, DOCTORS, LAB_TESTS } from "@/data/mockData";
+import { Product, PRODUCTS } from "@/data/mockData";
+
+function generateOrderId(): string {
+  return `OD-${Math.floor(100000 + Math.random() * 900000)}`;
+}
 
 export interface CartItem {
   product: Product;
@@ -44,25 +48,6 @@ export interface Prescription {
   extractedMedicines?: string[];
 }
 
-export interface DoctorAppointment {
-  id: string;
-  doctor: Doctor;
-  date: string;
-  slot: string;
-  type: "Chat" | "Video" | "Audio";
-  patientName: string;
-  status: "Scheduled" | "Completed" | "Cancelled";
-}
-
-export interface LabAppointment {
-  id: string;
-  test: LabTest;
-  date: string;
-  slot: string;
-  patientName: string;
-  status: "Scheduled" | "Completed" | "Report Ready";
-}
-
 export type PageName =
   | "home"
   | "shop"
@@ -71,8 +56,6 @@ export type PageName =
   | "checkout"
   | "success"
   | "dashboard"
-  | "doctors"
-  | "labtests"
   | "auth"
   | "upload"
   | "about"
@@ -130,7 +113,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!cleanPath) return "home";
     const validPages: PageName[] = [
       "home", "shop", "details", "cart", "checkout", "success",
-      "dashboard", "doctors", "labtests", "auth", "upload",
+      "dashboard", "auth", "upload",
       "about", "contact", "faq", "privacy", "terms"
     ];
     if (validPages.includes(cleanPath as PageName)) {
@@ -360,7 +343,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const total = subtotal - discount + deliveryFee;
 
     const newOrder: Order = {
-      id: `OD-${Math.floor(100000 + Math.random() * 900000)}`,
+      id: generateOrderId(),
       items: [...cart],
       subtotal,
       discount,
@@ -408,15 +391,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   };
 
-  const bookLabTest = (test: LabTest, date: string, slot: string, patient: string) => {
-    // doctor/lab booking removed — kept for compatibility if called from DoctorsPage/LabTestsPage
-    void test; void date; void slot; void patient;
-  };
 
-  const bookDoctor = (doctor: Doctor, date: string, slot: string, type: "Chat" | "Video" | "Audio", patient: string) => {
-    // doctor booking removed — kept for compatibility if called externally
-    void doctor; void date; void slot; void type; void patient;
-  };
 
   const applyCoupon = (code: string) => {
     const cleanCode = code.toUpperCase().trim();

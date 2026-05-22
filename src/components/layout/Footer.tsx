@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300 pb-20 md:pb-0">
       {/* Trust badges */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-gray-850">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -17,13 +17,16 @@ export default function Footer() {
               { icon: CreditCard, title: "Secure Payment", desc: "SSL encrypted" },
               { icon: Clock, title: "24/7 Support", desc: "Round the clock help" },
             ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-3">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-6 h-6 text-emerald-400" />
+              <div
+                key={title}
+                className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-4 p-4 rounded-2xl bg-gray-900/30 border border-gray-800/20 hover:border-gray-800/50 hover:bg-gray-850/30 transition-all duration-300 group cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 group-hover:from-emerald-500/25 group-hover:to-teal-500/20 transition-all duration-300 shadow-md">
+                  <Icon className="w-5 h-5 text-emerald-400 group-hover:text-emerald-350 transition-colors" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">{title}</div>
-                  <div className="text-xs text-gray-400">{desc}</div>
+                  <div className="text-sm font-bold text-white tracking-wide group-hover:text-emerald-300 transition-colors">{title}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{desc}</div>
                 </div>
               </div>
             ))}

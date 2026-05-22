@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useApp, UserAddress } from "@/context/AppContext";
+import { useApp } from "@/context/AppContext";
 import {
-  CreditCard, ShieldCheck, Truck, PlusCircle, CheckCircle,
+  CreditCard, ShieldCheck, PlusCircle, CheckCircle,
   FileText, Landmark, Wallet, Banknote, MapPin, X
 } from "lucide-react";
 
@@ -30,7 +30,6 @@ export default function CheckoutPage() {
   const [pincode, setPincode] = useState("");
   const [isDefault, setIsDefault] = useState(false);
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const requiresRx = cart.some((item) => item.product.prescriptionRequired);
 
   const handleAddAddressSubmit = (e: React.FormEvent) => {

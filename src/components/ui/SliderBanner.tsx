@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Sparkles, ShieldCheck, Clock, HeartPulse, Truck, Calendar, Baby, Leaf } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, ShieldCheck, Truck, Calendar, Baby, Leaf } from "lucide-react";
 import { useApp, PageName } from "@/context/AppContext";
 import Image from "next/image";
 
@@ -23,7 +23,7 @@ const SLIDES: Slide[] = [
     id: 1,
     tagline: "Exclusive First Order Offer",
     title: "Flat 30% Discount on Health Essentials",
-    description: "Get genuine clinical medicines, daily vitamins, and lab checkups delivered with maximum care and safety.",
+    description: "Get genuine clinical medicines and daily vitamins delivered with maximum care and safety.",
     buttonText: "Shop & Save Now",
     pageTarget: "shop",
     image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1000&auto=format&fit=crop&q=80",
@@ -41,28 +41,6 @@ const SLIDES: Slide[] = [
     image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1000&auto=format&fit=crop&q=80",
     gradient: "from-blue-600/90 to-indigo-800/90 dark:from-blue-950/95 dark:to-indigo-950/95",
     icon: ShieldCheck,
-  },
-  {
-    id: 3,
-    tagline: "Preventive Health Screening",
-    title: "Full Body Checkups at Home starting ₹1499",
-    description: "Book certified tests covering 82+ crucial body parameters with sterile collection. Reports generated in 12 hours.",
-    buttonText: "Schedule Test",
-    pageTarget: "labtests",
-    image: "https://images.unsplash.com/photo-1579154204601-01588f351167?w=1000&auto=format&fit=crop&q=80",
-    gradient: "from-cyan-600/90 to-blue-800/90 dark:from-cyan-950/95 dark:to-blue-950/95",
-    icon: HeartPulse,
-  },
-  {
-    id: 4,
-    tagline: "Top Tier Telemedicine",
-    title: "Consult Verified Specialists Online 24/7",
-    description: "Book an instant online consultation via chat, audio, or video. Get medical prescriptions on your dashboard in 10 mins.",
-    buttonText: "Consult Doctor",
-    pageTarget: "doctors",
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=1000&auto=format&fit=crop&q=80",
-    gradient: "from-purple-600/90 to-violet-850/90 dark:from-purple-950/95 dark:to-violet-950/95",
-    icon: Clock,
   },
   {
     id: 5,

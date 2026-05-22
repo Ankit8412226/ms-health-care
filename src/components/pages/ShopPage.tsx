@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useApp } from "@/context/AppContext";
 import { PRODUCTS, CATEGORIES } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
-import { SlidersHorizontal, Grid3X3, LayoutList } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function ShopPage() {
   const [selectedCat, setSelectedCat] = useState("all");

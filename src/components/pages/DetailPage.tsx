@@ -4,8 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { PRODUCTS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
 import {
-  Star, Heart, Share2, ShieldAlert, Sparkles, Check,
-  ShoppingCart, RefreshCw, AlertCircle, ShieldCheck
+  Star, Heart, ShoppingCart, AlertCircle, ShieldCheck
 } from "lucide-react";
 import Image from "next/image";
 
@@ -206,16 +205,18 @@ export default function DetailPage() {
       {/* Tabs / Medical Details */}
       <div className="mb-12 border-t border-gray-150 dark:border-gray-850 pt-8">
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto gap-4 scrollbar-none">
-          {[
-            { id: "desc", label: "Description" },
-            { id: "benefits", label: "Benefits" },
-            { id: "use", label: "How to Use" },
-            { id: "side", label: "Side Effects" },
-            { id: "safety", label: "Safety Warnings" },
-          ].map((tab) => (
+          {(
+            [
+              { id: "desc", label: "Description" },
+              { id: "benefits", label: "Benefits" },
+              { id: "use", label: "How to Use" },
+              { id: "side", label: "Side Effects" },
+              { id: "safety", label: "Safety Warnings" },
+            ] as const
+          ).map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`pb-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"

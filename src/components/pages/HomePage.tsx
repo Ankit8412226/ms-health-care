@@ -61,95 +61,153 @@ function BmiCalculatorWidget() {
   };
 
   const getCategory = (b: number) => {
-    if (b < 18.5) return { label: "Underweight", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800" };
-    if (b < 25) return { label: "Normal Weight", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" };
-    if (b < 30) return { label: "Overweight", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800" };
-    return { label: "Obese", color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" };
+    if (b < 18.5) return { 
+      label: "Underweight", 
+      color: "text-amber-500 dark:text-amber-400", 
+      bg: "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 dark:border-amber-500/30",
+      barColor: "bg-amber-500",
+      advice: "Consider speaking with a practitioner about a balanced nutritional roadmap."
+    };
+    if (b < 25) return { 
+      label: "Healthy Weight", 
+      color: "text-emerald-600 dark:text-emerald-400", 
+      bg: "bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30",
+      barColor: "bg-emerald-500",
+      advice: "Superb! Maintain your active physical routine and balanced whole-foods diet."
+    };
+    if (b < 30) return { 
+      label: "Overweight", 
+      color: "text-orange-500 dark:text-orange-400", 
+      bg: "bg-orange-500/5 dark:bg-orange-500/10 border-orange-500/20 dark:border-orange-500/30",
+      barColor: "bg-orange-500",
+      advice: "Adopting regular cardio schedules and managing calorie density can help optimize weight."
+    };
+    return { 
+      label: "Obese", 
+      color: "text-rose-500 dark:text-rose-400", 
+      bg: "bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 dark:border-rose-500/30",
+      barColor: "bg-rose-500",
+      advice: "Consulting a clinical dietitian is highly recommended to mitigate cardiovascular risks."
+    };
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 shadow-lg">
-      <div className="flex flex-col items-center sm:flex-row gap-3 mb-6 text-center sm:text-left">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg flex-shrink-0">
-          <Activity className="w-5 h-5 text-white" />
+    <div className="relative overflow-hidden rounded-3xl border border-white/20 dark:border-gray-800 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-emerald-500/5">
+      {/* Decorative gradients */}
+      <div className="absolute -right-16 -top-16 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -left-16 -bottom-16 w-36 h-36 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
+      
+      <div className="flex flex-col items-center sm:flex-row gap-4 mb-6 text-center sm:text-left relative z-10">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0 animate-pulse-glow">
+          <Activity className="w-6 h-6 text-white" />
         </div>
-        <div className="text-center sm:text-left">
-          <h3 className="font-bold text-gray-900 dark:text-white">BMI Calculator</h3>
-          <p className="text-xs text-gray-400">Body Mass Index — Instant Assessment</p>
+        <div>
+          <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-1.5 justify-center sm:justify-start">
+            Clinical BMI Calculator <Sparkles className="w-4 h-4 text-emerald-500" />
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Evaluate body mass index against World Health Organization criteria</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Weight (kg)</label>
-          <input
-            type="number"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            placeholder="e.g. 72"
-            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-          />
+      <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-gray-450 dark:text-gray-400 uppercase tracking-widest block">Body Weight (kg)</label>
+          <div className="relative rounded-xl overflow-hidden shadow-sm group">
+            <input
+              type="number"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="e.g. 72"
+              className="w-full bg-gray-50/50 dark:bg-gray-950/40 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 dark:focus:border-emerald-500 transition-all font-semibold"
+            />
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-gray-450 dark:text-gray-500 uppercase tracking-wider group-focus-within:text-emerald-500 transition-colors">KG</span>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Height (cm)</label>
-          <input
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            placeholder="e.g. 175"
-            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-          />
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-gray-450 dark:text-gray-400 uppercase tracking-widest block">Stature Height (cm)</label>
+          <div className="relative rounded-xl overflow-hidden shadow-sm group">
+            <input
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="e.g. 175"
+              className="w-full bg-gray-50/50 dark:bg-gray-950/40 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 dark:focus:border-emerald-500 transition-all font-semibold"
+            />
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-gray-450 dark:text-gray-500 uppercase tracking-wider group-focus-within:text-emerald-500 transition-colors">CM</span>
+          </div>
         </div>
       </div>
 
       <button
         onClick={calculate}
-        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 mb-5"
+        className="shine-effect w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 hover:from-emerald-700 hover:via-teal-600 hover:to-cyan-700 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:-translate-y-[1px] active:translate-y-0 cursor-pointer relative z-10"
       >
-        Calculate My BMI
+        Calculate Assessment
       </button>
 
       {bmi !== null && (() => {
         const cat = getCategory(bmi);
         const pct = Math.min(100, Math.max(0, ((bmi - 10) / 30) * 100));
         return (
-          <div className={`border rounded-2xl p-5 ${cat.bg} space-y-3`}>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Your BMI</span>
-              <span className={`text-2xl font-black ${cat.color}`}>{bmi}</span>
+          <div className={`mt-6 border rounded-2xl p-5 ${cat.bg} space-y-4 animate-scale-in relative z-10`}>
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-[10px] font-extrabold text-gray-500 dark:text-gray-450 uppercase tracking-wider">Estimated Score</span>
+                <div className={`text-3xl font-black ${cat.color}`}>{bmi} <span className="text-xs font-normal text-gray-455 dark:text-gray-500">kg/m²</span></div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-extrabold text-gray-500 dark:text-gray-450 uppercase tracking-wider">Classification</span>
+                <div className={`text-base font-extrabold tracking-tight ${cat.color}`}>{cat.label}</div>
+              </div>
             </div>
-            <div className="w-full h-2 bg-white/50 dark:bg-black/20 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${cat.color.replace("text-", "bg-")}`}
-                style={{ width: `${pct}%` }}
-              />
+
+            {/* Premium Sliding Gauge */}
+            <div className="space-y-1.5">
+              <div className="relative w-full h-3 bg-gray-200/50 dark:bg-black/40 rounded-full overflow-hidden border border-white/10 dark:border-black/20">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-amber-400 via-emerald-500 to-rose-500`}
+                  style={{ width: `${pct}%` }}
+                />
+                {/* Pointer marker */}
+                <div 
+                  className="absolute top-0 w-1 h-3 bg-white shadow-md transition-all duration-1000 ease-out"
+                  style={{ left: `calc(${pct}% - 2px)` }}
+                />
+              </div>
+              <div className="flex justify-between text-[9px] font-bold text-gray-450 dark:text-gray-505">
+                <span>Underweight</span>
+                <span>Normal</span>
+                <span>Overweight</span>
+                <span>Obese</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className={`text-sm font-bold ${cat.color}`}>{cat.label}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Normal: 18.5–24.9</span>
-            </div>
+
+            <p className="text-xs text-gray-650 dark:text-gray-350 font-medium leading-relaxed">
+              <span className="font-bold text-gray-800 dark:text-white">Advice:</span> {cat.advice}
+            </p>
           </div>
         );
       })()}
 
       {/* BMI Scale Reference */}
-      <div className="mt-4 grid grid-cols-4 gap-1 text-center">
+      <div className="mt-6 grid grid-cols-4 gap-2 text-center border-t border-gray-100 dark:border-gray-800/80 pt-4 relative z-10">
         {[
           { label: "Under", range: "< 18.5", color: "bg-amber-400" },
           { label: "Normal", range: "18.5–24.9", color: "bg-emerald-500" },
           { label: "Over", range: "25–29.9", color: "bg-orange-400" },
           { label: "Obese", range: "≥ 30", color: "bg-red-500" },
         ].map((s) => (
-          <div key={s.label} className="space-y-1">
-            <div className={`h-1.5 rounded-full ${s.color}`} />
-            <div className="text-[9px] font-bold text-gray-600 dark:text-gray-400">{s.label}</div>
-            <div className="text-[9px] text-gray-400">{s.range}</div>
+          <div key={s.label} className="space-y-1 group">
+            <div className={`h-1.5 rounded-full ${s.color} opacity-70 group-hover:opacity-100 transition-opacity duration-300`} />
+            <div className="text-[9px] font-black text-gray-800 dark:text-gray-300 tracking-wide uppercase">{s.label}</div>
+            <div className="text-[9px] text-gray-450 dark:text-gray-400 font-medium">{s.range}</div>
           </div>
         ))}
       </div>
     </div>
   );
 }
+
 
 const FAQ_ITEMS = [
   {
@@ -177,34 +235,43 @@ const FAQ_ITEMS = [
 function HomeFaqWidget() {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <div className="space-y-3">
-      {FAQ_ITEMS.map((item, idx) => (
-        <div
-          key={idx}
-          className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-2xl overflow-hidden transition-all"
-        >
-          <button
-            onClick={() => setOpen(open === idx ? null : idx)}
-            className="w-full flex items-center justify-between px-6 py-4 text-left gap-4"
+    <div className="space-y-4">
+      {FAQ_ITEMS.map((item, idx) => {
+        const isOpen = open === idx;
+        return (
+          <div
+            key={idx}
+            className={`transition-all duration-300 rounded-2xl border ${
+              isOpen
+                ? "bg-gradient-to-r from-emerald-500/5 to-teal-500/5 dark:from-emerald-500/10 dark:to-teal-500/10 border-emerald-500/30 dark:border-emerald-500/40 shadow-md shadow-emerald-500/5"
+                : "bg-white dark:bg-gray-900 border-gray-200/80 dark:border-gray-800/80 hover:border-gray-300 dark:hover:border-gray-700"
+            }`}
           >
-            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">{item.q}</span>
-            <span
-              className={`w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center transition-all ${
-                open === idx
-                  ? "bg-emerald-600 text-white rotate-45"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500"
-              }`}
+            <button
+              onClick={() => setOpen(isOpen ? null : idx)}
+              className="w-full flex items-center justify-between px-6 py-4.5 text-left gap-4 cursor-pointer group"
             >
-              +
-            </span>
-          </button>
-          {open === idx && (
-            <div className="px-6 pb-5 text-sm text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-4">
-              {item.a}
-            </div>
-          )}
-        </div>
-      ))}
+              <span className={`text-sm font-bold leading-snug transition-colors ${
+                isOpen ? "text-emerald-700 dark:text-emerald-350" : "text-gray-800 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-450"
+              }`}>{item.q}</span>
+              <span
+                className={`w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-300 font-bold text-xs ${
+                  isOpen
+                    ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white rotate-45 shadow-lg shadow-emerald-500/20"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-950 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
+                }`}
+              >
+                +
+              </span>
+            </button>
+            {isOpen && (
+              <div className="px-6 pb-5 text-xs sm:text-sm text-gray-655 dark:text-gray-400 leading-relaxed border-t border-emerald-500/10 dark:border-emerald-500/20 pt-4 animate-scale-in font-medium">
+                {item.a}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -248,27 +315,30 @@ export default function HomePage() {
   return (
     <div className="space-y-12 pb-12">
       {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 w-full border-0">
-        {/* Decorative blobs */}
-        <div className="absolute top-10 right-10 w-72 h-72 bg-emerald-300/20 dark:bg-emerald-500/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-teal-300/20 dark:bg-teal-500/10 rounded-full blur-3xl" style={{ animationDelay: "3s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-200/10 dark:bg-cyan-500/5 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 via-teal-50/60 to-cyan-50/60 dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-950 w-full border-0 bg-grid">
+        {/* Fading radial grid mask */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-gray-950 pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,white_90%)] dark:bg-[radial-gradient(circle_at_center,transparent_30%,oklch(0.09_0.01_240)_90%)] pointer-events-none z-0" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+        {/* Decorative glowing blobs */}
+        <div className="absolute top-10 right-10 w-72 h-72 bg-emerald-300/20 dark:bg-emerald-500/10 rounded-full blur-3xl animate-float z-0" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-teal-300/20 dark:bg-teal-500/10 rounded-full blur-3xl z-0" style={{ animationDelay: "3s" }} />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
-              <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-semibold px-4 py-2 rounded-full">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 bg-emerald-100/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-semibold px-4 py-2 rounded-full border border-emerald-200/50 dark:border-emerald-900/30 shadow-sm backdrop-blur-sm">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 India&apos;s #1 Licensed Online Pharmacy
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight">
                 <span className="text-gray-900 dark:text-white">Your Health,</span>
                 <br />
-                <span className="gradient-text">Delivered with Care</span>
+                <span className="gradient-text drop-shadow-[0_1px_1px_rgba(16,185,129,0.05)]">Delivered with Care</span>
               </h1>
 
-              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-lg leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-650 dark:text-gray-400 max-w-lg leading-relaxed font-medium">
                 Order genuine clinical medicines, health essentials, vitamins &amp; upload medical prescriptions online — all with 100% CDSCO safety.
               </p>
 
@@ -283,19 +353,19 @@ export default function HomePage() {
                     }}
                     onFocus={() => setHeroOpen(true)}
                     placeholder="Search medicines, salt compositions..."
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl pl-5 pr-14 py-4 text-base shadow-xl shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                    className="w-full bg-white/95 dark:bg-gray-850 border border-gray-200/80 dark:border-gray-800 rounded-2xl pl-5 pr-14 py-4 text-base shadow-xl shadow-emerald-500/5 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 transition-all dark:text-white font-medium hover:border-gray-350 dark:hover:border-gray-700"
                   />
                   {heroQ ? (
                     <button
                       onClick={() => { setHeroQ(""); setHeroOpen(false); }}
-                      className="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                      className="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   ) : null}
                   <button
                     onClick={() => { if (heroQ.trim()) { setActivePage("shop"); closeHero(); } else { setActivePage("shop"); } }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-emerald-500/30 hover:scale-105"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:scale-102 active:scale-98 cursor-pointer"
                   >
                     <Search className="w-5 h-5" />
                   </button>
@@ -317,7 +387,7 @@ export default function HomePage() {
                             <button
                               key={term}
                               onClick={() => { setHeroQ(term); setHeroOpen(true); }}
-                              className="text-xs font-medium px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 transition-all"
+                              className="text-xs font-semibold px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
                             >
                               {term}
                             </button>
@@ -325,7 +395,7 @@ export default function HomePage() {
                         </div>
                         <button
                           onClick={() => { setActivePage("shop"); closeHero(); }}
-                          className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 py-2 border-t border-gray-100 dark:border-gray-800 mt-1 pt-3"
+                          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 py-2 border-t border-gray-100 dark:border-gray-800 mt-1 pt-3 cursor-pointer"
                         >
                           <Tag className="w-3.5 h-3.5" /> Browse all medicines
                         </button>
@@ -360,10 +430,10 @@ export default function HomePage() {
                                 <button
                                   key={p.id}
                                   onClick={() => { setSelectedProductId(p.id); setActivePage("details", `id=${p.id}`); setHeroQ(""); closeHero(); }}
-                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 transition-colors text-left group"
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 transition-colors text-left group cursor-pointer"
                                 >
-                                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 shadow-sm">
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 shadow-sm bg-white">
+                                    <Image src={p.image} alt={p.name} width={48} height={48} className="w-full h-full object-cover" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
@@ -396,7 +466,7 @@ export default function HomePage() {
                             <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
                               <button
                                 onClick={() => { setActivePage("shop"); closeHero(); }}
-                                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all rounded-xl py-3 shadow-sm"
+                                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all rounded-xl py-3 shadow-sm cursor-pointer"
                               >
                                 <Search className="w-4 h-4" />
                                 See all results for &ldquo;{trimmedHeroQ}&rdquo;
@@ -412,31 +482,31 @@ export default function HomePage() {
               </div>
 
               {/* CTA buttons */}
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-3.5 justify-center md:justify-start">
                 <button
                   onClick={() => setActivePage("shop")}
-                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105"
+                  className="flex items-center gap-2 px-7 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/45 hover:scale-102 cursor-pointer"
                 >
                   Browse Medicines <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setActivePage("upload")}
-                  className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 bg-white/60 dark:bg-gray-850/60 backdrop-blur-md border border-gray-250 dark:border-gray-850 text-emerald-800 dark:text-emerald-350 font-bold rounded-2xl hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 hover:border-emerald-500/30 transition-all cursor-pointer shadow-sm hover:shadow"
                 >
                   <Upload className="w-4 h-4" /> Upload Prescription
                 </button>
               </div>
 
               {/* Trust stats */}
-              <div className="flex items-center justify-center md:justify-start gap-6 pt-4 w-full">
+              <div className="flex items-center justify-center md:justify-start gap-8 pt-4 w-full border-t border-gray-200/50 dark:border-gray-800/40">
                 {[
                   { num: "50L+", label: "Customers" },
                   { num: "1M+", label: "Orders" },
                   { num: "4.9★", label: "Rating" },
                 ].map(({ num, label }) => (
-                  <div key={label}>
-                    <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">{num}</div>
-                    <div className="text-xs text-gray-500">{label}</div>
+                  <div key={label} className="flex flex-col items-center md:items-start">
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{num}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">{label}</div>
                   </div>
                 ))}
               </div>
@@ -445,9 +515,9 @@ export default function HomePage() {
             {/* Hero image area */}
             <div className="relative hidden md:block">
               <div className="relative w-full aspect-square max-w-md mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 dark:from-emerald-600/10 dark:to-teal-600/10 rounded-[3rem] rotate-6" />
-                <div className="absolute inset-4 bg-gradient-to-br from-emerald-300/30 to-cyan-300/30 dark:from-emerald-500/10 dark:to-cyan-500/10 rounded-[2.5rem] -rotate-3" />
-                <div className="absolute inset-8 rounded-[2rem] overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 dark:from-emerald-600/10 dark:to-teal-600/10 rounded-[3rem] rotate-6 scale-95" />
+                <div className="absolute inset-4 bg-gradient-to-br from-emerald-300/30 to-cyan-300/30 dark:from-emerald-500/10 dark:to-cyan-500/10 rounded-[2.5rem] -rotate-3 scale-95" />
+                <div className="absolute inset-8 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 dark:border-gray-800/40">
                   <Image
                     src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&auto=format&fit=crop&q=80"
                     alt="Healthcare"
@@ -457,25 +527,25 @@ export default function HomePage() {
                   />
                 </div>
                 {/* Floating cards */}
-                <div className="absolute -left-4 top-1/4 glass-card rounded-2xl p-3 shadow-xl animate-float">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <div className="absolute -left-4 top-1/4 backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border border-emerald-500/10 dark:border-emerald-900/30 rounded-2xl p-3.5 shadow-2xl animate-float cursor-default">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow shadow-emerald-500/20">
                       <Truck className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-gray-800 dark:text-white">Free Delivery</div>
-                      <div className="text-[10px] text-gray-500">Under 4 hours</div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">Free Delivery</div>
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Under 4 hours</div>
                     </div>
                   </div>
                 </div>
-                <div className="absolute -right-4 bottom-1/4 glass-card rounded-2xl p-3 shadow-xl animate-float" style={{ animationDelay: "2s" }}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <div className="absolute -right-4 bottom-1/4 backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border border-blue-500/10 dark:border-blue-900/30 rounded-2xl p-3.5 shadow-2xl animate-float cursor-default" style={{ animationDelay: "2s" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow shadow-blue-500/20">
                       <ShieldCheck className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-gray-800 dark:text-white">100% Genuine</div>
-                      <div className="text-[10px] text-gray-500">Licensed pharmacy</div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">100% Genuine</div>
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Licensed pharmacy</div>
                     </div>
                   </div>
                 </div>
@@ -490,12 +560,14 @@ export default function HomePage() {
         <SliderBanner fullWidth={false} />
       </div>
 
+
+
       {/* ===== CATEGORIES ===== */}
       <section className="py-16 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-black text-gray-900 dark:text-white">Shop by Category</h2>
-            <p className="text-gray-500 mt-2">Find the right healthcare solutions for your needs</p>
+            <p className="text-gray-500 mt-2 font-medium">Find the right healthcare solutions for your needs</p>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-4">
             {CATEGORIES.filter((c) => c.id !== "all").map((cat) => {
@@ -504,12 +576,14 @@ export default function HomePage() {
                 <button
                   key={cat.id}
                   onClick={() => setActivePage("shop")}
-                  className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1"
+                  className="group relative p-[1px] rounded-2xl bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 hover:scale-105 active:scale-95"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                  <div className="h-full w-full rounded-2xl bg-white dark:bg-gray-905 p-4 flex flex-col items-center gap-3">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 group-hover:from-emerald-100 group-hover:to-teal-100 dark:group-hover:from-emerald-900/40 dark:group-hover:to-teal-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{cat.name}</span>
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 text-center leading-tight">{cat.name}</span>
                 </button>
               );
             })}
@@ -562,77 +636,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== VISION & MISSION SECTION ===== */}
-      <section className="relative py-24 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white overflow-hidden">
-        {/* Overlay grid and glow effect */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] opacity-25" />
-        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+      {/* ===== VISION & MISSION SECTION (ABOUT US) ===== */}
+      <section className="relative py-24 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white overflow-hidden bg-grid">
+        {/* Overlay gradient mask */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-950/20 to-emerald-950 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 text-xs font-semibold px-4 py-2 rounded-full">
-                <Sparkles className="w-3.5 h-3.5" />
-                Our Clinical Vision
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            
+            {/* Left side: Premium Image Frame & Compound Cards */}
+            <div className="relative order-2 md:order-1">
+              <div className="relative w-full aspect-[4/3] max-w-lg mx-auto">
+                {/* Decorative border frames */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-[2.5rem] rotate-3 scale-[1.02]" />
+                
+                {/* Main Image */}
+                <div className="absolute inset-2 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10">
+                  <Image
+                    src="https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=600&auto=format&fit=crop&q=80"
+                    alt="MS Care Pharmacy Sourcing Lab"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                
+                {/* Overlapping Floating Operational Stats Card */}
+                <div className="absolute -right-4 -bottom-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 shadow-2xl max-w-[200px] animate-float">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Certified Chemists</span>
+                  </div>
+                  <p className="text-xs text-gray-200 font-semibold leading-relaxed">
+                    100% orders verified by licensed pharmacy practitioners.
+                  </p>
+                </div>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
-                Pioneering Safe &amp; Trusted Digital Pharmacy Operations
+            </div>
+
+            {/* Right side: About Us Content */}
+            <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left order-1 md:order-2">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                About MS Care Online Pharmacy
+              </div>
+              
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight">
+                Pioneering Safe &amp; Trusted Clinical Supply Chains
               </h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                At MS Care, our vision is to solve chronic medical supply chains by combining deep pharmaceutical expertise, rigorous quality control operations, and intelligent AI automation. We believe everyone deserves direct access to genuine healthcare without regulatory compromises.
+              
+              <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-medium">
+                At MS Care, our mission is to eliminate friction in chronic healthcare management. We combine high-precision pharmaceutical storage, climate-controlled cold-chain shipping, and AI-enabled prescription analysis to ensure every medicine arriving at your doorstep retains 100% clinical efficacy.
               </p>
-              <div className="space-y-4 pt-4 w-full">
+              
+              <div className="space-y-4 pt-2 w-full">
                 {[
-                  { title: "Clinical Grade Sourcing", desc: "Every drug strip is certified through licensed batch verification pipelines." },
-                  { title: "AI-Powered Diagnostics", desc: "Automated OCR prescription verification system built for error-free patient dosage limits." },
-                  { title: "Eco-Conscious Packaging", desc: "We utilize climate-controlled, sustainable packaging to safeguard pharmaceutical potency." }
+                  { title: "Rigorous Sourcing Protocols", desc: "Every medicine batch is sourced directly from certified manufacturers and verified by licensed pharmacists." },
+                  { title: "AI-Powered Diagnostics OCR", desc: "Our high-precision OCR pipeline translates hand-written prescriptions into structured dosage plans within seconds." },
+                  { title: "Eco-Conscious Potency Packaging", desc: "We utilize temperature-regulated and biodegradable packaging to preserve vaccine and liquid formulation integrity." }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row gap-3 items-center md:items-start text-center md:text-left">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs font-bold sm:mt-1 flex-shrink-0">
+                  <div key={idx} className="flex flex-col sm:flex-row gap-3.5 items-center md:items-start text-center md:text-left group">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center text-emerald-300 text-xs font-bold sm:mt-0.5 flex-shrink-0 group-hover:scale-105 duration-200">
                       {idx + 1}
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-100 text-sm">{item.title}</h4>
-                      <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+                      <h4 className="font-bold text-gray-100 text-sm tracking-wide">{item.title}</h4>
+                      <p className="text-xs text-gray-400 mt-1 leading-relaxed font-medium">{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Vision Glass Card Mockup */}
-            <div className="relative">
-              <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-white/5 backdrop-blur-md p-8 flex flex-col justify-between">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl" />
-                
-                <div className="flex justify-between items-start">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                    <ShieldCheck className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-[10px] uppercase font-bold text-emerald-300 tracking-widest bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
-                    Quality Shield
-                  </span>
-                </div>
-
-                <div className="space-y-4">
-                  <span className="text-xl sm:text-2xl font-black block">Safety Assurance Guarantee</span>
-                  <p className="text-xs text-gray-350 leading-relaxed">
-                    &quot;We pledge to provide absolute compliance with the CDSCO rules, maintaining cold chain integrity and verified pharmacist reviews on 100% of orders dispatch.&quot;
-                  </p>
-                  
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-400/20 flex items-center justify-center">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold block text-gray-200">Certified Chemists Board</span>
-                      <span className="text-[10px] text-gray-400">Governance &amp; Medical Operations</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -812,29 +890,37 @@ export default function HomePage() {
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900/50 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-10">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white">What Our Customers Say</h2>
-            <p className="text-gray-500 mt-2">Real reviews from verified patients &amp; customers</p>
+      <section className="py-20 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden relative bg-grid">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12 relative z-10">
+          <div className="text-center space-y-3">
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Testimonials</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">Trusted by Thousands</h2>
+            <p className="text-gray-500 max-w-xl mx-auto font-medium text-sm">See how MS Care helps families across India manage their health and medicine prescriptions effortlessly.</p>
           </div>
         </div>
-        <Marquee pauseOnHover className="[--duration:30s]">
+        <Marquee pauseOnHover className="[--duration:40s] relative z-10">
           {TESTIMONIALS.map((t) => (
-            <div key={t.id} className="w-80 mx-3 p-6 bg-white dark:bg-gray-900/80 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-lg">
-              <div className="flex items-center gap-1 mb-3">
-                {Array.from({ length: t.rating }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                ))}
+            <div 
+              key={t.id} 
+              className="w-80 mx-4 p-6 sm:p-7 bg-white dark:bg-gray-900/80 rounded-3xl border border-gray-150/70 dark:border-gray-800/80 shadow-md hover:shadow-xl hover:border-emerald-500/20 dark:hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center gap-1 mb-4">
+                  {Array.from({ length: t.rating }).map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-350 leading-relaxed font-medium mb-6 italic">
+                  &ldquo;{t.text}&rdquo;
+                </p>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 relative">
+              <div className="flex items-center gap-3 border-t border-gray-100 dark:border-gray-800/80 pt-4">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 relative border border-emerald-500/10 flex-shrink-0">
                   <Image src={t.avatar} alt={t.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-gray-800 dark:text-white">{t.name}</div>
-                  <div className="text-xs text-gray-400">Verified Customer</div>
+                  <div className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white leading-tight">{t.name}</div>
+                  <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-0.5">Verified Patient</div>
                 </div>
               </div>
             </div>
@@ -843,46 +929,150 @@ export default function HomePage() {
       </section>
 
       {/* ===== APP DOWNLOAD ===== */}
-      <section className="py-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="text-white space-y-6 flex flex-col items-center md:items-start text-center md:text-left">
-              <h2 className="text-3xl sm:text-4xl font-black leading-tight">Download the MS Care App</h2>
-              <p className="text-emerald-100 text-lg leading-relaxed">
-                Get exclusive app-only discounts, real-time order tracking, instant prescription uploads, and 24/7 doctor consultations.
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-emerald-950 to-cyan-950 text-white relative overflow-hidden bg-grid border-t border-emerald-950/20">
+        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="text-white space-y-8 flex flex-col items-center md:items-start text-center md:text-left">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 uppercase tracking-widest">
+                Mobile Healthcare
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight">
+                Manage Your Healthcare From the App
+              </h2>
+              <p className="text-gray-300 text-base sm:text-lg leading-relaxed font-medium">
+                Get exclusive app-only discounts, real-time prescription approvals, medicine refills, and active video consultations with practitioners.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                <button className="flex items-center gap-3 bg-black/30 hover:bg-black/50 backdrop-blur rounded-xl px-5 py-3 transition-all hover:scale-105">
-                  <Play className="w-7 h-7" />
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start w-full">
+                <button className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 rounded-2xl px-5 py-3 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-black/10">
+                  <Play className="w-7 h-7 text-emerald-400" />
                   <div className="text-left">
-                    <div className="text-[10px] opacity-80">GET IT ON</div>
-                    <div className="text-sm font-bold">Google Play</div>
+                    <div className="text-[10px] opacity-70 font-semibold uppercase tracking-wider">GET IT ON</div>
+                    <div className="text-sm font-black">Google Play</div>
                   </div>
                 </button>
-                <button className="flex items-center gap-3 bg-black/30 hover:bg-black/50 backdrop-blur rounded-xl px-5 py-3 transition-all hover:scale-105">
-                  <Smartphone className="w-7 h-7" />
+                <button className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 rounded-2xl px-5 py-3 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-black/10">
+                  <Smartphone className="w-7 h-7 text-emerald-400" />
                   <div className="text-left">
-                    <div className="text-[10px] opacity-80">DOWNLOAD ON</div>
-                    <div className="text-sm font-bold">App Store</div>
+                    <div className="text-[10px] opacity-70 font-semibold uppercase tracking-wider">DOWNLOAD ON</div>
+                    <div className="text-sm font-black">App Store</div>
                   </div>
                 </button>
               </div>
-              <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-emerald-100 w-full">
-                <span>★ 4.9 Rating</span>
-                <span>•</span>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-xs font-bold text-gray-300 w-full">
+                <span className="flex items-center gap-1 text-amber-400">★ 4.9 <span className="text-gray-400 font-medium">Rating</span></span>
+                <span className="text-emerald-500">•</span>
                 <span>10M+ Downloads</span>
-                <span>•</span>
-                <span>Free</span>
+                <span className="text-emerald-500">•</span>
+                <span>Free to Install</span>
               </div>
             </div>
-            <div className="hidden md:flex justify-center">
-              <div className="relative w-52 h-96 bg-black/20 backdrop-blur rounded-[2.5rem] border-2 border-white/20 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-xl">
-                    <span className="text-2xl font-black">MS</span>
+
+            {/* Phone Mockup */}
+            <div className="hidden md:flex justify-center relative">
+              {/* Decorative behind glow */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Smartphone Outer Shell */}
+              <div className="relative w-[280px] h-[550px] bg-gray-950 rounded-[3rem] p-3 shadow-2xl border-4 border-gray-800 ring-1 ring-white/10 overflow-hidden hover:scale-103 transition-transform duration-500">
+                {/* Notch / Dynamic Island */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-30 flex items-center justify-between px-3">
+                  <div className="w-2.5 h-2.5 bg-gray-900 rounded-full border border-gray-800" />
+                  <div className="w-4 h-1 bg-gray-900 rounded-full" />
+                </div>
+
+                {/* Inner Screen */}
+                <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-gray-900 border border-white/5 flex flex-col justify-between p-4 pt-10 text-white font-sans">
+                  {/* Mock Status Bar */}
+                  <div className="absolute top-1 left-0 right-0 px-6 flex justify-between items-center text-[10px] text-gray-400 font-bold select-none z-20">
+                    <span>9:41</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2 bg-emerald-500 rounded-xs" />
+                      <span className="opacity-80">5G</span>
+                      <div className="w-4 h-2 border border-gray-400 rounded-xs p-0.5 flex items-center"><div className="w-full h-full bg-emerald-500 rounded-2xs" /></div>
+                    </div>
                   </div>
-                  <div className="text-lg font-bold">MS Care</div>
-                  <div className="text-xs opacity-60 mt-1">Your Health, Our Priority</div>
+
+                  {/* App Branding Mini Screen */}
+                  <div className="flex-1 flex flex-col justify-between py-4">
+                    {/* App Header */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md">
+                          <span className="text-[10px] font-black text-white">MS</span>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-extrabold leading-none">MS Care</div>
+                          <span className="text-[7px] text-emerald-400 font-bold tracking-wider">ONLINE</span>
+                        </div>
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                        <span className="text-[8px]">🔔</span>
+                      </div>
+                    </div>
+
+                    {/* Search bar mockup */}
+                    <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 mb-3 flex items-center gap-1.5 text-left">
+                      <span className="text-gray-500 text-[10px]">🔍</span>
+                      <span className="text-[9px] text-gray-400 font-semibold">Search medicines, salts...</span>
+                    </div>
+
+                    {/* Quick Health Stats Card */}
+                    <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/5 border border-emerald-500/20 rounded-2xl p-3 mb-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[9px] font-bold text-emerald-400">Order #MSC-9281</span>
+                        <span className="text-[8px] bg-emerald-500 text-black px-1.5 py-0.5 rounded font-black uppercase">Out for Delivery</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                          🚚
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-[8px] text-gray-400">Arriving in approx</div>
+                          <div className="text-[11px] font-extrabold text-white">18 Minutes</div>
+                        </div>
+                      </div>
+                      {/* Tracking Progress Bar */}
+                      <div className="w-full h-1 bg-white/10 rounded-full mt-2.5 overflow-hidden">
+                        <div className="w-3/4 h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" />
+                      </div>
+                    </div>
+
+                    {/* Prescription Scan Card */}
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex-1 flex flex-col justify-between">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-[9px] font-extrabold text-white">Prescription Scanner</div>
+                          <span className="text-[7px] text-gray-400">Extract medicines in seconds</span>
+                        </div>
+                        <span className="text-[7px] font-extrabold bg-emerald-500 text-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI OCR</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                          📄
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold text-gray-200 font-sans">Diabetes Care Rx.pdf</div>
+                          <div className="text-[7px] text-emerald-400 font-sans">Verified • 2 Items Extracted</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-2.5 py-1 text-center bg-emerald-500 hover:bg-emerald-600 text-black text-[9px] font-black rounded-lg transition-colors cursor-pointer">
+                        Scan & Order Now
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* App Bottom Nav mockup */}
+                  <div className="border-t border-white/5 pt-2 flex justify-around text-gray-500 text-[9px] font-bold">
+                    <div className="text-emerald-400 flex flex-col items-center gap-0.5"><span className="text-xs">🏠</span><span>Home</span></div>
+                    <div className="flex flex-col items-center gap-0.5"><span className="text-xs">💊</span><span>Shop</span></div>
+                    <div className="flex flex-col items-center gap-0.5"><span className="text-xs">📤</span><span>Upload Rx</span></div>
+                    <div className="flex flex-col items-center gap-0.5"><span className="text-xs">👤</span><span>Account</span></div>
+                  </div>
                 </div>
               </div>
             </div>

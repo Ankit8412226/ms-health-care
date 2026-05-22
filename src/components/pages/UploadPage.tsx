@@ -2,12 +2,12 @@
 import { useState, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import {
-  Upload, FileText, CheckCircle, ShieldAlert, Sparkles,
-  ArrowRight, ShieldCheck, RefreshCw, AlertCircle
+  Upload, FileText, CheckCircle, Sparkles,
+  ArrowRight, ShieldCheck, RefreshCw
 } from "lucide-react";
 
 export default function UploadPage() {
-  const { uploadPrescription, prescriptions, setActivePage } = useApp();
+  const { uploadPrescription, setActivePage } = useApp();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);

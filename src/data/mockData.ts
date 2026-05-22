@@ -23,29 +23,7 @@ export interface Product {
   benefits: string[];
 }
 
-export interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  experience: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  consultationFee: number;
-  availableSlots: string[];
-  education: string;
-}
-
-export interface LabTest {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice: number;
-  parameters: number;
-  description: string;
-  includes: string[];
-  duration: string;
-}
+// Doctor and LabTest interfaces removed
 
 export const CATEGORIES = [
   { id: "all", name: "All Products", icon: "LayoutGrid" },
@@ -298,120 +276,7 @@ export const PRODUCTS: Product[] = [
   }
 ];
 
-export const DOCTORS: Doctor[] = [
-  {
-    id: "doc1",
-    name: "Dr. Amit Sharma",
-    specialty: "Cardiologist",
-    experience: 16,
-    rating: 4.9,
-    reviewCount: 450,
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500&auto=format&fit=crop&q=60",
-    consultationFee: 700,
-    availableSlots: ["09:00 AM", "10:30 AM", "02:00 PM", "04:30 PM"],
-    education: "MBBS, MD (Medicine), DM (Cardiology) - AIIMS"
-  },
-  {
-    id: "doc2",
-    name: "Dr. Sarah Khan",
-    specialty: "Pediatrician",
-    experience: 12,
-    rating: 4.8,
-    reviewCount: 380,
-    image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?w=500&auto=format&fit=crop&q=60",
-    consultationFee: 500,
-    availableSlots: ["11:00 AM", "12:00 PM", "03:30 PM", "05:00 PM"],
-    education: "MBBS, DCH (Pediatrics), DNB - Safdarjung Hospital"
-  },
-  {
-    id: "doc3",
-    name: "Dr. Priya Nair",
-    specialty: "Dermatologist",
-    experience: 9,
-    rating: 4.7,
-    reviewCount: 240,
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&auto=format&fit=crop&q=60",
-    consultationFee: 600,
-    availableSlots: ["10:00 AM", "11:30 AM", "01:30 PM", "04:00 PM"],
-    education: "MBBS, MD (Dermatology, Venereology & Leprosy)"
-  },
-  {
-    id: "doc4",
-    name: "Dr. Rohan Verma",
-    specialty: "General Physician",
-    experience: 14,
-    rating: 4.9,
-    reviewCount: 620,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500&auto=format&fit=crop&q=60",
-    consultationFee: 400,
-    availableSlots: ["08:30 AM", "12:30 PM", "02:30 PM", "06:00 PM"],
-    education: "MBBS, MD (Internal Medicine) - MAMC Delhi"
-  }
-];
-
-export const LAB_TESTS: LabTest[] = [
-  {
-    id: "lt1",
-    name: "Comprehensive Full Body Checkup",
-    price: 1499,
-    originalPrice: 3499,
-    parameters: 82,
-    description: "Our most popular health checkup screening. Evaluates functions of active organs like Liver, Kidney, Thyroid, Heart, Lipid, and Blood profile.",
-    includes: [
-      "Complete Blood Count (CBC) - 24 parameters",
-      "Liver Function Test (LFT) - 11 parameters",
-      "Kidney Function Test (KFT) - 8 parameters",
-      "Lipid Profile (Cholesterol) - 7 parameters",
-      "Thyroid Profile (TSH, T3, T4) - 3 parameters",
-      "HbA1c & Blood Sugar Fasting - 2 parameters",
-      "Vitamin D3 & B12 Levels - 2 parameters"
-    ],
-    duration: "Report in 12 hours"
-  },
-  {
-    id: "lt2",
-    name: "Advanced Diabetes Control Profile",
-    price: 599,
-    originalPrice: 1200,
-    parameters: 4,
-    description: "Designed specifically to screen, monitor, and regulate glycemic balance and early pre-diabetic indicators.",
-    includes: [
-      "HbA1c (Average Blood Sugar)",
-      "Blood Glucose Fasting",
-      "Blood Glucose Post-Prandial",
-      "Urine Microalbuminuria"
-    ],
-    duration: "Report in 8 hours"
-  },
-  {
-    id: "lt3",
-    name: "Active Cardiac Risk Screening",
-    price: 999,
-    originalPrice: 2200,
-    parameters: 12,
-    description: "Comprehensive panel to assess lipid distribution, cardiac biomarkers, and potential arterial inflammation risks.",
-    includes: [
-      "High Sensitivity C-Reactive Protein (hs-CRP)",
-      "Apolipoprotein A1 & B ratio",
-      "Lipid Profile Plus (VLDL, LDL, HDL, Triglycerides)",
-      "Homocysteine Cardio-risk indicator"
-    ],
-    duration: "Report in 18 hours"
-  },
-  {
-    id: "lt4",
-    name: "Complete Essential Vitamin Deficiency Profile",
-    price: 799,
-    originalPrice: 1800,
-    parameters: 2,
-    description: "Evaluates Vitamin D3 (immune, bone health) and Vitamin B12 (nervous coordination, blood cell health) serum concentration.",
-    includes: [
-      "25-Hydroxy Vitamin D",
-      "Vitamin B12 Cyanocobalamin"
-    ],
-    duration: "Report in 6 hours"
-  }
-];
+// DOCTORS and LAB_TESTS datasets removed
 
 export const TESTIMONIALS = [
   {
@@ -432,7 +297,7 @@ export const TESTIMONIALS = [
     id: "t3",
     name: "Sandhya Iyer",
     rating: 5,
-    text: "The home sample collection for the Full Body Checkup test was completely seamless. The phlebotomist was extremely sterile, professional, and I received my digital report online in less than 8 hours. Highly recommended!",
+    text: "I am extremely pleased with the monthly chronic care refill subscription service. My hypertension medicines arrive automatically on the 1st of every month at a great discount. Never have to worry about running out!",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60"
   }
 ];

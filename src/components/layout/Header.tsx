@@ -2,11 +2,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useApp, PageName } from "@/context/AppContext";
 import { PRODUCTS, type Product } from "@/data/mockData";
+import Image from "next/image";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
   Phone, ChevronDown, ChevronRight, Package, User,
-  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock,
-  FlaskConical, Stethoscope
+  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock
 } from "lucide-react";
 
 /* ── search helpers ─────────────────────────────────────────────────────── */
@@ -161,7 +161,7 @@ function SearchDropdown({
                   >
                     {/* Product image */}
                     <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 shadow-sm">
-                      <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                      <Image src={p.image} alt={p.name} width={44} height={44} className="w-full h-full object-cover" />
                     </div>
 
                     {/* Product info */}
@@ -314,8 +314,8 @@ export default function Header() {
       {/* Main header */}
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "shadow-xl shadow-black/10 dark:shadow-black/30 backdrop-blur-xl bg-white/90 dark:bg-gray-950/90 border-b border-gray-200/50 dark:border-gray-800/50"
-          : "bg-white/85 dark:bg-gray-950/85 backdrop-blur-md border-b border-gray-100/50 dark:border-gray-900/50"
+          ? "shadow-lg shadow-emerald-950/5 dark:shadow-emerald-950/20 backdrop-blur-xl bg-white/90 dark:bg-gray-950/90 border-b border-emerald-500/10 dark:border-emerald-900/30"
+          : "bg-white/85 dark:bg-gray-950/85 backdrop-blur-md border-b border-gray-150/40 dark:border-gray-900/40"
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center h-16 gap-4">
@@ -346,11 +346,11 @@ export default function Header() {
                     setDropdownOpen(true);
                   }}
                   placeholder="Search medicines, salt compositions..."
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all placeholder:text-gray-400"
+                  className="w-full bg-gray-50/80 dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-700/80 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-900 transition-all placeholder:text-gray-400 font-medium shadow-sm hover:border-gray-300 dark:hover:border-gray-600 focus:shadow-md focus:shadow-emerald-500/5"
                 />
                 <button
                   onClick={() => { if (searchQuery.trim()) { setActivePage("shop"); closeDropdown(); } }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
                 </button>
@@ -372,15 +372,15 @@ export default function Header() {
 
 
             {/* Nav links – desktop */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1.5">
               {NAV_LINKS.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => setActivePage(link.page)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
                     activePage === link.page
-                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100/50 dark:border-emerald-900/30"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -592,8 +592,6 @@ export default function Header() {
                     { label: "Home", page: "home" as const, icon: Home },
                     { label: "Shop Medicines", page: "shop" as const, icon: Package },
                     { label: "Upload Rx", page: "upload" as const, icon: Upload },
-                    { label: "Lab Checkups", page: "labtests" as const, icon: FlaskConical },
-                    { label: "Online Consult", page: "doctors" as const, icon: Stethoscope },
                   ].map(({ label, page, icon: Icon }) => (
                     <button
                       key={label}

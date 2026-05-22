@@ -3,9 +3,8 @@ import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import Image from "next/image";
 import {
-  Mail, Phone, MapPin, Info, ShieldCheck, HelpCircle,
-  Target, Compass, Send, CheckCircle, FileText, ArrowRight,
-  Sparkles, Award, ShieldAlert, Heart
+  Mail, Phone, MapPin, ShieldCheck, HelpCircle,
+  Send, CheckCircle, FileText, Sparkles, Award, ShieldAlert
 } from "lucide-react";
 
 export default function StaticPages() {
@@ -337,7 +336,7 @@ export default function StaticPages() {
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex gap-3 text-xs leading-relaxed">
                   <ShieldAlert className="w-5 h-5 flex-shrink-0 text-amber-500" />
                   <span>
-                    <strong>Medical Emergency Notice:</strong> MS Care online portal is for scheduled purchases and diagnostic consults. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
+                    <strong>Medical Emergency Notice:</strong> MS Care online portal is for scheduled medicine purchases. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
                   </span>
                 </div>
               </div>
@@ -436,7 +435,7 @@ export default function StaticPages() {
               {[
                 { q: "Is MS Care a licensed online pharmacy in India?", a: "Yes. MS Care holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors." },
                 { q: "How do I upload my medical prescription?", a: "Navigate to the 'Upload Rx' tab on the header, drag & drop your PDF or image slip, and our clinical OCR will automatically parse the matched drugs." },
-                { q: "How long does home sample lab test collection take?", a: "Our certified phlebotomists will arrive at your home slot selection. Samples are processed, and digital results are sent to your dashboard within 12 hours." },
+                { q: "Do you deliver medicines across India?", a: "Yes, we ship to over 20,000 pin codes across India. For metro cities like Delhi NCR, Mumbai, and Bangalore, we offer express 4-hour delivery." },
                 { q: "Are all medicines sourced from genuine suppliers?", a: "Yes, all products on MS Care are sourced directly from verified licensed manufacturers and packed under supervision." },
                 { q: "What is your medicine return policy?", a: "We offer an easy 100% replacement or refund for damaged, wrong, or expired medicines. Raise a request from the dashboard within 7 days of delivery." },
                 { q: "How does the 4-hour express delivery work?", a: "For emergency medications, orders placed before 6 PM in Delhi NCR, Mumbai, and Bangalore qualify for express 4-hour temperature-controlled deliveries." }
@@ -500,7 +499,7 @@ export default function StaticPages() {
               <div className="space-y-4">
                 {[
                   { title: "1. Doctor Prescription Verification", desc: "Substances scheduled under CDSCO regulations (e.g. Schedule H, H1, X drugs) REQUIRE a valid digital or scanned doctor prescription. Orders will remain pending check until our certified pharmacists verify the slip." },
-                  { title: "2. Age & Patient Eligibility", desc: "You must be at least 18 years of age to initiate payments, book diagnostic health packages, or order clinical prescription drugs." },
+                  { title: "2. Age & Patient Eligibility", desc: "You must be at least 18 years of age to initiate payments or order clinical prescription drugs." },
                   { title: "3. Delivery & cold-chain Handling", desc: "Medications requiring cold-chain temperature control (e.g. insulin vials) must be accepted immediately upon delivery by our express handlers to prevent molecule decay." },
                   { title: "4. Order Cancellation & Drug Returns", desc: "Due to CDSCO drug quality guidelines, opened medication strips or items stored incorrectly by patients cannot be returned. Sealed boxes can be returned within 7 days." },
                   { title: "5. Disclaimer of Liability", desc: "MS Care provides logistical procurement and licensed pharmacist checks. Medical consultations represent individual physician views and do not replace inpatient hospital care." }

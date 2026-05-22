@@ -1,6 +1,6 @@
 "use client";
 import { useApp } from "@/context/AppContext";
-import { CheckCircle2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 export default function SuccessPage() {
   const { setActivePage, orders } = useApp();

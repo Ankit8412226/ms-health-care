@@ -1,6 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { PRODUCTS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
@@ -21,22 +20,13 @@ export default function DashboardPage() {
     deleteAddress
   } = useApp();
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 
-  const [activeSubTab, setActiveSubTab] = useState<"orders" | "rx" | "wish" | "addr">("orders");
-
-  useEffect(() => {
-    if (tabParam === "wish") {
-      setActiveSubTab("wish");
-    } else if (tabParam === "orders") {
-      setActiveSubTab("orders");
-    } else if (tabParam === "rx") {
-      setActiveSubTab("rx");
-    } else if (tabParam === "addr") {
-      setActiveSubTab("addr");
-    }
-  }, [tabParam]);
+  const activeSubTab = (tabParam === "wish" || tabParam === "orders" || tabParam === "rx" || tabParam === "addr")
+    ? (tabParam as "orders" | "rx" | "wish" | "addr")
+    : "orders";
 
   const wProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
 
@@ -86,7 +76,7 @@ export default function DashboardPage() {
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveSubTab(id as any)}
+                onClick={() => router.push(`/dashboard?tab=${id}`)}
                 className={`flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-[10px] sm:text-xs font-bold text-center sm:text-left transition-colors ${
                   activeSubTab === id
                     ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600"
