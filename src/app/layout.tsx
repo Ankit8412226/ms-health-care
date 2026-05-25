@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import AddedToCartModal from "@/components/ui/AddedToCartModal";
+import ConditionalConsumerLayout from "@/components/layout/ConditionalConsumerLayout";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -88,14 +86,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <AppProvider>
-          <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 font-sans">
-            <Header />
-            <main className="flex-grow pb-16 md:pb-8">
-              {children}
-            </main>
-            <Footer />
-            <AddedToCartModal />
-          </div>
+          <ConditionalConsumerLayout>
+            {children}
+          </ConditionalConsumerLayout>
         </AppProvider>
       </body>
     </html>

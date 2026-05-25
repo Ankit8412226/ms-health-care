@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Product, PRODUCTS } from "@/data/mockData";
+import { Product, PRODUCTS, CATEGORIES } from "@/data/mockData";
 
 function generateOrderId(): string {
   return `OD-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -99,6 +99,14 @@ interface AppContextType {
   removeCoupon: () => void;
   addedProduct: Product | null;
   setAddedProduct: (product: Product | null) => void;
+  products: Product[];
+  updateOrderStatus: (orderId: string, status: Order["status"]) => void;
+  updatePrescriptionStatus: (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => void;
+  updateProductPrice: (productId: string, price: number) => void;
+  deleteProduct: (productId: string) => void;
+  addProduct: (product: Product) => void;
+  categories: { id: string; name: string; icon: string }[];
+  addCategory: (name: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -124,6 +132,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const activePage = getActivePageFromPath(pathname);
 
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [categories, setCategories] = useState(CATEGORIES);
   const [selectedProductId, setSelectedProductId] = useState<string>("p1");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>(["p3", "p5", "p6"]);
@@ -224,7 +234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     {
       id: "rx1",
       name: "Diabetes_Management_May2026.pdf",
-      url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100",
+      url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500",
       date: "2026-05-18",
       status: "Verified",
       extractedMedicines: ["Metformin Glycomet 500mg SR", "Paracetamol Crocin Advance 650mg"],
@@ -232,7 +242,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     {
       id: "rx2",
       name: "Dermatology_Consultation_Apr2026.pdf",
-      url: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=100",
+      url: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500",
       date: "2026-04-30",
       status: "Verified",
       extractedMedicines: ["Cetaphil Gentle Skin Cleanser"],
@@ -240,7 +250,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     {
       id: "rx3",
       name: "Cardiology_Followup_May2026.pdf",
-      url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100",
+      url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500",
       date: "2026-05-22",
       status: "Processing (OCR)",
     },
@@ -391,7 +401,57 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   };
 
+  const updateOrderStatus = (orderId: string, status: Order["status"]) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+    );
+  };
 
+  const updatePrescriptionStatus = (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => {
+    setPrescriptions((prev) =>
+      prev.map((p) => {
+        if (p.id === rxId) {
+          const updated = { ...p, status };
+          if (extractedMedicines) {
+            updated.extractedMedicines = extractedMedicines;
+          }
+          return updated;
+        }
+        return p;
+      })
+    );
+  };
+
+  const updateProductPrice = (productId: string, price: number) => {
+    const pIndex = PRODUCTS.findIndex((prod) => prod.id === productId);
+    if (pIndex !== -1) {
+      PRODUCTS[pIndex].price = price;
+    }
+    setProducts([...PRODUCTS]);
+  };
+
+  const deleteProduct = (productId: string) => {
+    const pIndex = PRODUCTS.findIndex((prod) => prod.id === productId);
+    if (pIndex !== -1) {
+      PRODUCTS.splice(pIndex, 1);
+    }
+    setProducts([...PRODUCTS]);
+  };
+
+  const addProduct = (product: Product) => {
+    PRODUCTS.push(product);
+    setProducts([...PRODUCTS]);
+  };
+
+  const addCategory = (name: string) => {
+    const newCat = {
+      id: name.toLowerCase().trim().replace(/\s+/g, "-"),
+      name: name.trim(),
+      icon: "Folder",
+    };
+    CATEGORIES.push(newCat);
+    setCategories([...CATEGORIES]);
+  };
 
   const applyCoupon = (code: string) => {
     const cleanCode = code.toUpperCase().trim();
@@ -447,6 +507,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         removeCoupon,
         addedProduct,
         setAddedProduct,
+        products,
+        updateOrderStatus,
+        updatePrescriptionStatus,
+        updateProductPrice,
+        deleteProduct,
+        addProduct,
+        categories,
+        addCategory,
       }}
     >
       {children}
