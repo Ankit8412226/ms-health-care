@@ -10,25 +10,25 @@ import Image from "next/image";
 
 export default function DetailPage() {
   const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage } = useApp();
-  const [activeTab, setActiveTab] = useState<"desc" | "benefits" | "use" | "side" | "safety">("desc");
+  const [activeTab, setActiveTab] = useState<"desc" | "benefits" | "use" | "side">("desc");
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const product = PRODUCTS.find((p) => p.id === selectedProductId) || PRODUCTS[0];
   const isWished = wishlist.includes(product.id);
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const discount = Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
 
   // Find similar products based on matching salt composition first, then fallback/pad with category
   const getSimilarProducts = () => {
     let matches: typeof PRODUCTS = [];
-    if (product.saltComposition) {
-      const currentSalts = product.saltComposition.toLowerCase().split(/[\s,()\-+]+/).filter(w => w.length > 3);
+    if (product.salt) {
+      const currentSalts = product.salt.toLowerCase().split(/[\s,()\-+]+/).filter((w: string) => w.length > 3);
       matches = PRODUCTS.filter((p) => {
         if (p.id === product.id) return false;
-        if (!p.saltComposition) return false;
-        const otherSalts = p.saltComposition.toLowerCase();
-        return currentSalts.some(salt => otherSalts.includes(salt));
+        if (!p.salt) return false;
+        const otherSalts = p.salt.toLowerCase();
+        return currentSalts.some((salt: string) => otherSalts.includes(salt));
       });
     }
 
@@ -98,10 +98,11 @@ export default function DetailPage() {
               </span>
             )}
           </div>
+          {/* Image gallery - uses product.images array from API */}
           <div className="grid grid-cols-4 gap-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
-                <Image src={product.image} alt={product.name} fill className="object-cover hover:opacity-80" />
+            {(product.images.length > 1 ? product.images : [product.images[0], product.images[0], product.images[0], product.images[0]]).slice(0, 4).map((img, i) => (
+              <div key={img.id ?? i} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
+                <Image src={img.thumbnail || img.src} alt={img.alt || product.name} fill className="object-cover hover:opacity-80" />
               </div>
             ))}
           </div>
@@ -110,10 +111,10 @@ export default function DetailPage() {
         {/* Info Column */}
         <div className="lg:col-span-7 space-y-6">
           <div>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{product.manufacturer}</span>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{product.brand || product.manufacturer}</span>
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">{product.name}</h1>
-            {product.saltComposition && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono">Composition: {product.saltComposition}</p>
+            {product.salt && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono">Composition: {product.salt}{product.dosage ? ` • ${product.dosage}` : ""}</p>
             )}
           </div>
 
@@ -132,8 +133,8 @@ export default function DetailPage() {
               <span className="text-3xl font-black text-gray-900 dark:text-white">₹{product.price}</span>
               {discount > 0 && (
                 <>
-                  <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
-                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Save ₹{product.originalPrice - product.price} ({discount}% off)</span>
+                  <span className="text-lg text-gray-400 line-through">₹{product.regularPrice}</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Save ₹{product.regularPrice - product.price} ({discount}% off)</span>
                 </>
               )}
             </div>
@@ -183,20 +184,20 @@ export default function DetailPage() {
           {/* Quick Specifications list */}
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div className="space-y-1">
-              <span className="text-gray-400">Dosage Form:</span>
-              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.form}</p>
-            </div>
-            <div className="space-y-1">
               <span className="text-gray-400">Pack Size:</span>
               <p className="font-semibold text-gray-800 dark:text-gray-200">{product.packSize}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-gray-400">Storage:</span>
-              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.storage}</p>
+              <span className="text-gray-400">Dosage:</span>
+              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.dosage || "As prescribed"}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-gray-400">Expiry Date:</span>
-              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.expiryDate}</p>
+              <span className="text-gray-400">Manufacturer:</span>
+              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.manufacturer}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-gray-400">Storage:</span>
+              <p className="font-semibold text-gray-800 dark:text-gray-200">{product.storage}</p>
             </div>
           </div>
         </div>
@@ -205,15 +206,12 @@ export default function DetailPage() {
       {/* Tabs / Medical Details */}
       <div className="mb-12 border-t border-gray-150 dark:border-gray-850 pt-8">
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto gap-4 scrollbar-none">
-          {(
-            [
-              { id: "desc", label: "Description" },
+          {([
+              { id: "desc",     label: "Description" },
               { id: "benefits", label: "Benefits" },
-              { id: "use", label: "How to Use" },
-              { id: "side", label: "Side Effects" },
-              { id: "safety", label: "Safety Warnings" },
-            ] as const
-          ).map((tab) => (
+              { id: "use",      label: "How to Use" },
+              { id: "side",     label: "Side Effects" },
+            ] as const).map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -241,25 +239,14 @@ export default function DetailPage() {
             </div>
           )}
           {activeTab === "benefits" && (
-            <ul className="list-disc pl-5 space-y-2">
-              {product.benefits.map((b) => (
-                <li key={b}>{b}</li>
-              ))}
-            </ul>
+            <p>{product.benefits}</p>
           )}
           {activeTab === "use" && (
-            <p>{product.usageInstructions}</p>
+            <p>{product.howToUse}</p>
           )}
           {activeTab === "side" && (
             <ul className="list-disc pl-5 space-y-2 text-red-600 dark:text-red-400">
               {product.sideEffects.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          )}
-          {activeTab === "safety" && (
-            <ul className="list-disc pl-5 space-y-2">
-              {product.safetyInfo.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>

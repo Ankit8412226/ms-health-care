@@ -84,19 +84,22 @@ export default function AdminPage() {
     addCategory,
   } = useApp();
 
-  // Expanded Product Creation Form State
+  // Product Creation Form State
   const [newProdName, setNewProdName] = useState("");
+  const [newProdSlug, setNewProdSlug] = useState("");
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdCategory, setNewProdCategory] = useState("prescription");
-  const [newProdForm, setNewProdForm] = useState("Tablet");
-  const [newProdPack, setNewProdPack] = useState("10 Tablets in a strip");
+  const [newProdDosage, setNewProdDosage] = useState("");
+  const [newProdPack, setNewProdPack] = useState("10 Tablets in 1 Strip");
   const [newProdMfg, setNewProdMfg] = useState("Cipla Pharmaceuticals");
+  const [newProdBrand, setNewProdBrand] = useState("");
   const [newProdRxReq, setNewProdRxReq] = useState(false);
   const [newProdImage, setNewProdImage] = useState("");
   const [newProdSalt, setNewProdSalt] = useState("");
   const [newProdDesc, setNewProdDesc] = useState("");
+  const [newProdShortDesc, setNewProdShortDesc] = useState("");
   const [newProdSideEffects, setNewProdSideEffects] = useState("");
-  const [newProdSafety, setNewProdSafety] = useState("");
+  const [newProdStorage, setNewProdStorage] = useState("Store below 25°C. Protect from light and moisture.");
 
   // Success message toast simulation
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -174,14 +177,13 @@ export default function AdminPage() {
     });
   }, [prescriptions, searchTerm, statusFilter]);
 
-  // Filters for Products
   const filteredProducts = useMemo(() => {
     return products.filter((prod) => {
       const matchesSearch =
         prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (prod.saltComposition &&
-          prod.saltComposition.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        prod.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
+        (prod.salt && prod.salt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        prod.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        prod.brand.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter =
         statusFilter === "all" || prod.category === statusFilter;
       return matchesSearch && matchesFilter;
@@ -233,57 +235,60 @@ export default function AdminPage() {
       return;
     }
 
-    // Process comma separated lists
     const sideEffectsArr = newProdSideEffects
       ? newProdSideEffects.split(",").map(s => s.trim()).filter(Boolean)
       : ["Mild nausea", "Headache"];
-    const safetyArr = newProdSafety
-      ? newProdSafety.split(",").map(s => s.trim()).filter(Boolean)
-      : ["Consult physician before starting therapy", "Monitor dosage closely"];
 
     const defaultImage = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500";
     const finalImage = newProdImage.trim() || defaultImage;
+    const finalSlug = newProdSlug.trim() || newProdName.toLowerCase().replace(/\s+/g, "-");
+    const finalBrand = newProdBrand.trim() || newProdMfg;
 
     const newProduct: Product = {
       id: `p_${Date.now()}`,
       name: newProdName,
-      category: newProdCategory,
+      slug: finalSlug,
+      description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
+      shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
       price: priceNum,
-      originalPrice: Math.round(priceNum * 1.25),
-      rating: 4.8,
-      reviewCount: 12,
+      regularPrice: Math.round(priceNum * 1.25),
+      onSale: true,
+      rating: 0,
+      reviewCount: 0,
+      category: newProdCategory,
+      categoryName: categories.find(c => c.id === newProdCategory)?.name || newProdCategory,
+      brand: finalBrand,
+      images: [{ id: Date.now(), src: finalImage, alt: newProdName, thumbnail: finalImage }],
       image: finalImage,
       manufacturer: newProdMfg || "Cipla Pharmaceuticals",
       prescriptionRequired: newProdRxReq,
-      form: newProdForm || "Tablet",
-      packSize: newProdPack || "10 Tablets in a strip",
-      expiryDate: "05/2028",
-      storage: "Store below 25°C. Keep protected from excessive light and heat.",
-      usageInstructions: "To be taken orally with water, as recommended by a licensed clinician.",
+      dosage: newProdDosage.trim() || undefined,
+      packSize: newProdPack || "10 Tablets in 1 Strip",
+      storage: newProdStorage || "Store below 25°C. Protect from light and moisture.",
+      howToUse: "Take as prescribed by your doctor.",
       sideEffects: sideEffectsArr,
-      safetyInfo: safetyArr,
-      countryOfOrigin: "India",
-      description: newProdDesc.trim() || `Genuine high-efficacy clinical formulation for the active support in ${newProdCategory} medical indications.`,
-      benefits: ["Fast therapeutic action", "Clinically formulated and tested in certified GMP labs"],
-      saltComposition: newProdSalt.trim() || undefined
+      benefits: `Effective clinical formulation for ${newProdCategory} indications.`,
+      salt: newProdSalt.trim() || undefined,
     };
 
     addProduct(newProduct);
     setShowAddProductModal(false);
     
-    // Clear form fields
     setNewProdName("");
+    setNewProdSlug("");
     setNewProdPrice("");
     setNewProdCategory("prescription");
-    setNewProdForm("Tablet");
-    setNewProdPack("10 Tablets in a strip");
+    setNewProdDosage("");
+    setNewProdPack("10 Tablets in 1 Strip");
     setNewProdMfg("Cipla Pharmaceuticals");
+    setNewProdBrand("");
     setNewProdRxReq(false);
     setNewProdImage("");
     setNewProdSalt("");
     setNewProdDesc("");
+    setNewProdShortDesc("");
     setNewProdSideEffects("");
-    setNewProdSafety("");
+    setNewProdStorage("Store below 25°C. Protect from light and moisture.");
     
     triggerToast(`Added ${newProdName} to catalog successfully!`);
   };
@@ -976,9 +981,9 @@ export default function AdminPage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-800 truncate max-w-xs">{prod.name}</p>
-                                {prod.saltComposition && (
+                                {prod.salt && (
                                   <p className="text-[10px] text-slate-400 truncate max-w-xs mt-0.5 font-semibold">
-                                    {prod.saltComposition}
+                                    {prod.salt}{prod.dosage ? ` · ${prod.dosage}` : ""}
                                   </p>
                                 )}
                               </div>
@@ -990,7 +995,7 @@ export default function AdminPage() {
                             </span>
                           </td>
                           <td className="py-4 font-semibold text-slate-700">
-                            {prod.form}
+                            {prod.dosage || "—"}
                             <span className="block text-[10px] text-slate-400 mt-0.5 font-bold">{prod.packSize}</span>
                           </td>
                           <td className="py-4 font-bold text-slate-500">{prod.manufacturer}</td>
@@ -1199,7 +1204,7 @@ export default function AdminPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-850 truncate">{item.product.name}</p>
                           <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                            {item.product.form} ({item.product.packSize}) | Price: ₹{item.product.price}
+                            {item.product.dosage || item.product.packSize} | Price: ₹{item.product.price}
                           </p>
                         </div>
                         <div className="text-right whitespace-nowrap shrink-0 pl-2">
@@ -1571,17 +1576,16 @@ export default function AdminPage() {
                   </select>
                 </div>
 
-                {/* Form factor */}
+                {/* Form factor → Dosage */}
                 <div>
                   <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                    Form Factor
+                    Dosage Strength
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Capsule, Tablet, Liquid"
-                    value={newProdForm}
-                    onChange={(e) => setNewProdForm(e.target.value)}
+                    placeholder="e.g. 360MG, 500MG, 10MG"
+                    value={newProdDosage}
+                    onChange={(e) => setNewProdDosage(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
                 </div>
@@ -1627,52 +1631,66 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Abbott Labs, Cipla"
+                    placeholder="e.g. Concord Biotech Ltd"
                     value={newProdMfg}
                     onChange={(e) => setNewProdMfg(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
                 </div>
 
-                {/* Image URL Link */}
+                {/* Brand */}
                 <div>
-                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                    <LinkIcon className="w-3 h-3" /> Image Link / URL
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                    Brand Name
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. https://domain.com/tablet.jpg"
-                    value={newProdImage}
-                    onChange={(e) => setNewProdImage(e.target.value)}
+                    placeholder="e.g. CONCORD BIOTECH LIMITED"
+                    value={newProdBrand}
+                    onChange={(e) => setNewProdBrand(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
                 </div>
               </div>
 
-              {/* Side Effects list (comma separated) */}
+              {/* Image URL */}
               <div>
-                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                  Side Effects (comma-separated list)
+                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3" /> Image Link / URL
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Nausea, Drowsiness, Stomach discomfort"
+                  placeholder="e.g. https://domain.com/tablet.jpg"
+                  value={newProdImage}
+                  onChange={(e) => setNewProdImage(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
+                />
+              </div>
+
+              {/* Side Effects list (comma separated) */}
+              <div>
+                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                  Side Effects (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Nausea, Headache, Diarrhea"
                   value={newProdSideEffects}
                   onChange={(e) => setNewProdSideEffects(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                 />
               </div>
 
-              {/* Safety guidelines (comma separated) */}
+              {/* Storage instructions */}
               <div>
                 <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                  Safety Guidelines (comma-separated list)
+                  Storage Instructions
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Do not consume alcohol, Monitor blood sugar regularly"
-                  value={newProdSafety}
-                  onChange={(e) => setNewProdSafety(e.target.value)}
+                  placeholder="e.g. Store below 30°C. Protect from light."
+                  value={newProdStorage}
+                  onChange={(e) => setNewProdStorage(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                 />
               </div>

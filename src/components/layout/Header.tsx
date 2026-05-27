@@ -15,7 +15,7 @@ function searchProducts(q: string): Product[] {
   return PRODUCTS.filter(
     (p) =>
       p.name.toLowerCase().includes(lq) ||
-      (p.saltComposition && p.saltComposition.toLowerCase().includes(lq))
+      (p.salt && p.salt.toLowerCase().includes(lq))
   ).slice(0, 5);
 }
 
@@ -169,18 +169,18 @@ function SearchDropdown({
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate leading-snug">
                         <Highlight text={p.name} query={trimmedQ} />
                       </p>
-                      {p.saltComposition && (
+                      {p.salt && (
                         <p className="flex items-center gap-1 mt-0.5">
                           <span className="shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Salt</span>
                           <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
-                            <Highlight text={p.saltComposition} query={trimmedQ} />
+                            <Highlight text={p.salt} query={trimmedQ} />
                           </span>
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">₹{p.price}</span>
-                        {p.originalPrice > p.price && (
-                          <span className="text-[10px] text-gray-400 line-through">₹{p.originalPrice}</span>
+                        {p.regularPrice > p.price && (
+                          <span className="text-[10px] text-gray-400 line-through">₹{p.regularPrice}</span>
                         )}
                         {p.prescriptionRequired && (
                           <span className="text-[9px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">Rx</span>

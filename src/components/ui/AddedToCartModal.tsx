@@ -91,8 +91,8 @@ export default function AddedToCartModal() {
                 </span>
                 <div className="flex items-center gap-2 pt-1">
                   <span className="text-sm font-black text-gray-900 dark:text-white">₹{addedProduct.price}</span>
-                  {addedProduct.originalPrice > addedProduct.price && (
-                    <span className="text-xs text-gray-400 line-through">₹{addedProduct.originalPrice}</span>
+                  {addedProduct.regularPrice > addedProduct.price && (
+                    <span className="text-xs text-gray-400 line-through">₹{addedProduct.regularPrice}</span>
                   )}
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function AddedToCartModal() {
               <div className="grid sm:grid-cols-3 gap-4">
                 {similarProducts.map((p) => {
                   const isAdded = addedIds.includes(p.id);
-                  const discount = Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100);
+                  const discount = Math.round(((p.regularPrice - p.price) / p.regularPrice) * 100);
 
                   return (
                     <div
@@ -169,8 +169,8 @@ export default function AddedToCartModal() {
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-800/50">
                         <div className="flex flex-col">
                           <span className="text-xs font-black text-gray-900 dark:text-white">₹{p.price}</span>
-                          {p.originalPrice > p.price && (
-                            <span className="text-[9px] text-gray-400 line-through">₹{p.originalPrice}</span>
+                          {p.regularPrice > p.price && (
+                            <span className="text-[9px] text-gray-400 line-through">₹{p.regularPrice}</span>
                           )}
                         </div>
 

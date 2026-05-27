@@ -7,7 +7,7 @@ import Image from "next/image";
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, wishlist, toggleWishlist, setActivePage, setSelectedProductId } = useApp();
   const isWished = wishlist.includes(product.id);
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const discount = Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
 
   const handleView = () => {
     setSelectedProductId(product.id);
@@ -55,9 +55,9 @@ export default function ProductCard({ product }: { product: Product }) {
             <Eye className="w-4 h-4 text-emerald-600" />
           </div>
         </div>
-        {product.bestSeller && (
-          <div className="absolute bottom-2 left-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-950 text-[8px] font-black tracking-widest px-2 py-0.5 rounded shadow-sm">
-            BEST SELLER
+        {product.onSale && product.regularPrice > product.price && (
+          <div className="absolute bottom-2 left-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[8px] font-black tracking-widest px-2 py-0.5 rounded shadow-sm">
+            ON SALE
           </div>
         )}
       </button>
@@ -85,7 +85,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center justify-between w-full mt-4 pt-3 border-t border-gray-50 dark:border-gray-900/50">
           <div className="flex flex-col">
             {discount > 0 && (
-              <span className="text-[10px] text-gray-400 line-through leading-none mb-0.5">₹{product.originalPrice}</span>
+              <span className="text-[10px] text-gray-400 line-through leading-none mb-0.5">₹{product.regularPrice}</span>
             )}
             <span className="text-base font-black text-gray-950 dark:text-white leading-none">₹{product.price}</span>
           </div>

@@ -25,7 +25,7 @@ function heroSearchProducts(q: string): Product[] {
   return PRODUCTS.filter(
     (p) =>
       p.name.toLowerCase().includes(lq) ||
-      (p.saltComposition && p.saltComposition.toLowerCase().includes(lq))
+      (p.salt && p.salt.toLowerCase().includes(lq))
   ).slice(0, 6);
 }
 
@@ -278,7 +278,7 @@ function HomeFaqWidget() {
 
 export default function HomePage() {
   const { setActivePage, setSelectedProductId } = useApp();
-  const featured = PRODUCTS.filter((p) => p.bestSeller);
+  const featured = PRODUCTS.filter((p) => p.onSale).slice(0, 8);
 
   /* hero search state */
   const [heroQ, setHeroQ] = useState("");
@@ -439,18 +439,18 @@ export default function HomePage() {
                                     <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
                                       <HeroHighlight text={p.name} query={trimmedHeroQ} />
                                     </p>
-                                    {p.saltComposition && (
+                                    {p.salt && (
                                       <p className="flex items-center gap-1 mt-0.5">
                                         <span className="shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Salt</span>
                                         <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
-                                          <HeroHighlight text={p.saltComposition} query={trimmedHeroQ} />
+                                          <HeroHighlight text={p.salt} query={trimmedHeroQ} />
                                         </span>
                                       </p>
                                     )}
                                     <div className="flex items-center gap-2 mt-1">
                                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">₹{p.price}</span>
-                                      {p.originalPrice > p.price && (
-                                        <span className="text-[10px] text-gray-400 line-through">₹{p.originalPrice}</span>
+                                      {p.regularPrice > p.price && (
+                                        <span className="text-[10px] text-gray-400 line-through">₹{p.regularPrice}</span>
                                       )}
                                       {p.prescriptionRequired && (
                                         <span className="text-[9px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">Rx</span>
