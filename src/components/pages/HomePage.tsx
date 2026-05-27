@@ -637,7 +637,9 @@ export default function HomePage() {
       </section>
 
       {/* ===== VISION & MISSION SECTION (ABOUT US) ===== */}
-      <section className="relative py-24 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white overflow-hidden bg-grid">
+      <section className="relative py-24 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white overflow-hidden">
+        {/* Intersecting grid background pattern */}
+        <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
         {/* Overlay gradient mask */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-950/20 to-emerald-950 pointer-events-none" />
         <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -929,7 +931,9 @@ export default function HomePage() {
       </section>
 
       {/* ===== APP DOWNLOAD ===== */}
-      <section className="py-24 bg-gradient-to-br from-slate-900 via-emerald-950 to-cyan-950 text-white relative overflow-hidden bg-grid border-t border-emerald-950/20">
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-emerald-950 to-cyan-950 text-white relative overflow-hidden border-t border-emerald-950/20">
+        {/* Intersecting grid background pattern */}
+        <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
         <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 

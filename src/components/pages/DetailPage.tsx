@@ -101,7 +101,7 @@ export default function DetailPage() {
           {/* Image gallery - uses product.images array from API */}
           <div className="grid grid-cols-4 gap-2">
             {(product.images.length > 1 ? product.images : [product.images[0], product.images[0], product.images[0], product.images[0]]).slice(0, 4).map((img, i) => (
-              <div key={img.id ?? i} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
+              <div key={`${img.id ?? ''}_${i}`} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
                 <Image src={img.thumbnail || img.src} alt={img.alt || product.name} fill className="object-cover hover:opacity-80" />
               </div>
             ))}
