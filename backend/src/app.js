@@ -6,6 +6,7 @@ const app = express();
 
 // Enable Cross-Origin Resource Sharing (CORS)
 app.use(cors());
+app.options('*', cors());
 
 // Body parser middlewares
 app.use(express.json());
