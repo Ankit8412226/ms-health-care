@@ -141,16 +141,23 @@ productSchema.pre('validate', function (next) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   }
-  
+
   // Set onSale dynamically if price is lower than regularPrice
   if (this.price < this.regularPrice) {
     this.onSale = true;
   } else {
     this.onSale = false;
   }
-  
+
   next();
 });
+
+
+productSchema.index({ category: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ rating: -1 });
+productSchema.index({ reviewCount: -1 });
+productSchema.index({ name: 'text', salt: 'text', brand: 'text' });
 
 const Product = mongoose.model('Product', productSchema);
 

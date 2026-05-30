@@ -218,18 +218,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ── Fetch products & categories from API on mount ─────────────────────
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/products`);
-      if (res.ok) {
-        const json = await res.json();
+      // 1. Fetch initial limited products for instant load
+      const resLimit = await fetch(`${API_URL}/products?limit=24`);
+      if (resLimit.ok) {
+        const json = await resLimit.json();
         if (json.success && json.data) {
           const mapped = json.data.map(mapApiProduct);
           setProducts(mapped);
         }
       }
+      setLoading(false); // Enable interactive state immediately
+
+      // 2. Fetch the remaining products in the background after page mounts
+      setTimeout(async () => {
+        try {
+          const resAll = await fetch(`${API_URL}/products`);
+          if (resAll.ok) {
+            const jsonAll = await resAll.json();
+            if (jsonAll.success && jsonAll.data) {
+              const mapped = jsonAll.data.map(mapApiProduct);
+              setProducts(mapped);
+            }
+          }
+        } catch (err) {
+          console.warn("Background progressive fetch failed:", err);
+        }
+      }, 800); // 800ms delay to let the initial animation/render complete smoothly
+
     } catch (err) {
-      console.warn("API unreachable, using fallback data:", err);
-      // Keep PRODUCTS fallback
-    } finally {
+      console.warn("API unreachable:", err);
       setLoading(false);
     }
   }, []);

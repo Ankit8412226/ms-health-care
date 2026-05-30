@@ -6,7 +6,7 @@ const Product = require('../models/Product');
  * @access  Public
  */
 const getProducts = async (req, res) => {
-  const { category, search } = req.query;
+  const { category, search, limit, page, sort } = req.query;
   const filter = {};
 
   if (category && category !== 'all') {
@@ -22,7 +22,36 @@ const getProducts = async (req, res) => {
   }
 
   try {
-    const products = await Product.find(filter);
+    let query = Product.find(filter);
+
+    // Sorting
+    if (sort) {
+      if (sort === 'low') query = query.sort({ price: 1 });
+      else if (sort === 'high') query = query.sort({ price: -1 });
+      else if (sort === 'rating') query = query.sort({ rating: -1 });
+      else if (sort === 'popular') query = query.sort({ reviewCount: -1 });
+    }
+
+    // Pagination
+    if (limit && limit !== 'all') {
+      const limitNum = parseInt(limit) || 12;
+      const pageNum = parseInt(page) || 1;
+      const skip = (pageNum - 1) * limitNum;
+
+      const total = await Product.countDocuments(filter);
+      const products = await query.skip(skip).limit(limitNum);
+
+      return res.status(200).json({
+        success: true,
+        count: products.length,
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / limitNum),
+        data: products
+      });
+    }
+
+    const products = await query;
     return res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     console.error('Get Products Error:', error.message);

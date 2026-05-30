@@ -127,6 +127,7 @@ export default function DetailPage() {
               src={product.image}
               alt={product.name}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover transition-transform duration-100"
               style={{
                 transform: isZoomed ? "scale(2)" : "scale(1)",
@@ -164,6 +165,7 @@ export default function DetailPage() {
                       src={img.thumbnail || img.src || product.image}
                       alt={img.alt || product.name}
                       fill
+                      sizes="100px"
                       className="object-cover hover:opacity-80"
                     />
                   </div>
