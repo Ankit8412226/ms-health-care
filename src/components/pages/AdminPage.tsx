@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import { Order, Prescription } from "@/context/AppContext";
-import { Product } from "@/data/mockData";
+import { Product } from "@/types";
 import Image from "next/image";
 import {
   LayoutDashboard,

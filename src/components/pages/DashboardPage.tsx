@@ -1,7 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
-import { PRODUCTS } from "@/data/mockData";
 import ProductCard from "@/components/ProductCard";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
@@ -17,7 +16,8 @@ export default function DashboardPage() {
     prescriptions,
     wishlist,
     addresses,
-    deleteAddress
+    deleteAddress,
+    products
   } = useApp();
 
   const router = useRouter();
@@ -28,7 +28,8 @@ export default function DashboardPage() {
     ? (tabParam as "orders" | "rx" | "wish" | "addr")
     : "orders";
 
-  const wProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
+  const sourceProducts = products || [];
+  const wProducts = sourceProducts.filter((p) => wishlist.includes(p.id));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">

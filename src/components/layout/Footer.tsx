@@ -1,9 +1,31 @@
 "use client";
+import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Heart, Mail, Phone, MapPin, Shield, Truck, Clock, CreditCard } from "lucide-react";
 
 export default function Footer() {
-  const { setActivePage } = useApp();
+  const { setActivePage, subscribeNewsletter } = useApp();
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      setMessage({ text: "Please enter a valid email address.", error: true });
+      return;
+    }
+    setSubmitting(true);
+    setMessage(null);
+    const res = await subscribeNewsletter(email);
+    setSubmitting(false);
+    if (res.success) {
+      setMessage({ text: res.message, error: false });
+      setEmail("");
+    } else {
+      setMessage({ text: res.message, error: true });
+    }
+  };
 
   return (
     <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300 pb-20 md:pb-0">
@@ -102,16 +124,30 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col items-center text-center md:items-start md:text-left">
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Stay Updated</h4>
             <p className="text-sm text-gray-400 mb-4 max-w-sm">Get health tips & exclusive discounts delivered to your inbox.</p>
-            <div className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 w-full"
-              />
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors w-full sm:w-auto">
-                Subscribe
-              </button>
-            </div>
+            <form onSubmit={handleSubscribe} className="w-full max-w-sm">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
+                  className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 w-full"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors w-full sm:w-auto flex items-center justify-center disabled:opacity-50"
+                >
+                  {submitting ? "Subscribing..." : "Subscribe"}
+                </button>
+              </div>
+              {message && (
+                <p className={`text-xs mt-2 ${message.error ? "text-rose-450 text-rose-400" : "text-emerald-450 text-emerald-400"}`}>
+                  {message.text}
+                </p>
+              )}
+            </form>
             <div className="mt-6 flex flex-col items-center md:items-start">
               <h5 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">We Accept</h5>
               <div className="flex flex-wrap justify-center md:justify-start gap-2">

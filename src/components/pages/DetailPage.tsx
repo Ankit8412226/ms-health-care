@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import { PRODUCTS } from "@/data/mockData";
+import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import {
   Star, Heart, ShoppingCart, AlertCircle, ShieldCheck
@@ -9,22 +9,68 @@ import {
 import Image from "next/image";
 
 export default function DetailPage() {
-  const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage } = useApp();
+  const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage, products, getProductById } = useApp();
   const [activeTab, setActiveTab] = useState<"desc" | "benefits" | "use" | "side">("desc");
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(true);
 
-  const product = PRODUCTS.find((p) => p.id === selectedProductId) || PRODUCTS[0];
+  useEffect(() => {
+    if (!selectedProductId) return;
+
+    const preloaded = (products || []).find((p) => p.id === selectedProductId);
+    if (preloaded) {
+      setProduct(preloaded);
+      setLoadingDetail(false);
+    } else {
+      setLoadingDetail(true);
+    }
+
+    getProductById(selectedProductId).then((fetched) => {
+      if (fetched) {
+        setProduct(fetched);
+      }
+      setLoadingDetail(false);
+    });
+  }, [selectedProductId, products, getProductById]);
+
+  const sourceProducts = products || [];
+
+  if (loadingDetail && !product) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-lg text-gray-400 font-semibold">Product not found.</p>
+        <button
+          onClick={() => setActivePage("shop")}
+          className="mt-4 px-6 py-2.5 bg-emerald-650 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer"
+        >
+          Go to Shop
+        </button>
+      </div>
+    );
+  }
+
   const isWished = wishlist.includes(product.id);
-  const discount = Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
+  const discount = (product.regularPrice > product.price && product.regularPrice > 0)
+    ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
+    : 0;
 
   // Find similar products based on matching salt composition first, then fallback/pad with category
   const getSimilarProducts = () => {
-    let matches: typeof PRODUCTS = [];
+    let matches: Product[] = [];
     if (product.salt) {
       const currentSalts = product.salt.toLowerCase().split(/[\s,()\-+]+/).filter((w: string) => w.length > 3);
-      matches = PRODUCTS.filter((p) => {
+      matches = sourceProducts.filter((p) => {
         if (p.id === product.id) return false;
         if (!p.salt) return false;
         const otherSalts = p.salt.toLowerCase();
@@ -33,14 +79,14 @@ export default function DetailPage() {
     }
 
     if (matches.length < 4) {
-      const categoryMatches = PRODUCTS.filter(
+      const categoryMatches = sourceProducts.filter(
         (p) => p.category === product.category && p.id !== product.id && !matches.some(m => m.id === p.id)
       );
       matches = [...matches, ...categoryMatches];
     }
 
     if (matches.length < 4) {
-      const otherProducts = PRODUCTS.filter(
+      const otherProducts = sourceProducts.filter(
         (p) => p.id !== product.id && !matches.some(m => m.id === p.id)
       );
       matches = [...matches, ...otherProducts];
@@ -100,11 +146,30 @@ export default function DetailPage() {
           </div>
           {/* Image gallery - uses product.images array from API */}
           <div className="grid grid-cols-4 gap-2">
-            {(product.images.length > 1 ? product.images : [product.images[0], product.images[0], product.images[0], product.images[0]]).slice(0, 4).map((img, i) => (
-              <div key={`${img.id ?? ''}_${i}`} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
-                <Image src={img.thumbnail || img.src} alt={img.alt || product.name} fill className="object-cover hover:opacity-80" />
-              </div>
-            ))}
+            {(() => {
+              const list = (product.images && product.images.length > 0)
+                ? product.images
+                : [{ id: 0, src: product.image, thumbnail: product.image, alt: product.name }];
+              
+              const paddedList = [...list];
+              while (paddedList.length < 4 && paddedList[0]) {
+                paddedList.push(paddedList[0]);
+              }
+
+              return paddedList.slice(0, 4).map((img, i) => {
+                if (!img) return null;
+                return (
+                  <div key={`${img.id ?? ''}_${i}`} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
+                    <Image
+                      src={img.thumbnail || img.src || product.image}
+                      alt={img.alt || product.name}
+                      fill
+                      className="object-cover hover:opacity-80"
+                    />
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
@@ -115,6 +180,11 @@ export default function DetailPage() {
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">{product.name}</h1>
             {product.salt && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono">Composition: {product.salt}{product.dosage ? ` • ${product.dosage}` : ""}</p>
+            )}
+            {product.shortDescription && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-3.5 italic leading-relaxed border-l-2 border-emerald-500/30 pl-3">
+                {product.shortDescription}
+              </p>
             )}
           </div>
 

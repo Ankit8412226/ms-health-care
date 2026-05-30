@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useApp, PageName } from "@/context/AppContext";
-import { PRODUCTS, type Product } from "@/data/mockData";
+import { Product } from "@/types";
 import Image from "next/image";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
@@ -9,15 +9,6 @@ import {
   LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock
 } from "lucide-react";
 
-/* ── search helpers ─────────────────────────────────────────────────────── */
-function searchProducts(q: string): Product[] {
-  const lq = q.toLowerCase();
-  return PRODUCTS.filter(
-    (p) =>
-      p.name.toLowerCase().includes(lq) ||
-      (p.salt && p.salt.toLowerCase().includes(lq))
-  ).slice(0, 5);
-}
 
 const TRENDING_SEARCHES = ["Paracetamol", "Vitamin D3", "Metformin", "Omron BP Monitor", "Cetaphil"];
 const QUICK_CATEGORIES = [
@@ -71,6 +62,7 @@ function SearchDropdown({
   setActivePage,
   setSelectedProductId,
 }: SearchDropdownProps) {
+  const { categories } = useApp();
   return (
     <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-[200] animate-scale-in">
       {/* ── Idle state: show trending + categories ── */}
@@ -104,9 +96,9 @@ function SearchDropdown({
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Browse Categories</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {QUICK_CATEGORIES.map(({ label, cat }) => (
+              {(categories.length > 0 ? categories : QUICK_CATEGORIES.map(qc => ({ id: qc.cat, name: qc.label }))).filter((c: any) => c.id !== "all").slice(0, 6).map((cat: any) => (
                 <button
-                  key={cat}
+                  key={cat.id || cat.cat}
                   type="button"
                   onClick={() => {
                     setActivePage("shop");
@@ -114,7 +106,7 @@ function SearchDropdown({
                   }}
                   className="text-[11px] font-semibold px-2 py-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-colors border border-emerald-100 dark:border-emerald-900/40 text-center"
                 >
-                  {label}
+                  {cat.name || cat.label}
                 </button>
               ))}
             </div>
@@ -219,7 +211,7 @@ function SearchDropdown({
 }
 
 export default function Header() {
-  const { activePage, setActivePage, cart, wishlist, user, logout, setSelectedProductId } = useApp();
+  const { activePage, setActivePage, cart, wishlist, user, logout, setSelectedProductId, products, categories } = useApp();
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -232,7 +224,12 @@ export default function Header() {
 
   /* derived search results */
   const trimmedQ = searchQuery.trim();
-  const resultProducts = trimmedQ.length >= 2 ? searchProducts(trimmedQ) : [];
+  const sourceProducts = products || [];
+  const resultProducts = trimmedQ.length >= 2 ? sourceProducts.filter(
+    (p) =>
+      p.name.toLowerCase().includes(trimmedQ.toLowerCase()) ||
+      (p.salt && p.salt.toLowerCase().includes(trimmedQ.toLowerCase()))
+  ).slice(0, 5) : [];
   const hasResults = resultProducts.length > 0;
 
   const closeDropdown = useCallback(() => {

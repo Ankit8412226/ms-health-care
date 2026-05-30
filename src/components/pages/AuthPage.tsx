@@ -2,48 +2,70 @@
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import {
-  Mail, Lock, User, Phone, ArrowRight, ShieldCheck, AlertCircle
+  Mail, Lock, User, Phone, ArrowRight, ShieldCheck, AlertCircle, Loader2
 } from "lucide-react";
 
 export default function AuthPage() {
-  const { login, signup, authMode, setAuthMode, otpEmail, setOtpEmail } = useApp();
+  const { login, signup, authMode, setAuthMode, otpEmail, setOtpEmail, setActivePage } = useApp();
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [phoneInput, setPhoneInput] = useState("");
   const [otpInput, setOtpInput] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
+    setIsLoading(true);
 
-    if (authMode === "login") {
-      if (!emailInput || !passwordInput) {
-        setValidationError("Please fill in all credentials.");
-        return;
+    try {
+      if (authMode === "login") {
+        if (!emailInput || !passwordInput) {
+          setValidationError("Please fill in all credentials.");
+          setIsLoading(false);
+          return;
+        }
+        const ok = await login(emailInput, passwordInput);
+        if (!ok) {
+          setValidationError("Invalid email or password. Please try again.");
+        }
+      } else if (authMode === "signup") {
+        if (!nameInput || !emailInput || !phoneInput || !passwordInput) {
+          setValidationError("Please fill in all details to register.");
+          setIsLoading(false);
+          return;
+        }
+        const ok = await signup(nameInput, emailInput, phoneInput, passwordInput);
+        if (!ok) {
+          setValidationError("Registration failed. Email may already exist.");
+        }
+      } else if (authMode === "forgot") {
+        if (!emailInput) {
+          setValidationError("Please enter your email to proceed.");
+          setIsLoading(false);
+          return;
+        }
+        setOtpEmail(emailInput);
+        setAuthMode("otp");
+      } else if (authMode === "otp") {
+        if (otpInput === "123456" || otpInput.length === 6) {
+          setActivePage("home");
+        } else {
+          setValidationError("Invalid 6-digit OTP verification token.");
+        }
       }
-      login(emailInput, "Ankit Kumar");
-    } else if (authMode === "signup") {
-      if (!nameInput || !emailInput || !phoneInput || !passwordInput) {
-        setValidationError("Please fill in all details to register.");
-        return;
-      }
-      signup(nameInput, emailInput, phoneInput);
-    } else if (authMode === "forgot") {
-      if (!emailInput) {
-        setValidationError("Please enter your email to proceed.");
-        return;
-      }
-      setOtpEmail(emailInput);
-      setAuthMode("otp");
-    } else if (authMode === "otp") {
-      if (otpInput === "123456" || otpInput.length === 6) {
-        login(otpEmail, "Ankit Kumar");
-      } else {
-        setValidationError("Invalid 6-digit OTP verification token.");
-      }
+    } catch {
+      setValidationError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Social login is demo-only (no real API for social auth)
+  const handleSocialLogin = () => {
+    setValidationError("Social login coming soon! Please use email & password.");
   };
 
   return (
@@ -181,12 +203,21 @@ export default function AuthPage() {
             </div>
           )}
 
-          <button className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20">
-            {authMode === "login" && "Login Securely"}
-            {authMode === "signup" && "Create Secure Account"}
-            {authMode === "forgot" && "Send OTP Token"}
-            {authMode === "otp" && "Verify & Proceed"}
-            <ArrowRight className="w-4 h-4" />
+          <button
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                {authMode === "login" && "Login Securely"}
+                {authMode === "signup" && "Create Secure Account"}
+                {authMode === "forgot" && "Send OTP Token"}
+                {authMode === "otp" && "Verify & Proceed"}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
@@ -197,7 +228,7 @@ export default function AuthPage() {
               {/* Google */}
               <button
                 type="button"
-                onClick={() => login("social@google.com", "Ankit Kumar")}
+                onClick={handleSocialLogin}
                 className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
                 title="Google"
               >
@@ -224,7 +255,7 @@ export default function AuthPage() {
               {/* Facebook */}
               <button
                 type="button"
-                onClick={() => login("social@facebook.com", "Ankit Kumar")}
+                onClick={handleSocialLogin}
                 className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
                 title="Facebook"
               >
@@ -236,7 +267,7 @@ export default function AuthPage() {
               {/* GitHub */}
               <button
                 type="button"
-                onClick={() => login("social@github.com", "Ankit Kumar")}
+                onClick={handleSocialLogin}
                 className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
                 title="GitHub"
               >

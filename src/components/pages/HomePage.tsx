@@ -1,8 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
-import { PRODUCTS, CATEGORIES, TESTIMONIALS } from "@/data/mockData";
-import type { Product } from "@/data/mockData";
+import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import Marquee from "@/components/magicui/marquee";
 import SliderBanner from "@/components/ui/SliderBanner";
@@ -19,15 +18,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 
 /* ── search helpers ──────────────────────────────────────────────────────── */
 const HERO_TRENDING = ["Paracetamol", "Vitamin D3", "Metformin", "Cetaphil", "Omron BP"];
-
-function heroSearchProducts(q: string): Product[] {
-  const lq = q.toLowerCase();
-  return PRODUCTS.filter(
-    (p) =>
-      p.name.toLowerCase().includes(lq) ||
-      (p.salt && p.salt.toLowerCase().includes(lq))
-  ).slice(0, 6);
-}
 
 function HeroHighlight({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
@@ -276,9 +266,72 @@ function HomeFaqWidget() {
   );
 }
 
+const FALLBACK_CATEGORIES = [
+  { id: "prescription", name: "Prescription Drugs",  icon: "Pill"        },
+  { id: "transplant",   name: "Transplant",           icon: "HeartPulse"  },
+  { id: "diabetes",     name: "Diabetes Care",        icon: "Activity"    },
+  { id: "heart",        name: "Heart Health",         icon: "HeartPulse"  },
+  { id: "vitamins",     name: "Vitamins & OTC",       icon: "Sparkles"    },
+  { id: "devices",      name: "Health Devices",       icon: "ShieldAlert" },
+  { id: "baby",         name: "Baby Care",            icon: "Baby"        },
+  { id: "skin",         name: "Skin Care",            icon: "Sun"         },
+  { id: "ayurvedic",    name: "Ayurvedic",            icon: "Leaf"        },
+];
+
+const TESTIMONIALS = [
+  {
+    id: 1,
+    name: "Dr. Ramesh Mehta",
+    role: "Senior Oncologist",
+    text: "MS Care has revolutionized how my patients access oncology and critical care medicines. Fast delivery and 100% genuine products.",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120&auto=format&fit=crop&q=80"
+  },
+  {
+    id: 2,
+    name: "Priya Sharma",
+    role: "Chronic Patient",
+    text: "I order my transplant medicines monthly. The pricing is transparent and customer care assists with prescription validation so smoothly.",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
+  },
+  {
+    id: 3,
+    name: "Amit Patel",
+    role: "Caregiver",
+    text: "Their AI OCR prescription scanner makes ordering complex medicines extremely easy. Highly recommended for senior care.",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+  }
+];
+
 export default function HomePage() {
-  const { setActivePage, setSelectedProductId } = useApp();
-  const featured = PRODUCTS.filter((p) => p.onSale).slice(0, 8);
+  const { setActivePage, setSelectedProductId, products, categories, subscribeNewsletter } = useApp();
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      setMessage({ text: "Please enter a valid email address.", error: true });
+      return;
+    }
+    setSubmitting(true);
+    setMessage(null);
+    const res = await subscribeNewsletter(email);
+    setSubmitting(false);
+    if (res.success) {
+      setMessage({ text: res.message, error: false });
+      setEmail("");
+    } else {
+      setMessage({ text: res.message, error: true });
+    }
+  };
+
+  const sourceProducts = products || [];
+  const sourceCategories = (categories && categories.length > 0) ? categories : FALLBACK_CATEGORIES;
+  const featured = sourceProducts.filter((p) => p.onSale).slice(0, 8);
 
   /* hero search state */
   const [heroQ, setHeroQ] = useState("");
@@ -286,7 +339,11 @@ export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
 
   const trimmedHeroQ = heroQ.trim();
-  const heroResults = trimmedHeroQ.length >= 2 ? heroSearchProducts(trimmedHeroQ) : [];
+  const heroResults = trimmedHeroQ.length >= 2 ? sourceProducts.filter(
+    (p) =>
+      p.name.toLowerCase().includes(trimmedHeroQ.toLowerCase()) ||
+      (p.salt && p.salt.toLowerCase().includes(trimmedHeroQ.toLowerCase()))
+  ).slice(0, 6) : [];
 
   const closeHero = useCallback(() => {
     setHeroOpen(false);
@@ -570,7 +627,7 @@ export default function HomePage() {
             <p className="text-gray-500 mt-2 font-medium">Find the right healthcare solutions for your needs</p>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {CATEGORIES.filter((c) => c.id !== "all").map((cat) => {
+            {sourceCategories.filter((c) => c.id !== "all").map((cat) => {
               const Icon = CATEGORY_ICONS[cat.icon] || Pill;
               return (
                 <button
@@ -629,7 +686,7 @@ export default function HomePage() {
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {PRODUCTS.slice(0, 8).map((product) => (
+            {sourceProducts.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -1089,16 +1146,30 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3">Stay Healthy, Stay Informed</h2>
           <p className="text-gray-500 mb-8">Subscribe to get weekly health tips, exclusive deals, and early access to new features.</p>
-          <div className="flex gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-            />
-            <button className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex-shrink-0">
-              Subscribe
-            </button>
-          </div>
+          <form onSubmit={handleSubscribe} className="max-w-md mx-auto space-y-4">
+            <div className="flex gap-3">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex-shrink-0 disabled:opacity-50"
+              >
+                {submitting ? "Subscribing..." : "Subscribe"}
+              </button>
+            </div>
+            {message && (
+              <p className={`text-sm font-medium ${message.error ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                {message.text}
+              </p>
+            )}
+          </form>
         </div>
       </section>
     </div>

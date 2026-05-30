@@ -1,13 +1,15 @@
 "use client";
 import { useApp } from "@/context/AppContext";
-import { Product } from "@/data/mockData";
+import { Product } from "@/types";
 import { Heart, ShoppingCart, Star, Eye, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, wishlist, toggleWishlist, setActivePage, setSelectedProductId } = useApp();
   const isWished = wishlist.includes(product.id);
-  const discount = Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
+  const discount = (product.regularPrice > product.price && product.regularPrice > 0)
+    ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
+    : 0;
 
   const handleView = () => {
     setSelectedProductId(product.id);
@@ -71,6 +73,11 @@ export default function ProductCard({ product }: { product: Product }) {
           </h3>
         </button>
         <div className="text-[10px] text-gray-400 font-medium mt-1">{product.packSize}</div>
+        {product.shortDescription && (
+          <p className="text-[11px] text-gray-500 dark:text-gray-405 line-clamp-2 mt-1.5 leading-normal font-medium">
+            {product.shortDescription}
+          </p>
+        )}
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mt-2">

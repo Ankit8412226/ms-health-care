@@ -2,22 +2,23 @@
 
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { PRODUCTS, Product } from "@/data/mockData";
+import { Product } from "@/types";
 import { Check, ShoppingBag, ArrowRight, X, Sparkles, Star, Plus } from "lucide-react";
 import Image from "next/image";
 
 export default function AddedToCartModal() {
-  const { addedProduct, setAddedProduct, addToCart, cart, setActivePage } = useApp();
+  const { addedProduct, setAddedProduct, addToCart, cart, setActivePage, products } = useApp();
   const [addedIds, setAddedIds] = useState<string[]>([]);
 
   if (!addedProduct) return null;
 
   // Find similar products in the same category, pad with other products if needed
-  let similarProducts = PRODUCTS.filter(
+  const sourceProducts = products || [];
+  let similarProducts = sourceProducts.filter(
     (p) => p.category === addedProduct.category && p.id !== addedProduct.id
   );
   if (similarProducts.length < 3) {
-    const extra = PRODUCTS.filter(
+    const extra = sourceProducts.filter(
       (p) => p.id !== addedProduct.id && !similarProducts.some((s) => s.id === p.id)
     );
     similarProducts = [...similarProducts, ...extra];
@@ -132,7 +133,9 @@ export default function AddedToCartModal() {
               <div className="grid sm:grid-cols-3 gap-4">
                 {similarProducts.map((p) => {
                   const isAdded = addedIds.includes(p.id);
-                  const discount = Math.round(((p.regularPrice - p.price) / p.regularPrice) * 100);
+                  const discount = (p.regularPrice > p.price && p.regularPrice > 0)
+                    ? Math.round(((p.regularPrice - p.price) / p.regularPrice) * 100)
+                    : 0;
 
                   return (
                     <div

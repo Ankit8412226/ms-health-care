@@ -1,18 +1,30 @@
 "use client";
-import { useState } from "react";
-import { PRODUCTS, CATEGORIES } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { useApp } from "@/context/AppContext";
 import ProductCard from "@/components/ProductCard";
 import { SlidersHorizontal } from "lucide-react";
 
 export default function ShopPage() {
+  const { products, categories } = useApp();
   const [selectedCat, setSelectedCat] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
+  const [visibleCount, setVisibleCount] = useState(12);
 
-  let filtered = selectedCat === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.category === selectedCat);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [selectedCat, sortBy]);
+
+  const sourceProducts = products || [];
+  const sourceCategories = categories || [];
+
+  let filtered = selectedCat === "all" ? sourceProducts : sourceProducts.filter((p) => p.category === selectedCat);
 
   if (sortBy === "low") filtered = [...filtered].sort((a, b) => a.price - b.price);
   if (sortBy === "high") filtered = [...filtered].sort((a, b) => b.price - a.price);
   if (sortBy === "rating") filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+
+  const displayedProducts = filtered.slice(0, visibleCount);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -30,20 +42,19 @@ export default function ShopPage() {
             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4" /> Categories
             </h3>
-            {CATEGORIES.map((cat) => (
+            {sourceCategories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  selectedCat === cat.id
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCat === cat.id
                     ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
+                  }`}
               >
                 {cat.name}
                 {cat.id !== "all" && (
                   <span className="float-right text-xs text-gray-400">
-                    {PRODUCTS.filter((p) => p.category === cat.id).length}
+                    {sourceProducts.filter((p) => p.category === cat.id).length}
                   </span>
                 )}
               </button>
@@ -72,10 +83,21 @@ export default function ShopPage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {filtered.map((product) => (
+            {displayedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+
+          {filtered.length > visibleCount && (
+            <div className="text-center mt-12 mb-6">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 12)}
+                className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                View More
+              </button>
+            </div>
+          )}
 
           {filtered.length === 0 && (
             <div className="text-center py-16">
