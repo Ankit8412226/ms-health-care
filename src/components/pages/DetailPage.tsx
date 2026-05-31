@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
@@ -10,6 +11,10 @@ import Image from "next/image";
 
 export default function DetailPage() {
   const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage, products, getProductById } = useApp();
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id");
+  const currentProductId = idParam || selectedProductId || (products && products[0]?.id) || "";
+
   const [activeTab, setActiveTab] = useState<"desc" | "benefits" | "use" | "side">("desc");
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -18,9 +23,9 @@ export default function DetailPage() {
   const [loadingDetail, setLoadingDetail] = useState(true);
 
   useEffect(() => {
-    if (!selectedProductId) return;
+    if (!currentProductId) return;
 
-    const preloaded = (products || []).find((p) => p.id === selectedProductId);
+    const preloaded = (products || []).find((p) => p.id === currentProductId);
     if (preloaded) {
       setProduct(preloaded);
       setLoadingDetail(false);
@@ -28,13 +33,13 @@ export default function DetailPage() {
       setLoadingDetail(true);
     }
 
-    getProductById(selectedProductId).then((fetched) => {
+    getProductById(currentProductId).then((fetched) => {
       if (fetched) {
         setProduct(fetched);
       }
       setLoadingDetail(false);
     });
-  }, [selectedProductId, products, getProductById]);
+  }, [currentProductId, products, getProductById]);
 
   const sourceProducts = products || [];
 

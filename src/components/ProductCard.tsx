@@ -13,7 +13,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const handleView = () => {
     setSelectedProductId(product.id);
-    setActivePage("details");
+    setActivePage("details", `id=${product.id}`);
   };
 
   return (
