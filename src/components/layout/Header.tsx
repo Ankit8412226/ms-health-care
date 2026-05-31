@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useApp, PageName } from "@/context/AppContext";
 import { Product } from "@/types";
 import Image from "next/image";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
   Phone, ChevronDown, ChevronRight, Package, User,
-  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock
+  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock, ArrowLeft
 } from "lucide-react";
 
 
@@ -211,6 +212,7 @@ function SearchDropdown({
 }
 
 export default function Header() {
+  const router = useRouter();
   const { activePage, setActivePage, cart, wishlist, user, logout, setSelectedProductId, products, categories } = useApp();
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -316,6 +318,23 @@ export default function Header() {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center h-16 gap-4">
+            {/* Back Button for mobile when not on Home */}
+            {activePage !== "home" && (
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    router.back();
+                  } else {
+                    setActivePage("home");
+                  }
+                }}
+                className="md:hidden p-2 -ml-2 rounded-xl text-gray-705 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+
             {/* Logo */}
             <button
               onClick={() => setActivePage("home")}

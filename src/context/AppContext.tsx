@@ -215,6 +215,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // ── Prepend Home page to browser history stack if entered directly on a subpage ──
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isEntry = !sessionStorage.getItem("mscare_history_prepended");
+      if (isEntry) {
+        sessionStorage.setItem("mscare_history_prepended", "true");
+        if (window.location.pathname !== "/") {
+          const currentPath = window.location.pathname + window.location.search;
+          window.history.replaceState(null, "", "/");
+          window.history.pushState(null, "", currentPath);
+        }
+      }
+    }
+  }, []);
+
   // ── Fetch products & categories from API on mount ─────────────────────
   const fetchProducts = useCallback(async () => {
     try {

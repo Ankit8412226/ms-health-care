@@ -93,8 +93,8 @@ export default function ShopPage() {
 
       {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Category sidebar */}
-        <div className="lg:w-60 flex-shrink-0">
+        {/* Category sidebar - hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block lg:w-60 flex-shrink-0">
           <div className="sticky top-24 space-y-2">
             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4" /> Categories
@@ -122,22 +122,46 @@ export default function ShopPage() {
 
         {/* Products grid */}
         <div className="flex-1">
-          {/* Sort bar */}
-          <div className="flex items-center justify-between mb-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              >
-                <option value="popular">Most Popular</option>
-                <option value="low">Price: Low to High</option>
-                <option value="high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
+          {/* Sort & Filter bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3">
+            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+              {/* Category Dropdown (Mobile/Tablet only) */}
+              <div className="flex items-center gap-2 lg:hidden w-full sm:w-auto">
+                <span className="text-sm text-gray-500 font-medium">Category:</span>
+                <select
+                  value={selectedCat}
+                  onChange={(e) => setSelectedCat(e.target.value)}
+                  className="w-full sm:w-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-gray-800 dark:text-gray-200 cursor-pointer"
+                >
+                  {sourceCategories.map((cat) => {
+                    const count = cat.id !== "all"
+                      ? (allContextProducts || []).filter((p) => p.category === cat.id).length
+                      : null;
+                    return (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} {count !== null ? `(${count})` : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Sort by Dropdown */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm text-gray-500 font-medium">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full sm:w-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-gray-800 dark:text-gray-200 cursor-pointer"
+                >
+                  <option value="popular">Most Popular</option>
+                  <option value="low">Price: Low to High</option>
+                  <option value="high">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
             </div>
-            <span className="text-sm text-gray-400">{productsList.length} of {totalCount} shown</span>
+            <span className="text-sm text-gray-400 self-end sm:self-auto">{productsList.length} of {totalCount} shown</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

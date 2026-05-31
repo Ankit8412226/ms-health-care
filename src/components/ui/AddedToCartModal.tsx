@@ -47,11 +47,11 @@ export default function AddedToCartModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       {/* Backdrop click closer */}
       <div className="absolute inset-0" onClick={handleClose} />
 
-      <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl shadow-black/10 dark:shadow-black/35 overflow-hidden z-10 animate-scale-in">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-black/10 dark:shadow-black/35 z-10 animate-scale-in max-h-[85vh] sm:max-h-[90vh] flex flex-col">
         {/* Close Button */}
         <button
           onClick={handleClose}
@@ -61,33 +61,33 @@ export default function AddedToCartModal() {
         </button>
 
         {/* Modal Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 flex-shrink-0">
           <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Check className="w-5 h-5 stroke-[3]" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-900 dark:text-white">Added to Cart Successfully!</h3>
+            <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">Added to Cart Successfully!</h3>
             <p className="text-xs text-gray-400">Your health shopping cart has been updated.</p>
           </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6 space-y-6">
+        {/* Modal Content - Scrollable */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-none">
           {/* Main Added Product Card & Summary Grid */}
-          <div className="grid md:grid-cols-2 gap-6 bg-gradient-to-br from-emerald-50/40 via-teal-50/20 to-cyan-50/30 dark:from-gray-850 dark:via-gray-850 dark:to-gray-900 p-5 rounded-2xl border border-emerald-500/10">
+          <div className="grid md:grid-cols-2 gap-6 bg-gradient-to-br from-emerald-50/40 via-teal-50/20 to-cyan-50/30 dark:from-gray-850 dark:via-gray-850 dark:to-gray-900 p-4 sm:p-5 rounded-2xl border border-emerald-500/10">
             {/* Left Column: Added Product details */}
             <div className="flex gap-4">
-              <div className="relative w-20 h-20 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-150 dark:border-gray-700 flex-shrink-0">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-150 dark:border-gray-700 flex-shrink-0">
                 <Image src={addedProduct.image} alt={addedProduct.name} fill className="object-cover" />
               </div>
-              <div className="space-y-1 select-none">
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">
-                  {addedProduct.manufacturer}
+              <div className="space-y-1 select-none min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block truncate">
+                  {addedProduct.brand || addedProduct.manufacturer}
                 </span>
-                <span className="text-sm font-bold text-gray-800 dark:text-white line-clamp-2 leading-tight">
+                <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white line-clamp-2 leading-tight">
                   {addedProduct.name}
                 </span>
-                <span className="text-xs text-gray-400 font-mono block">
+                <span className="text-[10px] sm:text-xs text-gray-400 font-mono block">
                   Pack: {addedProduct.packSize}
                 </span>
                 <div className="flex items-center gap-2 pt-1">
@@ -108,13 +108,13 @@ export default function AddedToCartModal() {
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => handleNavigate("cart")}
-                  className="w-full py-3 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 shadow-sm"
+                  className="w-full py-3 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 shadow-sm cursor-pointer"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" /> View Cart
                 </button>
                 <button
                   onClick={() => handleNavigate("checkout")}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   Checkout <ArrowRight className="w-3.5 h-3.5" />
                 </button>
@@ -130,7 +130,8 @@ export default function AddedToCartModal() {
                 <span className="text-xs font-black uppercase tracking-wider">Frequently Bought Together</span>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-4">
+              {/* Horizontal Scroll on Mobile, Grid on Desktop */}
+              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3">
                 {similarProducts.map((p) => {
                   const isAdded = addedIds.includes(p.id);
                   const discount = (p.regularPrice > p.price && p.regularPrice > 0)
@@ -140,7 +141,7 @@ export default function AddedToCartModal() {
                   return (
                     <div
                       key={p.id}
-                      className="bg-gray-50 dark:bg-gray-850/50 border border-gray-100 dark:border-gray-800/80 rounded-2xl p-3 flex flex-col justify-between gap-3 hover:border-emerald-500/20 dark:hover:border-emerald-500/20 transition-all group"
+                      className="w-[170px] sm:w-auto flex-shrink-0 bg-gray-50 dark:bg-gray-850/50 border border-gray-100 dark:border-gray-800/80 rounded-2xl p-3 flex flex-col justify-between gap-3 hover:border-emerald-500/20 dark:hover:border-emerald-500/20 transition-all group"
                     >
                       <div className="space-y-2">
                         {/* Thumbnail */}
@@ -155,8 +156,8 @@ export default function AddedToCartModal() {
 
                         {/* Title & Rating */}
                         <div className="space-y-0.5">
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase">
-                            {p.manufacturer}
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase truncate">
+                            {p.brand || p.manufacturer}
                           </span>
                           <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-1">
                             {p.name}
@@ -169,18 +170,18 @@ export default function AddedToCartModal() {
                       </div>
 
                       {/* Pricing and Button */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-800/50">
-                        <div className="flex flex-col">
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-850/50">
+                        <div className="flex flex-col min-w-0">
                           <span className="text-xs font-black text-gray-900 dark:text-white">₹{p.price}</span>
                           {p.regularPrice > p.price && (
-                            <span className="text-[9px] text-gray-400 line-through">₹{p.regularPrice}</span>
+                            <span className="text-[9px] text-gray-400 line-through truncate">₹{p.regularPrice}</span>
                           )}
                         </div>
 
                         <button
                           onClick={() => handleAddSimilar(p)}
                           disabled={isAdded}
-                          className={`p-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
+                          className={`p-1.5 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                             isAdded
                               ? "bg-emerald-500 text-white"
                               : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-450 hover:bg-emerald-600 hover:text-white shadow-sm"
@@ -207,7 +208,7 @@ export default function AddedToCartModal() {
           <div className="text-center pt-2">
             <button
               onClick={handleClose}
-              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
             >
               Continue Shopping
             </button>
