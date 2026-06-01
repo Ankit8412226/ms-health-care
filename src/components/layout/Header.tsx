@@ -338,15 +338,26 @@ export default function Header() {
             {/* Logo */}
             <button
               onClick={() => setActivePage("home")}
-              className="flex items-center gap-2 flex-shrink-0 group"
+              className="relative h-11 w-44 flex items-center justify-start flex-shrink-0 group cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                <span className="text-white font-black text-sm">OL</span>
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-lg font-black gradient-text leading-none">Oncolife India</div>
-                <div className="text-[10px] text-gray-400 leading-none font-medium tracking-wider mt-0.5">ONCOLOGY PHARMACY</div>
-              </div>
+              <Image
+                src="/logo-light.png"
+                alt="Oncolife India"
+                width={176}
+                height={44}
+                priority
+                className="object-contain block dark:hidden select-none transition-transform duration-300 group-hover:scale-[1.02]"
+                style={{ mixBlendMode: "multiply" }}
+              />
+              <Image
+                src="/logo-dark.png"
+                alt="Oncolife India"
+                width={176}
+                height={44}
+                priority
+                className="object-contain hidden dark:block select-none transition-transform duration-300 group-hover:scale-[1.02]"
+                style={{ mixBlendMode: "screen" }}
+              />
             </button>
 
             {/* Search bar – desktop */}
@@ -570,14 +581,23 @@ export default function Header() {
 
               {/* Panel header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-505 to-teal-600 flex items-center justify-center shadow-md">
-                    <span className="text-white font-black text-xs">OL</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-black gradient-text leading-none">Oncolife India</div>
-                    <div className="text-[9px] text-gray-400 leading-none font-medium tracking-wider mt-0.5 uppercase">Oncology Pharmacy</div>
-                  </div>
+                <div className="relative h-9 w-36 flex items-center justify-start group">
+                  <Image
+                    src="/logo-light.png"
+                    alt="Oncolife India"
+                    width={144}
+                    height={36}
+                    className="object-contain block dark:hidden select-none"
+                    style={{ mixBlendMode: "multiply" }}
+                  />
+                  <Image
+                    src="/logo-dark.png"
+                    alt="Oncolife India"
+                    width={144}
+                    height={36}
+                    className="object-contain hidden dark:block select-none"
+                    style={{ mixBlendMode: "screen" }}
+                  />
                 </div>
                 <button
                   onClick={() => setMobileOpen(false)}

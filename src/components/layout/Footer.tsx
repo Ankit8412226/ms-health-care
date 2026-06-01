@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Heart, Mail, Phone, MapPin, Shield, Truck, Clock, CreditCard } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   const { setActivePage, subscribeNewsletter, categories } = useApp();
@@ -60,15 +61,19 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 flex flex-col items-center text-center md:items-start md:text-left">
-            <div className="flex flex-col items-center md:flex-row gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-black text-sm">OL</span>
-              </div>
-              <div className="text-center md:text-left">
-                <div className="text-lg font-black text-white">Oncolife India</div>
-                <div className="text-[10px] text-gray-500 tracking-wider">ONCOLOGY PHARMACY</div>
-              </div>
-            </div>
+            <button
+              onClick={() => setActivePage("home")}
+              className="relative h-10 w-40 flex items-center justify-start group cursor-pointer mb-4"
+            >
+              <Image
+                src="/logo-dark.png"
+                alt="Oncolife India"
+                width={160}
+                height={40}
+                className="object-contain block select-none"
+                style={{ mixBlendMode: "screen" }}
+              />
+            </button>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               India&apos;s specialized oncology pharmacy delivering genuine CDSCO-certified anti-cancer and critical care medicines with secure cold-chain logistics.
             </p>
