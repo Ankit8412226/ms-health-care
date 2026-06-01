@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   CreditCard, ShieldCheck, PlusCircle, CheckCircle,
@@ -32,6 +32,22 @@ export default function CheckoutPage() {
 
   const requiresRx = cart.some((item) => item.product.prescriptionRequired);
 
+  // Auto-select address if none is selected and addresses are available
+  useEffect(() => {
+    if (!selectedAddrId && addresses.length > 0) {
+      setSelectedAddrId(addresses[0].id);
+    }
+  }, [addresses, selectedAddrId]);
+
+  // Keep selectedAddrId updated when addresses change (e.g. first address added)
+  const previousAddressesLength = useRef(addresses.length);
+  useEffect(() => {
+    if (addresses.length > previousAddressesLength.current && !selectedAddrId) {
+      setSelectedAddrId(addresses[addresses.length - 1].id);
+    }
+    previousAddressesLength.current = addresses.length;
+  }, [addresses, selectedAddrId]);
+
   const handleAddAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !flat || !area || !city || !pincode) return;
@@ -49,6 +65,10 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = () => {
+    if (!selectedAddrId) {
+      alert("Please add a delivery address first.");
+      return;
+    }
     placeOrder(selectedAddrId, selectedPayment, selectedRxUrl);
   };
 
@@ -199,6 +219,18 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            {addresses.length === 0 && (
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl text-[11px] text-red-800 dark:text-red-300 space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-red-700 dark:text-red-400">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
+                  Delivery Address Required
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  You must add a delivery address to complete your checkout. Please click <strong>"Add Address"</strong> on the left side to continue.
+                </p>
+              </div>
+            )}
+
             <div className="bg-gray-50 dark:bg-gray-855 p-4 rounded-2xl text-[11px] text-gray-400 space-y-1">
               <div className="flex gap-2 items-center text-emerald-600 dark:text-emerald-400 font-bold mb-1">
                 <ShieldCheck className="w-3.5 h-3.5" /> Guarantee Safe Checkout
@@ -208,7 +240,8 @@ export default function CheckoutPage() {
 
             <button
               onClick={handlePlaceOrder}
-              className="w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 hover:scale-[1.02]"
+              disabled={addresses.length === 0}
+              className="w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none text-white shadow-emerald-500/20 hover:scale-[1.02]"
             >
               {requiresRx && !selectedRxUrl ? "Place Order (Needs Rx for Delivery)" : "Place Secure Order"}
             </button>
