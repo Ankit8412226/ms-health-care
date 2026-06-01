@@ -579,7 +579,7 @@ export default function Header() {
             />
 
             {/* Slide-in panel */}
-            <div className="absolute top-0 left-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-950 shadow-2xl flex flex-col animate-slide-in-left z-10">
+            <div className="absolute top-0 right-0 bottom-0 w-full bg-white dark:bg-gray-950 shadow-2xl flex flex-col animate-slide-in-right z-10">
 
               {/* Panel header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">

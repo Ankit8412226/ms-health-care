@@ -130,6 +130,12 @@
     from { transform: translate3d(-100%, 0, 0); }
     to { transform: translate3d(0, 0, 0); }
   }
+
+  --animate-slide-in-right: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  @keyframes slide-in-right {
+    from { transform: translate3d(100%, 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
 }
 
 :root {
