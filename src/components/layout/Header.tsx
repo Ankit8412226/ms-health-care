@@ -307,7 +307,7 @@ export default function Header() {
         <span className="mx-4 opacity-50">|</span>
         <span>🏷️ Use code <span className="font-bold bg-white/20 px-2 py-0.5 rounded">HEALTH30</span> for 30% off</span>
         <span className="mx-4 opacity-50">|</span>
-        <span className="flex items-center gap-1 inline-flex"><Phone className="w-3 h-3" /> 1800-123-CARE (24/7 Support)</span>
+        <span className="flex items-center gap-1 inline-flex"><Phone className="w-3 h-3" /> +91 9540294099 (Call & Whatsapp)</span>
       </div>
 
       {/* Main header */}
@@ -341,11 +341,11 @@ export default function Header() {
               className="flex items-center gap-2 flex-shrink-0 group"
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                <span className="text-white font-black text-sm">MS</span>
+                <span className="text-white font-black text-sm">OL</span>
               </div>
               <div className="hidden sm:block">
-                <div className="text-lg font-black gradient-text leading-none">MS Care</div>
-                <div className="text-[10px] text-gray-400 leading-none font-medium tracking-wider">TRUSTED PHARMACY</div>
+                <div className="text-lg font-black gradient-text leading-none">Oncolife India</div>
+                <div className="text-[10px] text-gray-400 leading-none font-medium tracking-wider mt-0.5">ONCOLOGY PHARMACY</div>
               </div>
             </button>
 
@@ -571,12 +571,12 @@ export default function Header() {
               {/* Panel header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-                    <span className="text-white font-black text-xs">MS</span>
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-505 to-teal-600 flex items-center justify-center shadow-md">
+                    <span className="text-white font-black text-xs">OL</span>
                   </div>
                   <div>
-                    <div className="text-sm font-black gradient-text leading-none">MS Care</div>
-                    <div className="text-[9px] text-gray-400 leading-none font-medium tracking-wider mt-0.5 uppercase">Trusted Pharmacy</div>
+                    <div className="text-sm font-black gradient-text leading-none">Oncolife India</div>
+                    <div className="text-[9px] text-gray-400 leading-none font-medium tracking-wider mt-0.5 uppercase">Oncology Pharmacy</div>
                   </div>
                 </div>
                 <button
@@ -670,7 +670,7 @@ export default function Header() {
                     Login / Sign Up
                   </button>
                 )}
-                <div className="text-[10px] text-center text-gray-400">24/7 Helpline: 1800-123-CARE</div>
+                <div className="text-[10px] text-center text-gray-400">Call & Whatsapp: +91 9540294099</div>
               </div>
             </div>
           </div>

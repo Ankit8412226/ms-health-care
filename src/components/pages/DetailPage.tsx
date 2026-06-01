@@ -20,6 +20,7 @@ export default function DetailPage() {
   const [isZoomed, setIsZoomed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [product, setProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string>("");
   const [loadingDetail, setLoadingDetail] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function DetailPage() {
     const preloaded = (products || []).find((p) => p.id === currentProductId);
     if (preloaded) {
       setProduct(preloaded);
+      setSelectedImage(preloaded.image);
       setLoadingDetail(false);
     } else {
       setLoadingDetail(true);
@@ -36,6 +38,7 @@ export default function DetailPage() {
     getProductById(currentProductId).then((fetched) => {
       if (fetched) {
         setProduct(fetched);
+        setSelectedImage(fetched.image);
       }
       setLoadingDetail(false);
     });
@@ -129,7 +132,7 @@ export default function DetailPage() {
             onMouseMove={handleMouseMove}
           >
             <Image
-              src={product.image}
+              src={selectedImage || product.image}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -164,8 +167,18 @@ export default function DetailPage() {
 
               return paddedList.slice(0, 4).map((img, i) => {
                 if (!img) return null;
+                const imgSrc = img.src || product.image;
+                const isSelected = (selectedImage || product.image) === imgSrc;
                 return (
-                  <div key={`${img.id ?? ''}_${i}`} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 border-emerald-500/20 cursor-pointer">
+                  <div
+                    key={`${img.id ?? ''}_${i}`}
+                    onClick={() => setSelectedImage(imgSrc)}
+                    className={`relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 overflow-hidden border-2 cursor-pointer transition-all ${
+                      isSelected
+                        ? "border-emerald-500 shadow-md ring-2 ring-emerald-500/15"
+                        : "border-emerald-500/20 hover:border-emerald-500/50"
+                    }`}
+                  >
                     <Image
                       src={img.thumbnail || img.src || product.image}
                       alt={img.alt || product.name}

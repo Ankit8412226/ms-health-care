@@ -5,7 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Package, Upload, Heart, MapPin,
-  LogOut, CheckCircle2, Clock, Truck
+  LogOut, CheckCircle2, Clock, Truck, AlertCircle
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -130,6 +130,16 @@ export default function DashboardPage() {
                           </div>
                         ))}
                       </div>
+
+                      {order.items.some(item => item.product.prescriptionRequired) && !order.prescriptionUrl && (
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-3 rounded-2xl text-[10px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                          <div>
+                            <span className="font-bold block">⚠️ Prescription Required for Delivery</span>
+                            This order is currently held at dispatch because a valid doctor's prescription has not been uploaded yet. Please upload it under the "My Prescriptions" tab or during checkout.
+                          </div>
+                        </div>
+                      )}
 
                       <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
                         <span className="text-gray-400">Paid via: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>

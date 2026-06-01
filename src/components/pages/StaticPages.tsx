@@ -4,7 +4,7 @@ import { useApp } from "@/context/AppContext";
 import Image from "next/image";
 import {
   Mail, Phone, MapPin, ShieldCheck, HelpCircle,
-  Send, CheckCircle, FileText, Sparkles, Award, ShieldAlert
+  Send, CheckCircle, FileText, Sparkles, Award, ShieldAlert, RotateCcw
 } from "lucide-react";
 
 export default function StaticPages() {
@@ -77,10 +77,10 @@ export default function StaticPages() {
                   Our Mission & Vision
                 </span>
                 <h1 className="text-4xl sm:text-6xl font-black text-gray-900 dark:text-white leading-tight">
-                  We are building the <span className="gradient-text font-black">Future of Pharmacy</span> in India
+                  We are building the <span className="gradient-text font-black">Future of Oncology Pharmacy</span> in India
                 </h1>
                 <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
-                  MS Care is a licensed, CDSCO-compliant healthcare platform delivering certified medications, cold-chain diagnostics, and automated prescription processing directly to your home.
+                  Oncolife India is a licensed, CDSCO-compliant healthcare platform delivering certified anti-cancer medications, chemotherapy supportive drugs, and automated prescription processing directly to your home.
                 </p>
                 <div className="flex flex-wrap gap-4 justify-center lg:justify-start w-full">
                   <button
@@ -169,10 +169,10 @@ export default function StaticPages() {
                 </h2>
                 <div className="text-sm sm:text-base text-gray-505 dark:text-gray-400 space-y-4 leading-relaxed">
                   <p>
-                    MS Care was founded with a clear directive: to address the critical gap in genuine chronic care medications in India. In an environment where patient safety is occasionally compromised by fragmented supply chains, we guarantee pharmaceutical authenticity.
+                    Oncolife India was founded with a clear directive: to address the critical gap in genuine oncology and specialized cancer care medications in India. In an environment where patient safety is occasionally compromised by fragmented supply chains, we guarantee anti-cancer drug authenticity.
                   </p>
                   <p>
-                    Every pill, capsule, or syrup we ship undergoes double-pharmacist verification. By sourcing directly from registered pharmaceutical companies and maintaining a temperature-controlled cold chain network, we ensure insulin, cardiovascular drugs, and thyroid medications maintain maximum potency.
+                    Every anti-cancer medicine we ship undergoes double-pharmacist verification. By sourcing directly from registered pharmaceutical manufacturers and maintaining a temperature-controlled cold chain network, we ensure chemotherapy drugs, targeted therapies, and support medications maintain maximum potency.
                   </p>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export default function StaticPages() {
             <div className="text-center max-w-2xl mx-auto space-y-4">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Connect With Us</span>
               <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">Let&apos;s Start a Conversation</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-505 dark:text-gray-400 leading-relaxed">
                 Have questions about custom dosages, billing, prescription status, or clinic setups? Send us a message, and our verified clinical executives will respond.
               </p>
             </div>
@@ -297,7 +297,7 @@ export default function StaticPages() {
                   
                   <h3 className="text-xl font-bold">Clinical Care Desk</h3>
                   <p className="text-xs text-emerald-100 leading-relaxed">
-                    Our registered pharmacists are available 24/7 to resolve medicine-related queries or prescription queries.
+                    Our registered pharmacists are available to resolve medicine-related queries or prescription queries.
                   </p>
 
                   <div className="space-y-4">
@@ -306,8 +306,8 @@ export default function StaticPages() {
                         <Phone className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Helpline (Toll Free)</span>
-                        <span className="text-sm font-bold block">1800-123-CARE</span>
+                        <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Call & Whatsapp Us</span>
+                        <span className="text-sm font-bold block">+91 9540294099</span>
                       </div>
                     </div>
 
@@ -317,7 +317,7 @@ export default function StaticPages() {
                       </div>
                       <div>
                         <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Email Query</span>
-                        <span className="text-sm font-bold block">support@mscare.in</span>
+                        <span className="text-sm font-bold block">support@oncolifeindia.com</span>
                       </div>
                     </div>
 
@@ -326,8 +326,8 @@ export default function StaticPages() {
                         <MapPin className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Corporate Hub</span>
-                        <span className="text-sm font-bold block leading-snug">Plot No. 12, Tech Sector 62, Noida, UP, India</span>
+                        <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Corporate Office</span>
+                        <span className="text-sm font-bold block leading-snug">Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007</span>
                       </div>
                     </div>
                   </div>
@@ -336,7 +336,7 @@ export default function StaticPages() {
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex gap-3 text-xs leading-relaxed">
                   <ShieldAlert className="w-5 h-5 flex-shrink-0 text-amber-500" />
                   <span>
-                    <strong>Medical Emergency Notice:</strong> MS Care online portal is for scheduled medicine purchases. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
+                    <strong>Medical Emergency Notice:</strong> Oncolife India online portal is for scheduled anti-cancer medicine purchases. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
                   </span>
                 </div>
               </div>
@@ -369,7 +369,7 @@ export default function StaticPages() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="ankit@mscare.com"
+                        placeholder="ankit@oncolifeindia.com"
                         className="w-full bg-white dark:bg-gray-900 border border-gray-250 dark:border-gray-750 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       />
                     </div>
@@ -433,16 +433,16 @@ export default function StaticPages() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { q: "Is MS Care a licensed online pharmacy in India?", a: "Yes. MS Care holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors." },
+                { q: "Is Oncolife India a licensed online pharmacy in India?", a: "Yes. Oncolife India holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors." },
                 { q: "How do I upload my medical prescription?", a: "Navigate to the 'Upload Rx' tab on the header, drag & drop your PDF or image slip, and our clinical OCR will automatically parse the matched drugs." },
                 { q: "Do you deliver medicines across India?", a: "Yes, we ship to over 20,000 pin codes across India. For metro cities like Delhi NCR, Mumbai, and Bangalore, we offer express 4-hour delivery." },
-                { q: "Are all medicines sourced from genuine suppliers?", a: "Yes, all products on MS Care are sourced directly from verified licensed manufacturers and packed under supervision." },
-                { q: "What is your medicine return policy?", a: "We offer an easy 100% replacement or refund for damaged, wrong, or expired medicines. Raise a request from the dashboard within 7 days of delivery." },
+                { q: "Are all medicines sourced from genuine suppliers?", a: "Yes, all products on Oncolife India are sourced directly from verified licensed manufacturers and packed under supervision." },
+                { q: "What is your medicine return policy?", a: "We offer an easy 100% replacement or refund for damaged, defective, or incorrect products. Return requests must be raised within 48 hours of delivery by contacting our customer support team." },
                 { q: "How does the 4-hour express delivery work?", a: "For emergency medications, orders placed before 6 PM in Delhi NCR, Mumbai, and Bangalore qualify for express 4-hour temperature-controlled deliveries." }
               ].map((faq, i) => (
                 <div key={i} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/50 dark:border-gray-800 space-y-2">
                   <span className="font-bold text-gray-850 dark:text-white block text-sm leading-snug">{faq.q}</span>
-                  <p className="text-xs text-gray-500 dark:text-gray-405 leading-relaxed">{faq.a}</p>
+                  <p className="text-xs text-gray-550 dark:text-gray-405 leading-relaxed">{faq.a}</p>
                 </div>
               ))}
             </div>
@@ -460,20 +460,40 @@ export default function StaticPages() {
             </div>
 
             <div className="space-y-6">
-              <p className="text-sm">
-                At MS Care, we take patient confidentiality, health records security, and absolute privacy seriously. This document outlines how patient records are structured and protected.
+              <p className="text-sm text-gray-505 dark:text-gray-400 leading-relaxed">
+                At Oncolife India, we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website.
               </p>
 
               <div className="space-y-4">
                 {[
-                  { title: "1. Medical History Encryption", desc: "All medical prescriptions (Rx uploads) and diagnostic reports are encrypted at rest using AES-256 standards. Our medical team access is audited." },
-                  { title: "2. Zero Third-Party Advertising Sharing", desc: "Your personal diagnostic datasets, medical prescriptions, and orders are never sold or shared with any external advertisement engines." },
-                  { title: "3. Patient Consent & Controls", desc: "You have complete rights to clear your uploaded prescription archive or terminate your patient account directly from the patient dashboard." },
-                  { title: "4. Cookies & Trackers", desc: "We utilize minimal local session cookies to secure login state and hold cart items. No behavioral cookies are used." }
+                  { 
+                    title: "Information We Collect", 
+                    desc: "• Personal details such as name, email, phone number, and address when you place an order or contact us.\n• Payment information to process transactions (secured through trusted payment gateways).\n• Browsing data such as IP address, cookies, and device information for website improvements." 
+                  },
+                  { 
+                    title: "How We Use Your Information", 
+                    desc: "• To process and deliver your orders.\n• To provide customer support and respond to queries.\n• To send important updates, offers, and service-related information.\n• To improve our website, products, and user experience." 
+                  },
+                  { 
+                    title: "Data Security", 
+                    desc: "We use secure servers and encryption to protect your personal data. Your payment details are never stored on our servers." 
+                  },
+                  { 
+                    title: "Sharing Information", 
+                    desc: "We do not sell or rent your personal information. Data is shared only with trusted third parties (such as delivery and payment partners) to complete your order." 
+                  },
+                  { 
+                    title: "Your Rights", 
+                    desc: "You can request access, correction, or deletion of your personal data at any time by contacting us." 
+                  },
+                  {
+                    title: "Corporate & Support Info",
+                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 9540294099"
+                  }
                 ].map((section, idx) => (
                   <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
                     <h4 className="font-bold text-gray-900 dark:text-white text-sm">{section.title}</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{section.desc}</p>
+                    <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed whitespace-pre-line">{section.desc}</p>
                   </div>
                 ))}
               </div>
@@ -488,25 +508,92 @@ export default function StaticPages() {
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white">Patient Terms &amp; Conditions</h1>
+              <h1 className="text-2xl font-black text-gray-900 dark:text-white">Terms &amp; Conditions</h1>
             </div>
 
             <div className="space-y-6">
-              <p className="text-sm">
-                Welcome to MS Care. By accessing our portal, uploading doctor prescriptions, or ordering medicines, you agree to comply with these terms, complying with the Pharmacy Practice Regulations, 2015.
+              <div className="p-5 bg-emerald-50/30 dark:bg-emerald-950/10 rounded-2xl border border-emerald-500/10 space-y-3">
+                <h4 className="font-bold text-emerald-800 dark:text-emerald-400 text-sm">About Onco Healthcare</h4>
+                <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
+                  The domain name <strong>oncohealthcare.com</strong> is an online platform owned by Onco Healthcare. Your access to the Website, use of its features, transactions, and any services provided (directly or indirectly) from the Website (the “Services”) are all governed by these Terms of Use, and all policies referenced herein. These Terms of Use are a legally binding agreement between you and Onco Healthcare. By accessing, browsing, registering, or using the Website or Services in any way, shape, or form, you represent to Onco Healthcare that you have read, understood, and agreed to be bound by these Terms of Use. Your acceptance of these Terms of Use may be explicit, or it may be implicit.
+                </p>
+                <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
+                  Additionally, by accepting these Terms, you also agree to follow our Privacy Policy, along with other policies, rules, guidelines, and documents on the Website, as these will always form part of these Terms and Conditions, as amended from time to time.
+                </p>
+                <p className="text-xs text-gray-550 dark:text-gray-400 leading-relaxed">
+                  If you leave our Website to go to a third-party Website, you accept that those other sites may have their own terms of use and policies regarding privacy. Onco Healthcare will not be liable or responsible for your use of any third-party sites, and their terms will apply to your use of their sites.
+                </p>
+                <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
+                  Onco Healthcare may change, amend, or modify these Terms of Use, as well as the Privacy Policy from time to time, at its sole discretion. These changes will be effective immediately once they are posted on the Website. You will not be given direct notice of the changes, although they may be announced to the Website users. If you continue to use the Website after changes have been made, that will be viewed as your acceptance of those changes. You should check these Terms regularly.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    title: "Legal Compliance and Governing Laws",
+                    desc: "The Terms of Use stipulations are implemented and governed in accordance with the following laws of India:\n• The Indian Contract Act of 1872\n• The Information Technology Act of 2000 and the rules, regulations, and guidelines made thereunder. They include:\n  - Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules of 2011\n  - Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules of 2021\n• The Drugs and Cosmetics Act of 1940 in conjunction with the Drugs and Cosmetics Rules of 1945.\n• The Drugs and Magic Remedies (Objectionable Advertisements) Act of 1954\n• The Indian Medical Council Act of 1956 and the rules made thereunder\n• The Pharmacy Act of 1948\n• The Consumer Protection Act of 2019 and the Consumer Protection (E-Commerce) Rules of 2020\n\nAny dispute that may arise from or in connection with these Terms will be governed by the laws of India, and will fall under the jurisdiction of the appropriate courts in India."
+                  },
+                  {
+                    title: "Eligibility and Registration",
+                    desc: "Users may be asked to perform a registration process as set by Onco Healthcare to access certain functionalities or use Services on the Website. This may include engaging with third-party service providers.\n\nFor the purpose of creating an account, the following details may be collected by Onco Healthcare:\n– Full Name\n– Username / User ID\n– Email Address\n– Residential Address\n– Age\n– Gender\n– Mobile / Contact Number\n– Account Password\n– Details of a valid payment or financial account (if applicable)\n\nIn the course of this registration process, you confirm that you are being truthful and that the information you are providing is completely accurate, timely, and valid, and you are solely liable for the confidentiality of your login information and are responsible for all actions that will be undertaken in your account.\n\nOnco Healthcare Disability accounts will be canceled at their discretion once they are made aware of users providing information that is incorrect, incomplete, or simply false, and those breaching the Terms of Use of this contract."
+                  }
+                ].map((section, idx) => (
+                  <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">{section.title}</h4>
+                    <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed whitespace-pre-line">{section.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 6. REFUND & RETURNS POLICY PAGE ===== */}
+        {(activePage === "refund-returns" || activePage === "refund_returns") && (
+          <div className="space-y-8">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 dark:text-white">Refund and Returns Policy</h1>
+            </div>
+
+            <div className="space-y-6">
+              <p className="text-sm text-gray-505 dark:text-gray-400 leading-relaxed">
+                At Oncolife India, we want you to have a safe and hassle-free shopping experience. If you are not satisfied with your order, our return and refund policy is designed to make the process simple and transparent.
               </p>
 
               <div className="space-y-4">
                 {[
-                  { title: "1. Doctor Prescription Verification", desc: "Substances scheduled under CDSCO regulations (e.g. Schedule H, H1, X drugs) REQUIRE a valid digital or scanned doctor prescription. Orders will remain pending check until our certified pharmacists verify the slip." },
-                  { title: "2. Age & Patient Eligibility", desc: "You must be at least 18 years of age to initiate payments or order clinical prescription drugs." },
-                  { title: "3. Delivery & cold-chain Handling", desc: "Medications requiring cold-chain temperature control (e.g. insulin vials) must be accepted immediately upon delivery by our express handlers to prevent molecule decay." },
-                  { title: "4. Order Cancellation & Drug Returns", desc: "Due to CDSCO drug quality guidelines, opened medication strips or items stored incorrectly by patients cannot be returned. Sealed boxes can be returned within 7 days." },
-                  { title: "5. Disclaimer of Liability", desc: "MS Care provides logistical procurement and licensed pharmacist checks. Medical consultations represent individual physician views and do not replace inpatient hospital care." }
+                  {
+                    title: "Returns Eligibility",
+                    desc: "• You may request a return if you receive a damaged, defective, or incorrect product.\n• Products must be returned in their original condition, unopened, unused, and with all packaging intact.\n• Due to safety and hygiene reasons, opened medicines, healthcare products, or consumables cannot be returned."
+                  },
+                  {
+                    title: "Return Timeline",
+                    desc: "• Return requests must be raised within 48 hours of delivery by contacting our customer support team.\n• Our team will guide you through the return process and arrange pickup if applicable."
+                  },
+                  {
+                    title: "Refunds",
+                    desc: "• Once the returned product is received and inspected, we will notify you about the approval or rejection of your refund.\n• Approved refunds will be processed to your original payment method within 7–10 working days.\n• In case of prepaid orders, the full amount (excluding shipping charges, if applicable) will be refunded.\n• For COD orders, refunds will be issued to your provided bank account or as store credit."
+                  },
+                  {
+                    title: "Non-Returnable Items",
+                    desc: "• Opened medicines or healthcare products.\n• Products without original packaging.\n• Items returned after the allowed time frame."
+                  },
+                  {
+                    title: "Exchanges",
+                    desc: "• If you wish to exchange a product for the same item (for example, if it was damaged in transit), we will provide a replacement free of cost."
+                  },
+                  {
+                    title: "Corporate & Support Info",
+                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 9540294099"
+                  }
                 ].map((section, idx) => (
                   <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
                     <h4 className="font-bold text-gray-900 dark:text-white text-sm">{section.title}</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{section.desc}</p>
+                    <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed whitespace-pre-line">{section.desc}</p>
                   </div>
                 ))}
               </div>

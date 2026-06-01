@@ -7,13 +7,13 @@ import Marquee from "@/components/magicui/marquee";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Search, ArrowRight, Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf,
-  ShieldCheck, Truck, Clock, CreditCard, Upload,
+  ShieldCheck, ShieldAlert, LayoutGrid, Folder, Truck, Clock, CreditCard, Upload,
   Star, ChevronRight, Smartphone, Play, CheckCircle2, TrendingUp, Tag, X
 } from "lucide-react";
 import Image from "next/image";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldCheck,
+  Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldCheck, ShieldAlert, LayoutGrid, Folder,
 };
 
 /* ── search helpers ──────────────────────────────────────────────────────── */
@@ -310,6 +310,7 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -626,25 +627,48 @@ export default function HomePage() {
             <h2 className="text-3xl font-black text-gray-900 dark:text-white">Shop by Category</h2>
             <p className="text-gray-500 mt-2 font-medium">Find the right healthcare solutions for your needs</p>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {sourceCategories.filter((c) => c.id !== "all").map((cat) => {
-              const Icon = CATEGORY_ICONS[cat.icon] || Pill;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActivePage("shop")}
-                  className="group relative p-[1px] rounded-2xl bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 hover:scale-105 active:scale-95"
-                >
-                  <div className="h-full w-full rounded-2xl bg-white dark:bg-gray-905 p-4 flex flex-col items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 group-hover:from-emerald-100 group-hover:to-teal-100 dark:group-hover:from-emerald-900/40 dark:group-hover:to-teal-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                      <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors" />
-                    </div>
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{cat.name}</span>
+          
+          {/* Categories Grid */}
+          {(() => {
+            const filteredCats = sourceCategories.filter((c) => c.id !== "all");
+            const displayedCats = showAllCategories ? filteredCats : filteredCats.slice(0, 8);
+            const hasMore = filteredCats.length > 8;
+
+            return (
+              <div className="space-y-8">
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                  {displayedCats.map((cat) => {
+                    const Icon = CATEGORY_ICONS[cat.icon] || Pill;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActivePage("shop", `category=${cat.id}`)}
+                        className="group relative p-[1px] rounded-2xl bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 hover:scale-105 active:scale-95 text-left w-full block"
+                      >
+                        <div className="h-full w-full rounded-2xl bg-white dark:bg-gray-905 p-4 flex flex-col items-center gap-3">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 group-hover:from-emerald-100 group-hover:to-teal-100 dark:group-hover:from-emerald-900/40 dark:group-hover:to-teal-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                            <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors" />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{cat.name}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {hasMore && (
+                  <div className="text-center pt-2">
+                    <button
+                      onClick={() => setShowAllCategories(!showAllCategories)}
+                      className="px-6 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl border border-emerald-250 dark:border-emerald-800/60 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-650 dark:hover:bg-emerald-600 dark:hover:text-white transition-all shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      {showAllCategories ? "View Less" : "View More Categories"}
+                    </button>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </section>
 
@@ -894,13 +918,13 @@ export default function HomePage() {
             "image": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600",
             "@id": "https://mscare.com",
             "url": "https://mscare.com",
-            "telephone": "1800-123-CARE",
+            "telephone": "+91 9540294099",
             "address": {
               "@type": "PostalAddress",
-              "streetAddress": "Plot No. 12, Tech Sector 62",
-              "addressLocality": "Noida",
-              "addressRegion": "Uttar Pradesh",
-              "postalCode": "201301",
+              "streetAddress": "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station",
+              "addressLocality": "Delhi",
+              "addressRegion": "Delhi",
+              "postalCode": "110007",
               "addressCountry": "IN"
             },
             "openingHoursSpecification": {

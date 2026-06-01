@@ -63,10 +63,7 @@ export default function AuthPage() {
     }
   };
 
-  // Social login is demo-only (no real API for social auth)
-  const handleSocialLogin = () => {
-    setValidationError("Social login coming soon! Please use email & password.");
-  };
+
 
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-12">
@@ -79,14 +76,14 @@ export default function AuthPage() {
           </div>
           {authMode === "login" && (
             <>
-              <h2 className="text-xl font-bold text-gray-850 dark:text-white">Welcome Back to MS Care</h2>
-              <p className="text-xs text-gray-400">Login to manage orders, health consults &amp; lab results</p>
+              <h2 className="text-xl font-bold text-gray-850 dark:text-white">Welcome Back to Oncolife India</h2>
+              <p className="text-xs text-gray-400">Login to manage your oncology orders, clinical prescriptions & tracker</p>
             </>
           )}
           {authMode === "signup" && (
             <>
               <h2 className="text-xl font-bold text-gray-850 dark:text-white">Create Account</h2>
-              <p className="text-xs text-gray-400">Join over 50 Lakh+ users getting authentic clinical care</p>
+              <p className="text-xs text-gray-400">Join over 50 Lakh+ users getting authentic oncology clinical care</p>
             </>
           )}
           {authMode === "forgot" && (
@@ -121,7 +118,7 @@ export default function AuthPage() {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder="Ankit Kumar"
-                  className="w-full text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs bg-gray-50 dark:bg-gray-850 border border-gray-250 dark:border-gray-750 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
@@ -137,8 +134,8 @@ export default function AuthPage() {
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="ankit@mscare.com"
-                  className="w-full text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="ankit@oncolifeindia.com"
+                  className="w-full text-xs bg-gray-50 dark:bg-gray-850 border border-gray-250 dark:border-gray-750 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
@@ -220,64 +217,6 @@ export default function AuthPage() {
             )}
           </button>
         </form>
-
-        {(authMode === "login" || authMode === "signup") && (
-          <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-850">
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block text-center">OR SOCIAL CONNECT</span>
-            <div className="grid grid-cols-3 gap-3">
-              {/* Google */}
-              <button
-                type="button"
-                onClick={handleSocialLogin}
-                className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
-                title="Google"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.842 1.05 15.114 0 12 0 7.354 0 3.327 2.68 1.341 6.6l3.925 3.165z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M23.455 12.273c0-.818-.073-1.609-.209-2.373H12v4.5h6.427c-.277 1.455-1.095 2.691-2.327 3.518l3.609 2.8c2.11-1.945 3.327-4.8 3.327-8.245z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.266 14.235A7.07 7.07 0 0 1 4.909 12c0-.79.132-1.55.357-2.235L1.34 6.6A11.936 11.936 0 0 0 0 12c0 1.92.455 3.73 1.259 5.345l4.007-3.11z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.97-1.077 7.955-2.909l-3.609-2.8c-1 .67-2.282 1.073-4.346 1.073-3.34 0-6.177-2.254-7.186-5.29l-3.99 3.09C2.886 21.05 6.827 24 12 24z"
-                  />
-                </svg>
-              </button>
-
-              {/* Facebook */}
-              <button
-                type="button"
-                onClick={handleSocialLogin}
-                className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
-                title="Facebook"
-              >
-                <svg className="w-5 h-5 fill-blue-600" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </button>
-
-              {/* GitHub */}
-              <button
-                type="button"
-                onClick={handleSocialLogin}
-                className="py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-850 flex items-center justify-center transition-colors"
-                title="GitHub"
-              >
-                <svg className="w-5 h-5 fill-gray-800 dark:fill-white" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="text-center text-xs">
           {authMode === "login" && (

@@ -1,10 +1,11 @@
 "use client";
 import { useApp } from "@/context/AppContext";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function SuccessPage() {
   const { setActivePage, orders } = useApp();
   const latestOrder = orders[0];
+  const requiresRx = latestOrder?.items.some((item) => item.product.prescriptionRequired);
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
@@ -39,12 +40,22 @@ export default function SuccessPage() {
             </div>
           </div>
 
-          <div className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-2xl flex gap-3 text-emerald-800 dark:text-emerald-300">
-            <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-            <div className="text-[10px] leading-relaxed">
-              <strong>Supervised Verification:</strong> Our clinical pharmacist is reviewing your order details. Verification status updates will arrive via SMS within 15 minutes.
+          {requiresRx && !latestOrder.prescriptionUrl ? (
+            <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-2xl flex gap-3 text-amber-800 dark:text-amber-300 border border-amber-250 dark:border-amber-900/50">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+              <div className="text-[11px] leading-relaxed">
+                <strong className="text-amber-850 dark:text-amber-450 block mb-0.5">⚠️ Prescription Required for Delivery</strong>
+                Your order contains prescription medicines, but no prescription was uploaded. To ensure delivery, please upload a valid doctor's prescription from your account dashboard or during checkout.
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-2xl flex gap-3 text-emerald-800 dark:text-emerald-300">
+              <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+              <div className="text-[10px] leading-relaxed">
+                <strong>Supervised Verification:</strong> Our clinical pharmacist is reviewing your order details. Verification status updates will arrive via SMS within 15 minutes.
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -65,7 +65,9 @@ export type PageName =
   | "contact"
   | "faq"
   | "privacy"
-  | "terms";
+  | "terms"
+  | "refund-returns"
+  | "refund_returns";
 
 export type AuthMode = "login" | "signup" | "forgot" | "otp";
 
@@ -176,7 +178,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const validPages: PageName[] = [
       "home", "shop", "details", "cart", "checkout", "success",
       "dashboard", "auth", "upload",
-      "about", "contact", "faq", "privacy", "terms"
+      "about", "contact", "faq", "privacy", "terms", "refund-returns", "refund_returns"
     ];
     if (validPages.includes(cleanPath as PageName)) {
       return cleanPath as PageName;

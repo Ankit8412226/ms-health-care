@@ -4,7 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { Heart, Mail, Phone, MapPin, Shield, Truck, Clock, CreditCard } from "lucide-react";
 
 export default function Footer() {
-  const { setActivePage, subscribeNewsletter } = useApp();
+  const { setActivePage, subscribeNewsletter, categories } = useApp();
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
@@ -62,27 +62,27 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col items-center text-center md:items-start md:text-left">
             <div className="flex flex-col items-center md:flex-row gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-black text-sm">MS</span>
+                <span className="text-white font-black text-sm">OL</span>
               </div>
               <div className="text-center md:text-left">
-                <div className="text-lg font-black text-white">MS Care</div>
-                <div className="text-[10px] text-gray-500 tracking-wider">TRUSTED PHARMACY</div>
+                <div className="text-lg font-black text-white">Oncolife India</div>
+                <div className="text-[10px] text-gray-500 tracking-wider">ONCOLOGY PHARMACY</div>
               </div>
             </div>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-              India&apos;s most trusted online pharmacy delivering genuine medicines, health devices, and wellness products at your doorstep.
+              India&apos;s specialized oncology pharmacy delivering genuine CDSCO-certified anti-cancer and critical care medicines with secure cold-chain logistics.
             </p>
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400 mb-2">
               <Phone className="w-4 h-4 text-emerald-400" />
-              1800-123-CARE
+              +91 9540294099
             </div>
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400 mb-2">
               <Mail className="w-4 h-4 text-emerald-400" />
-              support@mscare.in
+              support@oncolifeindia.com
             </div>
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400">
               <MapPin className="w-4 h-4 text-emerald-400" />
-              Noida, Uttar Pradesh, India
+              Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007
             </div>
           </div>
 
@@ -96,6 +96,7 @@ export default function Footer() {
                 { label: "FAQs", page: "faq" as const },
                 { label: "Privacy Policy", page: "privacy" as const },
                 { label: "Terms of Service", page: "terms" as const },
+                { label: "Refund & Returns Policy", page: "refund-returns" as const },
               ].map(({ label, page }) => (
                 <li key={label}>
                   <button onClick={() => setActivePage(page)} className="text-sm text-gray-400 hover:text-emerald-400 transition-colors">
@@ -110,13 +111,19 @@ export default function Footer() {
           <div className="flex flex-col items-center text-center md:items-start md:text-left col-span-1">
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2.5">
-              {["Diabetes Care", "Heart Health", "Vitamins & OTC", "Baby Care", "Skin Care", "Ayurvedic"].map((cat) => (
-                <li key={cat}>
-                  <button onClick={() => setActivePage("shop")} className="text-sm text-gray-400 hover:text-emerald-400 transition-colors">
-                    {cat}
-                  </button>
-                </li>
-              ))}
+              {(categories || [])
+                .filter((c) => c.id !== "all")
+                .slice(0, 4)
+                .map((cat) => (
+                  <li key={cat.id}>
+                    <button
+                      onClick={() => setActivePage("shop", `category=${cat.id}`)}
+                      className="text-sm text-gray-400 hover:text-emerald-400 transition-colors text-left"
+                    >
+                      {cat.name}
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
 
@@ -166,7 +173,7 @@ export default function Footer() {
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 text-center sm:text-left">
-            <span>© 2026 MS Care Pharmacy Pvt. Ltd. All rights reserved. Drug License No: DL-XXXXX-XXXX</span>
+            <span>© 2026 Oncolife India. All rights reserved. CDSCO Drug License No: DL-XXXXX-XXXX</span>
             <span>Made with <Heart className="w-3 h-3 inline text-red-400" /> in India</span>
           </div>
         </div>

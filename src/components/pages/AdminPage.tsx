@@ -112,7 +112,7 @@ export default function AdminPage() {
   // Handle Admin Authentication
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@mscare.com" && password === "admin123") {
+    if (email === "admin@oncolifeindia.com" && password === "admin123") {
       setIsAuthenticated(true);
       setLoginError("");
       triggerToast("Welcome back, Chief Administrator!");
@@ -122,7 +122,7 @@ export default function AdminPage() {
   };
 
   const handleQuickFill = () => {
-    setEmail("admin@mscare.com");
+    setEmail("admin@oncolifeindia.com");
     setPassword("admin123");
     setLoginError("");
   };
@@ -322,7 +322,7 @@ export default function AdminPage() {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4 border border-white">
               <Lock className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">MS Care Admin Portal</h1>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Oncolife India Admin Portal</h1>
             <p className="text-slate-400 text-[10px] font-bold mt-1 text-center uppercase tracking-widest">
               Protected Administrative Interface
             </p>
@@ -346,7 +346,7 @@ export default function AdminPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@mscare.com"
+                  placeholder="admin@oncolifeindia.com"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white transition-all text-slate-800 placeholder:text-slate-400 font-medium"
                 />
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -412,10 +412,10 @@ export default function AdminPage() {
         {/* Sidebar Header */}
         <div className="h-16 px-6 border-b border-slate-100 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow shadow-emerald-500/20">
-            <span className="text-white font-black text-xs">MS</span>
+            <span className="text-white font-black text-xs">OL</span>
           </div>
           <div>
-            <div className="text-sm font-black text-slate-900 leading-none">MS Care</div>
+            <div className="text-sm font-black text-slate-900 leading-none">Oncolife India</div>
             <div className="text-[9px] text-emerald-600 font-extrabold tracking-widest leading-none mt-1 uppercase">
               Admin System
             </div>
@@ -727,6 +727,11 @@ export default function AdminPage() {
                             }`}>
                               {order.status}
                             </span>
+                            {order.items.some(item => item.product.prescriptionRequired) && !order.prescriptionUrl && (
+                              <span className="mt-1 block text-[9px] font-extrabold text-red-650 bg-red-50 border border-red-100 rounded px-1.5 py-0.5 max-w-[80px] mx-auto uppercase tracking-wide">
+                                Rx Missing
+                              </span>
+                            )}
                           </td>
                           <td className="py-4 text-center pr-4">
                             <div className="flex items-center justify-center gap-2">
@@ -1191,6 +1196,16 @@ export default function AdminPage() {
                     </p>
                   </div>
                 </div>
+
+                {selectedOrder.items.some(item => item.product.prescriptionRequired) && !selectedOrder.prescriptionUrl && (
+                  <div className="bg-red-50 border border-red-150 rounded-2xl p-4 flex gap-3 text-red-800">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-600" />
+                    <div className="text-xs">
+                      <strong className="text-red-900 block mb-0.5">⚠️ Delivery Alert: Prescription Missing</strong>
+                      This order contains prescription-only items, but no prescription slip was uploaded by the customer. Delivery should not proceed until the prescription is uploaded.
+                    </div>
+                  </div>
+                )}
 
                 {/* 2. Items List */}
                 <div className="space-y-3">

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   CreditCard, ShieldCheck, PlusCircle, CheckCircle,
-  FileText, Landmark, Wallet, Banknote, MapPin, X
+  FileText, Landmark, Wallet, Banknote, MapPin, X, AlertCircle
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
                 <FileText className="w-5 h-5" /> Medical Prescription Required (Rx)
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-400">
-                At least one drug in your checkout requires a verified clinical prescription slip. Please select a previously uploaded slip or upload a new one to complete order dispatch verification.
+                At least one drug in your checkout requires a verified clinical prescription slip. Please select a previously uploaded slip or upload a new one to complete order dispatch verification. You may also place the order now and upload it later from your dashboard.
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 {prescriptions.map((rx) => (
@@ -187,7 +187,19 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-850 p-4 rounded-2xl text-[11px] text-gray-400 space-y-1">
+            {requiresRx && !selectedRxUrl && (
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-4 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  Prescription Required for Delivery
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  You can place this order now. However, please note that <strong>your order will only be delivered after you upload a valid prescription</strong>.
+                </p>
+              </div>
+            )}
+
+            <div className="bg-gray-50 dark:bg-gray-855 p-4 rounded-2xl text-[11px] text-gray-400 space-y-1">
               <div className="flex gap-2 items-center text-emerald-600 dark:text-emerald-400 font-bold mb-1">
                 <ShieldCheck className="w-3.5 h-3.5" /> Guarantee Safe Checkout
               </div>
@@ -196,14 +208,9 @@ export default function CheckoutPage() {
 
             <button
               onClick={handlePlaceOrder}
-              disabled={requiresRx && !selectedRxUrl}
-              className={`w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm ${
-                requiresRx && !selectedRxUrl
-                  ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 hover:scale-[1.02]"
-              }`}
+              className="w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 hover:scale-[1.02]"
             >
-              {requiresRx && !selectedRxUrl ? "Please Select Prescription" : "Place Secure Order"}
+              {requiresRx && !selectedRxUrl ? "Place Order (Needs Rx for Delivery)" : "Place Secure Order"}
             </button>
           </div>
         </div>

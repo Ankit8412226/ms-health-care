@@ -1,14 +1,32 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
+import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { Product } from "@/types";
-import { SlidersHorizontal, Loader2 } from "lucide-react";
+import {
+  SlidersHorizontal, Loader2, Pill, Activity, HeartPulse, Sparkles,
+  ShieldAlert, Baby, Sun, Leaf, LayoutGrid, Folder
+} from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldAlert, LayoutGrid, Folder
+};
 
 export default function ShopPage() {
   const { products: allContextProducts, categories } = useApp();
-  const [selectedCat, setSelectedCat] = useState("all");
+  const searchParams = useSearchParams();
+  const categoryQuery = searchParams.get("category") || "all";
+  
+  const [selectedCat, setSelectedCat] = useState(categoryQuery);
   const [sortBy, setSortBy] = useState("popular");
+  const [catOpen, setCatOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  // Keep state in sync with URL category query updates
+  useEffect(() => {
+    setSelectedCat(categoryQuery);
+  }, [categoryQuery]);
   
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -99,24 +117,32 @@ export default function ShopPage() {
             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4" /> Categories
             </h3>
-            {sourceCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCat(cat.id)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  selectedCat === cat.id
-                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-              >
-                {cat.name}
-                {cat.id !== "all" && (
-                  <span className="float-right text-xs text-gray-400">
-                    {(allContextProducts || []).filter((p) => p.category === cat.id).length}
-                  </span>
-                )}
-              </button>
-            ))}
+             {sourceCategories.map((cat) => {
+               const Icon = CATEGORY_ICONS[cat.icon] || LayoutGrid;
+               return (
+                 <button
+                   key={cat.id}
+                   onClick={() => setSelectedCat(cat.id)}
+                   className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between gap-2 border ${
+                     selectedCat === cat.id
+                       ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-250 dark:border-emerald-800 shadow-xs"
+                       : "border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                   }`}
+                 >
+                   <span className="flex items-center gap-2">
+                     <Icon className={`w-4 h-4 ${
+                       selectedCat === cat.id ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500"
+                     }`} />
+                     {cat.name}
+                   </span>
+                   {cat.id !== "all" && (
+                     <span className="text-xs text-gray-450 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/80 px-2 py-0.5 rounded-md font-bold">
+                       {(allContextProducts || []).filter((p) => p.category === cat.id).length}
+                     </span>
+                   )}
+                 </button>
+               );
+             })}
           </div>
         </div>
 
@@ -126,39 +152,100 @@ export default function ShopPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3">
             <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
               {/* Category Dropdown (Mobile/Tablet only) */}
-              <div className="flex items-center gap-2 lg:hidden w-full sm:w-auto">
-                <span className="text-sm text-gray-500 font-medium">Category:</span>
-                <select
-                  value={selectedCat}
-                  onChange={(e) => setSelectedCat(e.target.value)}
-                  className="w-full sm:w-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-gray-800 dark:text-gray-200 cursor-pointer"
-                >
-                  {sourceCategories.map((cat) => {
-                    const count = cat.id !== "all"
-                      ? (allContextProducts || []).filter((p) => p.category === cat.id).length
-                      : null;
-                    return (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name} {count !== null ? `(${count})` : ""}
-                      </option>
-                    );
-                  })}
-                </select>
+              <div className="flex items-center gap-2 lg:hidden w-full sm:w-auto relative">
+                <span className="text-sm text-gray-505 dark:text-gray-400 font-medium">Category:</span>
+                <div className="relative w-full sm:w-auto flex-1 sm:flex-initial">
+                  <button
+                    type="button"
+                    onClick={() => setCatOpen(!catOpen)}
+                    className="w-full sm:w-48 flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 text-gray-850 dark:text-gray-200 cursor-pointer shadow-xs"
+                  >
+                    <span>{sourceCategories.find(c => c.id === selectedCat)?.name || "All Products"}</span>
+                    <span className="text-[10px] text-gray-400">▼</span>
+                  </button>
+                  {catOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setCatOpen(false)} />
+                      <div className="absolute left-0 mt-1.5 w-full sm:w-48 bg-white dark:bg-gray-850 border border-gray-200/80 dark:border-gray-750/80 rounded-xl shadow-lg z-25 max-h-60 overflow-y-auto overflow-x-hidden">
+                        {sourceCategories.map((cat) => {
+                          const count = cat.id !== "all"
+                            ? (allContextProducts || []).filter((p) => p.category === cat.id).length
+                            : null;
+                          return (
+                            <button
+                              type="button"
+                              key={cat.id}
+                              onClick={() => {
+                                setSelectedCat(cat.id);
+                                setCatOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-xs font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-colors flex items-center justify-between gap-2 border-b border-gray-50 dark:border-gray-800 last:border-b-0 ${
+                                selectedCat === cat.id
+                                  ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold"
+                                  : "text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              <span>{cat.name}</span>
+                              {count !== null && (
+                                <span className="text-[9px] text-gray-450 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/85 px-1.5 py-0.5 rounded font-bold">
+                                  {count}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Sort by Dropdown */}
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-sm text-gray-500 font-medium">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full sm:w-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-gray-800 dark:text-gray-200 cursor-pointer"
-                >
-                  <option value="popular">Most Popular</option>
-                  <option value="low">Price: Low to High</option>
-                  <option value="high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                </select>
+              <div className="flex items-center gap-2 w-full sm:w-auto relative">
+                <span className="text-sm text-gray-550 dark:text-gray-400 font-medium">Sort by:</span>
+                <div className="relative w-full sm:w-auto flex-1 sm:flex-initial">
+                  <button
+                    type="button"
+                    onClick={() => setSortOpen(!sortOpen)}
+                    className="w-full sm:w-48 flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 text-gray-855 dark:text-gray-200 cursor-pointer shadow-xs"
+                  >
+                    <span>{
+                      sortBy === "popular" ? "Most Popular" :
+                      sortBy === "low" ? "Price: Low to High" :
+                      sortBy === "high" ? "Price: High to Low" : "Highest Rated"
+                    }</span>
+                    <span className="text-[10px] text-gray-400">▼</span>
+                  </button>
+                  {sortOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+                      <div className="absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-full sm:w-48 bg-white dark:bg-gray-850 border border-gray-200/80 dark:border-gray-750/80 rounded-xl shadow-lg z-25 overflow-hidden">
+                        {[
+                          { value: "popular", label: "Most Popular" },
+                          { value: "low", label: "Price: Low to High" },
+                          { value: "high", label: "Price: High to Low" },
+                          { value: "rating", label: "Highest Rated" }
+                        ].map((opt) => (
+                          <button
+                            type="button"
+                            key={opt.value}
+                            onClick={() => {
+                              setSortBy(opt.value);
+                              setSortOpen(false);
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 text-xs font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-b-0 ${
+                              sortBy === opt.value
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold"
+                                : "text-gray-705 dark:text-gray-300"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <span className="text-sm text-gray-400 self-end sm:self-auto">{productsList.length} of {totalCount} shown</span>
