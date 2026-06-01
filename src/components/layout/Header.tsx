@@ -428,7 +428,7 @@ export default function Header() {
               {/* Dark mode */}
               <button
                 onClick={() => setDark(!dark)}
-                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="hidden md:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -436,7 +436,7 @@ export default function Header() {
               {/* Wishlist */}
               <button
                 onClick={() => setActivePage("dashboard", "tab=wish")}
-                className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="hidden md:flex relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (
@@ -460,62 +460,64 @@ export default function Header() {
               </button>
 
               {/* User menu */}
-              {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                      {user.name.charAt(0)}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block max-w-[80px] truncate">
-                      {user.name.split(" ")[0]}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                  </button>
+              <div className="hidden md:block">
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                        {user.name.charAt(0)}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block max-w-[80px] truncate">
+                        {user.name.split(" ")[0]}
+                      </span>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                    </button>
 
-                  {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 overflow-hidden z-50">
-                      <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                        <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{user.name}</div>
-                        <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 overflow-hidden z-50">
+                        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-205 truncate">{user.name}</div>
+                          <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                        </div>
+                        {[
+                          { label: "Dashboard", icon: User, page: "dashboard" as const, query: undefined },
+                          { label: "My Orders", icon: Package, page: "dashboard" as const, query: "tab=orders" },
+                          { label: "Upload Prescription", icon: Upload, page: "upload" as const, query: undefined },
+                        ].map((item) => (
+                          <button
+                            key={item.label}
+                            onClick={() => { setActivePage(item.page, item.query); setUserMenuOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                          >
+                            <item.icon className="w-4 h-4 text-emerald-600" />
+                            {item.label}
+                          </button>
+                        ))}
+                        <div className="border-t border-gray-100 dark:border-gray-800">
+                          <button
+                            onClick={() => { logout(); setUserMenuOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                          </button>
+                        </div>
                       </div>
-                      {[
-                        { label: "Dashboard", icon: User, page: "dashboard" as const, query: undefined },
-                        { label: "My Orders", icon: Package, page: "dashboard" as const, query: "tab=orders" },
-                        { label: "Upload Prescription", icon: Upload, page: "upload" as const, query: undefined },
-                      ].map((item) => (
-                        <button
-                          key={item.label}
-                          onClick={() => { setActivePage(item.page, item.query); setUserMenuOpen(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          <item.icon className="w-4 h-4 text-emerald-600" />
-                          {item.label}
-                        </button>
-                      ))}
-                      <div className="border-t border-gray-100 dark:border-gray-800">
-                        <button
-                          onClick={() => { logout(); setUserMenuOpen(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setActivePage("auth")}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:block">Login</span>
-                </button>
-              )}
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setActivePage("auth")}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105"
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:block">Login</span>
+                  </button>
+                )}
+              </div>
 
               {/* Mobile menu toggle */}
               <button
@@ -599,12 +601,21 @@ export default function Header() {
                     style={{ mixBlendMode: "screen" }}
                   />
                 </div>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setDark(!dark)}
+                    className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Toggle theme"
+                  >
+                    {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </button>
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Scrollable content */}
@@ -625,13 +636,14 @@ export default function Header() {
                 {/* Nav links */}
                 <div className="px-3 py-3 space-y-1">
                   {[
-                    { label: "Home", page: "home" as const, icon: Home },
-                    { label: "Shop Medicines", page: "shop" as const, icon: Package },
-                    { label: "Upload Rx", page: "upload" as const, icon: Upload },
-                  ].map(({ label, page, icon: Icon }) => (
+                    { label: "Home", page: "home" as const, icon: Home, query: undefined },
+                    { label: "Shop Medicines", page: "shop" as const, icon: Package, query: undefined },
+                    { label: "Upload Rx", page: "upload" as const, icon: Upload, query: undefined },
+                    { label: "My Wishlist", page: "dashboard" as const, icon: Heart, query: "tab=wish" },
+                  ].map(({ label, page, icon: Icon, query }) => (
                     <button
                       key={label}
-                      onClick={() => { setActivePage(page); setMobileOpen(false); }}
+                      onClick={() => { setActivePage(page, query); setMobileOpen(false); }}
                       className={`w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3 ${
                         activePage === page
                           ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
