@@ -61,7 +61,7 @@ export default function DashboardPage() {
 
             <button
               onClick={logout}
-              className="w-full mt-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-400 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-6 py-2.5 bg-red-50 hover:bg-red-100 dark:hover:bg-red-950/40 text-red-600 dark:bg-red-950/20 dark:text-red-400 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4" /> Log Out Account
             </button>

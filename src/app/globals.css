@@ -42,6 +42,22 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
+  --color-gray-150: #eceef1;
+  --color-gray-250: #dadde2;
+  --color-gray-350: #b3b9c4;
+  --color-gray-405: #8e96a3;
+  --color-gray-450: #718096;
+  --color-gray-505: #64748b;
+  --color-gray-550: #5a6270;
+  --color-gray-650: #3d4654;
+  --color-gray-705: #323b49;
+  --color-gray-750: #252f3f;
+  --color-gray-850: #182232;
+  --color-gray-905: #0a0f18;
+
+  --color-emerald-250: #a7f3d0;
+  --color-emerald-650: #047857;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
