@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
@@ -10,7 +10,7 @@ import {
 import Image from "next/image";
 
 export default function DetailPage() {
-  const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage, products, getProductById } = useApp();
+  const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage, products, getProductById, user } = useApp();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const currentProductId = idParam || selectedProductId || (products && products[0]?.id) || "";
@@ -22,6 +22,110 @@ export default function DetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [loadingDetail, setLoadingDetail] = useState(true);
+
+  // Product Reviews States
+  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [isEligible, setIsEligible] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Review Form Input States
+  const [formRating, setFormRating] = useState(5);
+  const [formComment, setFormComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+
+  const fetchReviews = useCallback(async () => {
+    if (!currentProductId) return;
+    try {
+      const res = await fetch(`${API_URL}/reviews/${currentProductId}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setReviewsList(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [currentProductId, API_URL]);
+
+  const checkEligibility = useCallback(async () => {
+    if (!currentProductId || !user || !user.token) {
+      setIsEligible(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/reviews/${currentProductId}/eligible`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setIsEligible(!!(json.success && json.eligible));
+      }
+    } catch (err) {
+      console.error("Error checking review eligibility:", err);
+    }
+  }, [currentProductId, user, API_URL]);
+
+  useEffect(() => {
+    fetchReviews();
+    checkEligibility();
+  }, [currentProductId, fetchReviews, checkEligibility]);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !user.token) return;
+    if (!formComment.trim()) {
+      setReviewError("Please write a comment for your review.");
+      return;
+    }
+    setReviewError("");
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`${API_URL}/reviews/${currentProductId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          rating: formRating,
+          comment: formComment
+        })
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setReviewSuccess(true);
+        setFormComment("");
+        setFormRating(5);
+        setIsEligible(false);
+        fetchReviews();
+        
+        if (product) {
+          const updatedCount = product.reviewCount + 1;
+          const updatedRating = Math.round((((product.rating * product.reviewCount) + formRating) / updatedCount) * 10) / 10;
+          setProduct({
+            ...product,
+            rating: updatedRating,
+            reviewCount: updatedCount
+          });
+        }
+      } else {
+        setReviewError(json.message || "Failed to submit review.");
+      }
+    } catch (err) {
+      setReviewError("Network error. Please try again.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     if (!currentProductId) return;
@@ -341,6 +445,115 @@ export default function DetailPage() {
               ))}
             </ul>
           )}
+        </div>
+      </div>
+
+      {/* ===== REVIEWS SECTION ===== */}
+      <div className="border-t border-gray-150 dark:border-gray-850 pt-12 pb-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Patient Reviews &amp; Ratings</h2>
+        
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          {/* Reviews List */}
+          <div className="lg:col-span-7 space-y-4">
+            {loadingReviews ? (
+              <p className="text-sm text-gray-400">Loading reviews...</p>
+            ) : reviewsList.length === 0 ? (
+              <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl text-center border border-dashed border-gray-200 dark:border-gray-800">
+                <p className="text-sm text-gray-500 font-medium">No reviews yet for this cancer medicine.</p>
+                <p className="text-xs text-gray-400 mt-1">Be the first verified buyer to share your clinical review.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+                {reviewsList.map((rev) => (
+                  <div key={rev._id} className="p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-gray-850 dark:text-gray-200">{rev.userName}</span>
+                        <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full font-bold">Verified Buyer</span>
+                      </div>
+                      <span className="text-[10px] text-gray-405 font-medium">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? "fill-emerald-500 text-emerald-500" : "text-gray-300"}`} />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{rev.comment}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Review Form */}
+          <div className="lg:col-span-5 bg-gray-50 dark:bg-gray-900/45 p-6 rounded-3xl border border-gray-150 dark:border-gray-800">
+            {isEligible ? (
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <h3 className="font-bold text-gray-900 dark:text-white text-base">Write a Review</h3>
+                <p className="text-[10px] text-gray-400 leading-normal">
+                  Thank you for your purchase! Your feedback helps other oncologists and patients choose authentic medications.
+                </p>
+
+                {reviewError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold rounded-xl">
+                    {reviewError}
+                  </div>
+                )}
+
+                {/* Rating star selectors */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest block">Star Rating</label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setFormRating(star)}
+                        className="p-1 hover:scale-110 active:scale-95 transition-all text-gray-300 hover:text-emerald-500 cursor-pointer"
+                      >
+                        <Star className={`w-6 h-6 ${star <= formRating ? "fill-emerald-500 text-emerald-500" : "text-gray-300"}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest block">Review Comments</label>
+                  <textarea
+                    rows={4}
+                    value={formComment}
+                    onChange={(e) => setFormComment(e.target.value)}
+                    placeholder="Describe your therapy experience, shipment condition, efficacy, etc."
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none font-medium"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-500/15 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  Submit Review
+                </button>
+              </form>
+            ) : reviewSuccess ? (
+              <div className="text-center py-6 space-y-2">
+                <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-lg font-bold">
+                  ✓
+                </div>
+                <h4 className="font-bold text-gray-900 dark:text-white text-sm">Review Submitted!</h4>
+                <p className="text-xs text-gray-400">Bhai, thank you for your submission. Your review was posted successfully!</p>
+              </div>
+            ) : (
+              <div className="p-4 bg-emerald-550/5 dark:bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-center space-y-2.5">
+                <span className="text-lg">🔒</span>
+                <h4 className="font-bold text-gray-850 dark:text-white text-xs">Review Locked</h4>
+                <p className="text-[10px] text-gray-400 leading-normal max-w-xs mx-auto">
+                  Only verified buyers who have purchased and received this product from Oncolife India can leave feedback reviews.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
