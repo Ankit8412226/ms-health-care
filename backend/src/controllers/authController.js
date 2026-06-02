@@ -14,7 +14,7 @@ const generateToken = (id) => {
  * @access  Public
  */
 const registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, phone, role } = req.body;
 
   try {
     // Check if user already exists
@@ -28,6 +28,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password,
+      phone,
       role: role || 'user', // Default to normal user
     });
 

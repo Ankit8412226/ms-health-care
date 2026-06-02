@@ -56,6 +56,13 @@ export default function CheckoutPage() {
   const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
   const total = subtotal - discount + deliveryFee;
 
+  // Redirect to Auth if not logged in
+  useEffect(() => {
+    if (!user) {
+      setActivePage("auth");
+    }
+  }, [user, setActivePage]);
+
   // Auto-select address if none is selected and addresses are available
   useEffect(() => {
     if (!selectedAddrId && addresses.length > 0) {
