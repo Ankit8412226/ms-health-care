@@ -6,6 +6,21 @@ import {
   FileText, Landmark, Wallet, Banknote, MapPin, X, AlertCircle
 } from "lucide-react";
 
+// Helper function to load Razorpay SDK dynamically
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && (window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function CheckoutPage() {
   const {
     cart,
@@ -13,13 +28,16 @@ export default function CheckoutPage() {
     addAddress,
     placeOrder,
     prescriptions,
-    setActivePage
+    setActivePage,
+    user,
+    discountPercentage
   } = useApp();
 
   const [selectedAddrId, setSelectedAddrId] = useState(addresses[0]?.id || "");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [selectedRxUrl, setSelectedRxUrl] = useState("");
   const [isAddrModalOpen, setIsAddrModalOpen] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Address Form fields
   const [name, setName] = useState("");
@@ -31,6 +49,12 @@ export default function CheckoutPage() {
   const [isDefault, setIsDefault] = useState(false);
 
   const requiresRx = cart.some((item) => item.product.prescriptionRequired);
+
+  // Calculate pricing for Razorpay
+  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  const discount = Math.round(subtotal * (discountPercentage / 100));
+  const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
+  const total = subtotal - discount + deliveryFee;
 
   // Auto-select address if none is selected and addresses are available
   useEffect(() => {
@@ -64,12 +88,118 @@ export default function CheckoutPage() {
     setIsDefault(false);
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!selectedAddrId) {
       alert("Please add a delivery address first.");
       return;
     }
-    placeOrder(selectedAddrId, selectedPayment, selectedRxUrl);
+
+    if (selectedPayment === "cod") {
+      placeOrder(selectedAddrId, selectedPayment, selectedRxUrl);
+      return;
+    }
+
+    // Prepaid Payment: Launch Razorpay checkout
+    setIsProcessingPayment(true);
+
+    try {
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        alert("Failed to load Razorpay SDK. Please check your network connection.");
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      // 1. Create order on backend to get Razorpay order_id
+      const apiPrefix = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+      const orderRes = await fetch(`${apiPrefix}/orders/razorpay-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": user?.token ? `Bearer ${user.token}` : "",
+        },
+        body: JSON.stringify({ amount: total }),
+      });
+
+      if (!orderRes.ok) {
+        const errorData = await orderRes.json();
+        alert(`Payment Initialization Failed: ${errorData.message || "Unknown error"}`);
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      const orderJson = await orderRes.json();
+      const rzpOrder = orderJson.data;
+
+      // 2. Open Razorpay modal
+      const options = {
+        key: "rzp_live_SwTSEkWxau6fbi", // Live Key ID
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: "M S Healthcare",
+        description: "Specialized Oncology & Cancer Care Pharmacy",
+        image: "/logo-light.png",
+        order_id: rzpOrder.id,
+        handler: async function (response: any) {
+          // 3. Verify Razorpay Payment Signature
+          try {
+            const verifyRes = await fetch(`${apiPrefix}/orders/razorpay-verify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": user?.token ? `Bearer ${user.token}` : "",
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyJson = await verifyRes.json();
+            if (verifyJson.success) {
+              // Finalize order local placement
+              placeOrder(selectedAddrId, selectedPayment, selectedRxUrl, {
+                transactionId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                paymentStatus: "Paid",
+              });
+            } else {
+              alert(`Payment verification failed: ${verifyJson.message}`);
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
+            alert("Network connection error verifying the payment signature.");
+          } finally {
+            setIsProcessingPayment(false);
+          }
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+          contact: user?.phone || "",
+        },
+        notes: {
+          address: selectedAddrId,
+        },
+        theme: {
+          color: "#059669", // Emerald green
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessingPayment(false);
+          },
+        },
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      console.error("Razorpay error:", err);
+      alert("An unexpected error occurred while launching Razorpay.");
+      setIsProcessingPayment(false);
+    }
   };
 
   return (
@@ -240,10 +370,19 @@ export default function CheckoutPage() {
 
             <button
               onClick={handlePlaceOrder}
-              disabled={addresses.length === 0}
-              className="w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none text-white shadow-emerald-500/20 hover:scale-[1.02]"
+              disabled={addresses.length === 0 || isProcessingPayment}
+              className="w-full py-3.5 rounded-xl font-bold transition-all shadow-lg text-center text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none text-white shadow-emerald-500/20 hover:scale-[1.02] flex items-center justify-center gap-2"
             >
-              {requiresRx && !selectedRxUrl ? "Place Order (Needs Rx for Delivery)" : "Place Secure Order"}
+              {isProcessingPayment ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Processing Payment...
+                </>
+              ) : requiresRx && !selectedRxUrl ? (
+                "Place Order (Needs Rx for Delivery)"
+              ) : (
+                "Place Secure Order"
+              )}
             </button>
           </div>
         </div>

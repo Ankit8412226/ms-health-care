@@ -1,6 +1,8 @@
 const Order = require('../models/Order');
 const Address = require('../models/Address');
 const Product = require('../models/Product');
+const razorpay = require('../config/razorpay');
+const crypto = require('crypto');
 
 /**
  * @desc    Place a new order with mock payment processing
@@ -44,8 +46,8 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    // Delivery fee logic: Free above ₹500, else ₹40
-    const deliveryFee = subtotal > 500 ? 0 : 40;
+    // Delivery fee logic: Free above ₹1100, else ₹49
+    const deliveryFee = subtotal > 1100 ? 0 : 49;
     const total = subtotal + deliveryFee;
 
     // 3. Create the order instance
@@ -171,9 +173,80 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Create a Razorpay order
+ * @route   POST /api/orders/razorpay-order
+ * @access  Private
+ */
+const createRazorpayOrder = async (req, res) => {
+  const { amount } = req.body; // Amount in rupees
+
+  if (!amount || isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ success: false, message: 'Invalid transaction amount' });
+  }
+
+  try {
+    const options = {
+      amount: Math.round(amount * 100), // convert to paise
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}`,
+    };
+
+    const rzpOrder = await razorpay.orders.create(options);
+
+    return res.status(200).json({
+      success: true,
+      data: rzpOrder,
+    });
+  } catch (error) {
+    console.error('Razorpay Create Order Error:', error);
+    return res.status(500).json({ success: false, message: 'Razorpay order generation failed', error: error.message });
+  }
+};
+
+/**
+ * @desc    Verify Razorpay payment signature
+ * @route   POST /api/orders/razorpay-verify
+ * @access  Private
+ */
+const verifyRazorpayPayment = async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ success: false, message: 'Missing required Razorpay parameters' });
+  }
+
+  try {
+    // Hardcoded Secret used for validation
+    const secret = 'I0NySzSeypRaJCFr3G5wBBY2';
+    const text = razorpay_order_id + '|' + razorpay_payment_id;
+    const generated_signature = crypto
+      .createHmac('sha256', secret)
+      .update(text)
+      .digest('hex');
+
+    if (generated_signature === razorpay_signature) {
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified and signature matched successfully!',
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature. Verification failed.',
+      });
+    }
+  } catch (error) {
+    console.error('Razorpay Verify Signature Error:', error);
+    return res.status(500).json({ success: false, message: 'Payment verification process error' });
+  }
+};
+
 module.exports = {
   placeOrder,
   getMyOrders,
   getAllOrders,
   updateOrderStatus,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
 };

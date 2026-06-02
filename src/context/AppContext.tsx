@@ -40,6 +40,13 @@ export interface Order {
   status: "Placed" | "Processing" | "Out for Delivery" | "Delivered";
   prescriptionUrl?: string;
   prescriptionStatus?: "Pending Review" | "Approved" | "Rejected";
+  paymentStatus?: "Pending" | "Paid" | "Failed";
+  paymentDetails?: {
+    transactionId?: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    paidAt?: string;
+  };
 }
 
 export interface Prescription {
@@ -95,7 +102,12 @@ interface AppContextType {
   addAddress: (addr: Omit<UserAddress, "id">) => void;
   deleteAddress: (id: string) => void;
   orders: Order[];
-  placeOrder: (addressId: string, paymentMethod: string, prescriptionUrl?: string) => void;
+  placeOrder: (
+    addressId: string,
+    paymentMethod: string,
+    prescriptionUrl?: string,
+    paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
+  ) => void;
   prescriptions: Prescription[];
   uploadPrescription: (name: string, url: string) => void;
   couponCode: string;
@@ -430,7 +442,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ── Orders (client-side for demo) ─────────────────────────────────────
-  const placeOrder = (addressId: string, paymentMethod: string, prescriptionUrl?: string) => {
+  const placeOrder = (
+    addressId: string,
+    paymentMethod: string,
+    prescriptionUrl?: string,
+    paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
+  ) => {
     const address = addresses.find((a) => a.id === addressId) || addresses[0];
     if (!address) return;
     const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -451,6 +468,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: "Placed",
       prescriptionUrl,
       prescriptionStatus: prescriptionUrl ? "Pending Review" : undefined,
+      paymentStatus: paymentDetails?.paymentStatus || (paymentMethod === "cod" ? "Pending" : "Paid"),
+      paymentDetails: paymentDetails ? {
+        transactionId: paymentDetails.transactionId,
+        razorpayOrderId: paymentDetails.razorpayOrderId,
+        razorpayPaymentId: paymentDetails.razorpayPaymentId,
+        paidAt: new Date().toISOString(),
+      } : undefined,
     };
 
     setOrders((prev) => [newOrder, ...prev]);
