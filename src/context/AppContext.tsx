@@ -435,7 +435,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!address) return;
     const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     const discount = Math.round(subtotal * (discountPercentage / 100));
-    const deliveryFee = subtotal - discount > 500 ? 0 : 49;
+    const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
     const total = subtotal - discount + deliveryFee;
 
     const newOrder: Order = {

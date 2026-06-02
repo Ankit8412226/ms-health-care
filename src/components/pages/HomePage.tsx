@@ -201,8 +201,8 @@ function BmiCalculatorWidget() {
 
 const FAQ_ITEMS = [
   {
-    q: "Is MS Care a licensed online pharmacy in India?",
-    a: "Yes. MS Care holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors."
+    q: "Is M S Healthcare a licensed online pharmacy in India?",
+    a: "Yes. M S Healthcare holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors."
   },
   {
     q: "How do I upload my prescription to order medicines?",
@@ -217,7 +217,7 @@ const FAQ_ITEMS = [
     a: "Yes, we offer a 100% replacement or full refund policy for damaged, expired, or incorrectly delivered medicines. Contact our 24/7 support team with your order ID and a photo for instant resolution."
   },
   {
-    q: "Are all products listed on MS Care 100% genuine?",
+    q: "Are all products listed on M S Healthcare 100% genuine?",
     a: "Absolutely. Every product batch is verified by our licensed pharmacists and traced to its certified manufacturer. We maintain a strict cold chain to ensure drug potency integrity."
   },
 ];
@@ -283,7 +283,7 @@ const TESTIMONIALS = [
     id: 1,
     name: "Dr. Ramesh Mehta",
     role: "Senior Oncologist",
-    text: "MS Care has revolutionized how my patients access oncology and critical care medicines. Fast delivery and 100% genuine products.",
+    text: "M S Healthcare has revolutionized how my patients access oncology and critical care medicines. Fast delivery and 100% genuine products.",
     rating: 5,
     avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120&auto=format&fit=crop&q=80"
   },
@@ -739,7 +739,7 @@ export default function HomePage() {
                 <div className="absolute inset-2 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10">
                   <Image
                     src="https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=600&auto=format&fit=crop&q=80"
-                    alt="MS Care Pharmacy Sourcing Lab"
+                    alt="M S Healthcare Sourcing Lab"
                     fill
                     className="object-cover"
                   />
@@ -764,7 +764,7 @@ export default function HomePage() {
             <div className="space-y-6 flex flex-col items-center md:items-start text-center md:text-left order-1 md:order-2">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                About MS Care Online Pharmacy
+                About M S Healthcare Online Pharmacy
               </div>
               
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight">
@@ -772,7 +772,7 @@ export default function HomePage() {
               </h2>
               
               <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-medium">
-                At MS Care, our mission is to eliminate friction in chronic healthcare management. We combine high-precision pharmaceutical storage, climate-controlled cold-chain shipping, and AI-enabled prescription analysis to ensure every medicine arriving at your doorstep retains 100% clinical efficacy.
+                At M S Healthcare, our mission is to eliminate friction in chronic healthcare management. We combine high-precision pharmaceutical storage, climate-controlled cold-chain shipping, and AI-enabled prescription analysis to ensure every medicine arriving at your doorstep retains 100% clinical efficacy.
               </p>
               
               <div className="space-y-4 pt-2 w-full">
@@ -914,7 +914,7 @@ export default function HomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Pharmacy",
-            "name": "MS Care Online Pharmacy",
+            "name": "M S Healthcare Online Pharmacy",
             "image": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600",
             "@id": "https://mscare.com",
             "url": "https://mscare.com",
@@ -949,7 +949,7 @@ export default function HomePage() {
       <section className="py-16 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white">Why Choose MS Care?</h2>
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white">Why Choose M S Healthcare?</h2>
             <p className="text-gray-500 mt-2">Trusted by 50 lakh+ customers across India</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
@@ -978,7 +978,7 @@ export default function HomePage() {
           <div className="text-center space-y-3">
             <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Testimonials</span>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">Trusted by Thousands</h2>
-            <p className="text-gray-500 max-w-xl mx-auto font-medium text-sm">See how MS Care helps families across India manage their health and medicine prescriptions effortlessly.</p>
+            <p className="text-gray-500 max-w-xl mx-auto font-medium text-sm">See how M S Healthcare helps families across India manage their health and medicine prescriptions effortlessly.</p>
           </div>
         </div>
         <Marquee pauseOnHover className="[--duration:40s] relative z-10">
@@ -1089,7 +1089,7 @@ export default function HomePage() {
                           <span className="text-[10px] font-black text-white">MS</span>
                         </div>
                         <div>
-                          <div className="text-[10px] font-extrabold leading-none">MS Care</div>
+                          <div className="text-[10px] font-extrabold leading-none">M S Healthcare</div>
                           <span className="text-[7px] text-emerald-400 font-bold tracking-wider">ONLINE</span>
                         </div>
                       </div>

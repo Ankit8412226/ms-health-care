@@ -35,7 +35,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Truck, title: "Free Delivery", desc: "On orders above ₹500" },
+              { icon: Truck, title: "Free Delivery", desc: "On orders above ₹1100" },
               { icon: Shield, title: "100% Genuine", desc: "Licensed pharmacy" },
               { icon: CreditCard, title: "Secure Payment", desc: "SSL encrypted" },
               { icon: Clock, title: "24/7 Support", desc: "Round the clock help" },
@@ -67,7 +67,7 @@ export default function Footer() {
             >
               <Image
                 src="/logo-dark.png"
-                alt="Oncolife India"
+                alt="Onco Life India"
                 width={160}
                 height={40}
                 className="object-contain block select-none"
@@ -178,7 +178,7 @@ export default function Footer() {
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 text-center sm:text-left">
-            <span>© 2026 Oncolife India. All rights reserved. CDSCO Drug License No: DL-XXXXX-XXXX</span>
+            <span>© 2026 Onco Life India. All rights reserved. CDSCO Drug License No: DL-XXXXX-XXXX</span>
             <span>Made with <Heart className="w-3 h-3 inline text-red-400" /> in India</span>
           </div>
         </div>

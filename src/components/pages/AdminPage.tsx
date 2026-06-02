@@ -322,7 +322,7 @@ export default function AdminPage() {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4 border border-white">
               <Lock className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">Oncolife India Admin Portal</h1>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Onco Life India Admin Portal</h1>
             <p className="text-slate-400 text-[10px] font-bold mt-1 text-center uppercase tracking-widest">
               Protected Administrative Interface
             </p>
@@ -415,7 +415,7 @@ export default function AdminPage() {
             <span className="text-white font-black text-xs">OL</span>
           </div>
           <div>
-            <div className="text-sm font-black text-slate-900 leading-none">Oncolife India</div>
+            <div className="text-sm font-black text-slate-900 leading-none">Onco Life India</div>
             <div className="text-[9px] text-emerald-600 font-extrabold tracking-widest leading-none mt-1 uppercase">
               Admin System
             </div>

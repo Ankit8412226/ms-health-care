@@ -80,7 +80,7 @@ export default function StaticPages() {
                   We are building the <span className="gradient-text font-black">Future of Oncology Pharmacy</span> in India
                 </h1>
                 <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
-                  Oncolife India is a licensed, CDSCO-compliant healthcare platform delivering certified anti-cancer medications, chemotherapy supportive drugs, and automated prescription processing directly to your home.
+                  Onco Life India is a licensed, CDSCO-compliant healthcare platform delivering certified anti-cancer medications, chemotherapy supportive drugs, and automated prescription processing directly to your home.
                 </p>
                 <div className="flex flex-wrap gap-4 justify-center lg:justify-start w-full">
                   <button
@@ -169,7 +169,7 @@ export default function StaticPages() {
                 </h2>
                 <div className="text-sm sm:text-base text-gray-505 dark:text-gray-400 space-y-4 leading-relaxed">
                   <p>
-                    Oncolife India was founded with a clear directive: to address the critical gap in genuine oncology and specialized cancer care medications in India. In an environment where patient safety is occasionally compromised by fragmented supply chains, we guarantee anti-cancer drug authenticity.
+                    Onco Life India was founded with a clear directive: to address the critical gap in genuine oncology and specialized cancer care medications in India. In an environment where patient safety is occasionally compromised by fragmented supply chains, we guarantee anti-cancer drug authenticity.
                   </p>
                   <p>
                     Every anti-cancer medicine we ship undergoes double-pharmacist verification. By sourcing directly from registered pharmaceutical manufacturers and maintaining a temperature-controlled cold chain network, we ensure chemotherapy drugs, targeted therapies, and support medications maintain maximum potency.
@@ -336,7 +336,7 @@ export default function StaticPages() {
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex gap-3 text-xs leading-relaxed">
                   <ShieldAlert className="w-5 h-5 flex-shrink-0 text-amber-500" />
                   <span>
-                    <strong>Medical Emergency Notice:</strong> Oncolife India online portal is for scheduled anti-cancer medicine purchases. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
+                    <strong>Medical Emergency Notice:</strong> Onco Life India online portal is for scheduled anti-cancer medicine purchases. If you are experiencing an acute clinical emergency, please dial 102 or visit the nearest local hospital immediately.
                   </span>
                 </div>
               </div>
@@ -433,10 +433,10 @@ export default function StaticPages() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { q: "Is Oncolife India a licensed online pharmacy in India?", a: "Yes. Oncolife India holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors." },
+                { q: "Is Onco Life India a licensed online pharmacy in India?", a: "Yes. Onco Life India holds a valid CDSCO Drug License and operates under the Drugs & Cosmetics Act, 1940. All medicines are sourced directly from licensed manufacturers and distributors." },
                 { q: "How do I upload my medical prescription?", a: "Navigate to the 'Upload Rx' tab on the header, drag & drop your PDF or image slip, and our clinical OCR will automatically parse the matched drugs." },
                 { q: "Do you deliver medicines across India?", a: "Yes, we ship to over 20,000 pin codes across India. For metro cities like Delhi NCR, Mumbai, and Bangalore, we offer express 4-hour delivery." },
-                { q: "Are all medicines sourced from genuine suppliers?", a: "Yes, all products on Oncolife India are sourced directly from verified licensed manufacturers and packed under supervision." },
+                { q: "Are all medicines sourced from genuine suppliers?", a: "Yes, all products on Onco Life India are sourced directly from verified licensed manufacturers and packed under supervision." },
                 { q: "What is your medicine return policy?", a: "We offer an easy 100% replacement or refund for damaged, defective, or incorrect products. Return requests must be raised within 48 hours of delivery by contacting our customer support team." },
                 { q: "How does the 4-hour express delivery work?", a: "For emergency medications, orders placed before 6 PM in Delhi NCR, Mumbai, and Bangalore qualify for express 4-hour temperature-controlled deliveries." }
               ].map((faq, i) => (
@@ -461,7 +461,7 @@ export default function StaticPages() {
 
             <div className="space-y-6">
               <p className="text-sm text-gray-505 dark:text-gray-400 leading-relaxed">
-                At Oncolife India, we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website.
+                At Onco Life India, we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website.
               </p>
 
               <div className="space-y-4">
@@ -513,18 +513,18 @@ export default function StaticPages() {
 
             <div className="space-y-6">
               <div className="p-5 bg-emerald-50/30 dark:bg-emerald-950/10 rounded-2xl border border-emerald-500/10 space-y-3">
-                <h4 className="font-bold text-emerald-800 dark:text-emerald-400 text-sm">About Onco Healthcare</h4>
+                <h4 className="font-bold text-emerald-800 dark:text-emerald-400 text-sm">About M S Healthcare</h4>
                 <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
-                  The domain name <strong>oncohealthcare.com</strong> is an online platform owned by Onco Healthcare. Your access to the Website, use of its features, transactions, and any services provided (directly or indirectly) from the Website (the “Services”) are all governed by these Terms of Use, and all policies referenced herein. These Terms of Use are a legally binding agreement between you and Onco Healthcare. By accessing, browsing, registering, or using the Website or Services in any way, shape, or form, you represent to Onco Healthcare that you have read, understood, and agreed to be bound by these Terms of Use. Your acceptance of these Terms of Use may be explicit, or it may be implicit.
+                  The domain name <strong>mshealthcare.com</strong> is an online platform owned by M S Healthcare. Your access to the Website, use of its features, transactions, and any services provided (directly or indirectly) from the Website (the “Services”) are all governed by these Terms of Use, and all policies referenced herein. These Terms of Use are a legally binding agreement between you and M S Healthcare. By accessing, browsing, registering, or using the Website or Services in any way, shape, or form, you represent to M S Healthcare that you have read, understood, and agreed to be bound by these Terms of Use. Your acceptance of these Terms of Use may be explicit, or it may be implicit.
                 </p>
                 <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
                   Additionally, by accepting these Terms, you also agree to follow our Privacy Policy, along with other policies, rules, guidelines, and documents on the Website, as these will always form part of these Terms and Conditions, as amended from time to time.
                 </p>
                 <p className="text-xs text-gray-550 dark:text-gray-400 leading-relaxed">
-                  If you leave our Website to go to a third-party Website, you accept that those other sites may have their own terms of use and policies regarding privacy. Onco Healthcare will not be liable or responsible for your use of any third-party sites, and their terms will apply to your use of their sites.
+                  If you leave our Website to go to a third-party Website, you accept that those other sites may have their own terms of use and policies regarding privacy. M S Healthcare will not be liable or responsible for your use of any third-party sites, and their terms will apply to your use of their sites.
                 </p>
                 <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed">
-                  Onco Healthcare may change, amend, or modify these Terms of Use, as well as the Privacy Policy from time to time, at its sole discretion. These changes will be effective immediately once they are posted on the Website. You will not be given direct notice of the changes, although they may be announced to the Website users. If you continue to use the Website after changes have been made, that will be viewed as your acceptance of those changes. You should check these Terms regularly.
+                  M S Healthcare may change, amend, or modify these Terms of Use, as well as the Privacy Policy from time to time, at its sole discretion. These changes will be effective immediately once they are posted on the Website. You will not be given direct notice of the changes, although they may be announced to the Website users. If you continue to use the Website after changes have been made, that will be viewed as your acceptance of those changes. You should check these Terms regularly.
                 </p>
               </div>
 
@@ -536,7 +536,7 @@ export default function StaticPages() {
                   },
                   {
                     title: "Eligibility and Registration",
-                    desc: "Users may be asked to perform a registration process as set by Onco Healthcare to access certain functionalities or use Services on the Website. This may include engaging with third-party service providers.\n\nFor the purpose of creating an account, the following details may be collected by Onco Healthcare:\n– Full Name\n– Username / User ID\n– Email Address\n– Residential Address\n– Age\n– Gender\n– Mobile / Contact Number\n– Account Password\n– Details of a valid payment or financial account (if applicable)\n\nIn the course of this registration process, you confirm that you are being truthful and that the information you are providing is completely accurate, timely, and valid, and you are solely liable for the confidentiality of your login information and are responsible for all actions that will be undertaken in your account.\n\nOnco Healthcare Disability accounts will be canceled at their discretion once they are made aware of users providing information that is incorrect, incomplete, or simply false, and those breaching the Terms of Use of this contract."
+                    desc: "Users may be asked to perform a registration process as set by M S Healthcare to access certain functionalities or use Services on the Website. This may include engaging with third-party service providers.\n\nFor the purpose of creating an account, the following details may be collected by M S Healthcare:\n– Full Name\n– Username / User ID\n– Email Address\n– Residential Address\n– Age\n– Gender\n– Mobile / Contact Number\n– Account Password\n– Details of a valid payment or financial account (if applicable)\n\nIn the course of this registration process, you confirm that you are being truthful and that the information you are providing is completely accurate, timely, and valid, and you are solely liable for the confidentiality of your login information and are responsible for all actions that will be undertaken in your account.\n\nM S Healthcare Disability accounts will be canceled at their discretion once they are made aware of users providing information that is incorrect, incomplete, or simply false, and those breaching the Terms of Use of this contract."
                   }
                 ].map((section, idx) => (
                   <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
@@ -561,7 +561,7 @@ export default function StaticPages() {
 
             <div className="space-y-6">
               <p className="text-sm text-gray-505 dark:text-gray-400 leading-relaxed">
-                At Oncolife India, we want you to have a safe and hassle-free shopping experience. If you are not satisfied with your order, our return and refund policy is designed to make the process simple and transparent.
+                At Onco Life India, we want you to have a safe and hassle-free shopping experience. If you are not satisfied with your order, our return and refund policy is designed to make the process simple and transparent.
               </p>
 
               <div className="space-y-4">

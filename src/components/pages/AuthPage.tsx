@@ -76,7 +76,7 @@ export default function AuthPage() {
           </div>
           {authMode === "login" && (
             <>
-              <h2 className="text-xl font-bold text-gray-850 dark:text-white">Welcome Back to Oncolife India</h2>
+              <h2 className="text-xl font-bold text-gray-850 dark:text-white">Welcome Back to Onco Life India</h2>
               <p className="text-xs text-gray-400">Login to manage your oncology orders, clinical prescriptions & tracker</p>
             </>
           )}

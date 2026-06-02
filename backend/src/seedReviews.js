@@ -36,7 +36,7 @@ const indianReviewers = [
 const categoryReviewTemplates = {
   // Vaccines
   vaccine: [
-    { rating: 5, comment: "Very reliable vaccine. Oncolife India's cold chain delivery was excellent, ice packs were completely intact." },
+    { rating: 5, comment: "Very reliable vaccine. Onco Life India's cold chain delivery was excellent, ice packs were completely intact." },
     { rating: 5, comment: "Got this pediatric vaccine on time. Standard batch and original packaging. Highly recommended." },
     { rating: 4, comment: "Genuine vaccine product, batch details matched. Doctor verified and administered without issues." },
     { rating: 5, comment: "Excellent clinical logistics. Sourced vaccine at a very good discount. Thank you." }
@@ -47,12 +47,12 @@ const categoryReviewTemplates = {
     { rating: 5, comment: "Life-saving transplant medicine. Hard to find in local stores but got it here easily with long expiry." },
     { rating: 5, comment: "Authentic immunosuppressant, prompt shipping. The price discount is a huge help for transplant patients." },
     { rating: 4, comment: "Physician verified the batch number. Standard manufacturer packing. Good support team." },
-    { rating: 5, comment: "Genuine medicine. Oncolife India is highly reliable for critical post-transplant care medicines." }
+    { rating: 5, comment: "Genuine medicine. Onco Life India is highly reliable for critical post-transplant care medicines." }
   ],
 
   // Oncology/Anti-cancer
   oncology: [
-    { rating: 5, comment: "Genuine anti-cancer drug. Oncolife India is doing a great job helping patients get authentic therapy." },
+    { rating: 5, comment: "Genuine anti-cancer drug. Onco Life India is doing a great job helping patients get authentic therapy." },
     { rating: 5, comment: "Excellent price discount for critical treatment medicine. Barcode and serial number verified on manufacturer portal." },
     { rating: 4, comment: "Sourced this oncology tablet easily. Expiry date is 18 months away. Proper sealed packaging." },
     { rating: 5, comment: "Original chemotherapy medication. Very prompt delivery, which was extremely critical for my therapy cycle." },
@@ -64,8 +64,8 @@ const categoryReviewTemplates = {
     { rating: 5, comment: "Hospital-grade injection, delivered in perfect condition. Packaging was fully sealed in a cool box." },
     { rating: 5, comment: "Sourced this critical care injection easily. Standard temperature-controlled delivery. Very reliable service." },
     { rating: 4, comment: "Genuine infusion. The doctor verified the batch details before administration. Great pricing." },
-    { rating: 5, comment: "Oncolife India is highly reliable for critical infusions. Got prompt shipping and proper invoicing." },
-    { rating: 5, comment: "Genuine albumin infusion, very professional packaging. Extremely satisfied with Oncolife." }
+    { rating: 5, comment: "Onco Life India is highly reliable for critical infusions. Got prompt shipping and proper invoicing." },
+    { rating: 5, comment: "Genuine albumin infusion, very professional packaging. Extremely satisfied with Onco Life." }
   ],
 
   // Diabetes Care
@@ -73,7 +73,7 @@ const categoryReviewTemplates = {
     { rating: 5, comment: "Regular buyer for my father. Controls blood sugar levels perfectly. Best rate online." },
     { rating: 5, comment: "Fast delivery, got standard strips with long shelf life. Excellent service." },
     { rating: 4, comment: "Good discounts on monthly medicine subscription. Recommended for diabetes care." },
-    { rating: 5, comment: "Original product. Quick billing and standard shipping. Happy with Oncolife India." }
+    { rating: 5, comment: "Original product. Quick billing and standard shipping. Happy with Onco Life India." }
   ],
 
   // Heart Health
@@ -94,7 +94,7 @@ const categoryReviewTemplates = {
   // Skin Care
   skin: [
     { rating: 5, comment: "Super gentle on skin, perfect for sensitive skin types. Authentic Galderma product." },
-    { rating: 5, comment: "Dermatologist recommended this. Best price and original product on Oncolife." },
+    { rating: 5, comment: "Dermatologist recommended this. Best price and original product on Onco Life." },
     { rating: 4, comment: "Hydrates well without making skin greasy. Worth every rupee." },
     { rating: 5, comment: "Very good product. Packaging was neat and delivered quickly." }
   ],
@@ -103,7 +103,7 @@ const categoryReviewTemplates = {
   ayurvedic: [
     { rating: 5, comment: "Excellent natural immunity booster. Standard product in our daily routine." },
     { rating: 5, comment: "Great discount on the standard jar. Original Ayurvedic ingredients and premium brand." },
-    { rating: 4, comment: "Authentic herbal taste. Fast shipping by Oncolife India." },
+    { rating: 4, comment: "Authentic herbal taste. Fast shipping by Onco Life India." },
     { rating: 5, comment: "Very good quality, protects from cold and cough effectively." }
   ],
 
@@ -117,7 +117,7 @@ const categoryReviewTemplates = {
   // General Prescription Medicines / Fallback
   general_medicine: [
     { rating: 5, comment: "Authentic prescription medicine. Good expiry date and proper sealed packaging." },
-    { rating: 5, comment: "Oncolife India is my go-to pharmacy now. Excellent customer support and genuine product." },
+    { rating: 5, comment: "Onco Life India is my go-to pharmacy now. Excellent customer support and genuine product." },
     { rating: 4, comment: "Highly satisfied with the product quality. Saved a good amount compared to offline shops." },
     { rating: 5, comment: "Prompt delivery and genuine manufacturer packing. Safe and secure." }
   ]
@@ -251,9 +251,8 @@ const seedReviews = async () => {
           role: "user"
         });
         console.log(`   Created user: ${user.name}`);
-      } else {
-        userIds.push(user);
       }
+      userIds.push(user);
     }
     console.log(`✅ Loaded ${userIds.length} reviewer users.`);
 

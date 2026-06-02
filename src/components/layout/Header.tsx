@@ -303,7 +303,7 @@ export default function Header() {
     <>
       {/* Top banner */}
       <div className="bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-700 text-white text-xs py-2 px-4 text-center hidden md:block">
-        <span className="font-medium">🚚 Free delivery on orders above ₹500</span>
+        <span className="font-medium">🚚 Free delivery on orders above ₹1100</span>
         <span className="mx-4 opacity-50">|</span>
         <span>🏷️ Use code <span className="font-bold bg-white/20 px-2 py-0.5 rounded">HEALTH30</span> for 30% off</span>
         <span className="mx-4 opacity-50">|</span>
@@ -342,7 +342,7 @@ export default function Header() {
             >
               <Image
                 src="/logo-light.png"
-                alt="Oncolife India"
+                alt="Onco Life India"
                 width={176}
                 height={44}
                 priority
@@ -351,7 +351,7 @@ export default function Header() {
               />
               <Image
                 src="/logo-dark.png"
-                alt="Oncolife India"
+                alt="Onco Life India"
                 width={176}
                 height={44}
                 priority
@@ -586,7 +586,7 @@ export default function Header() {
                 <div className="relative h-9 w-36 flex items-center justify-start group">
                   <Image
                     src="/logo-light.png"
-                    alt="Oncolife India"
+                    alt="Onco Life India"
                     width={144}
                     height={36}
                     className="object-contain block dark:hidden select-none"
@@ -594,7 +594,7 @@ export default function Header() {
                   />
                   <Image
                     src="/logo-dark.png"
-                    alt="Oncolife India"
+                    alt="Onco Life India"
                     width={144}
                     height={36}
                     className="object-contain hidden dark:block select-none"

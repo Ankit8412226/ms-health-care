@@ -549,7 +549,7 @@ export default function DetailPage() {
                 <span className="text-lg">🔒</span>
                 <h4 className="font-bold text-gray-850 dark:text-white text-xs">Review Locked</h4>
                 <p className="text-[10px] text-gray-400 leading-normal max-w-xs mx-auto">
-                  Only verified buyers who have purchased and received this product from Oncolife India can leave feedback reviews.
+                  Only verified buyers who have purchased and received this product from Onco Life India can leave feedback reviews.
                 </p>
               </div>
             )}
