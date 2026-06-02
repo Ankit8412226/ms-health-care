@@ -285,7 +285,7 @@ const TESTIMONIALS = [
     role: "Senior Oncologist",
     text: "M S Healthcare has revolutionized how my patients access oncology and critical care medicines. Fast delivery and 100% genuine products.",
     rating: 5,
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120&auto=format&fit=crop&q=80"
+    avatar: "/avatar-ramesh.png"
   },
   {
     id: 2,
@@ -293,7 +293,7 @@ const TESTIMONIALS = [
     role: "Chronic Patient",
     text: "I order my transplant medicines monthly. The pricing is transparent and customer care assists with prescription validation so smoothly.",
     rating: 5,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
+    avatar: "/avatar-sneha.png"
   },
   {
     id: 3,
@@ -301,7 +301,7 @@ const TESTIMONIALS = [
     role: "Caregiver",
     text: "Their AI OCR prescription scanner makes ordering complex medicines extremely easy. Highly recommended for senior care.",
     rating: 5,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+    avatar: "/avatar-amit.png"
   }
 ];
 
@@ -577,7 +577,7 @@ export default function HomePage() {
                 <div className="absolute inset-4 bg-gradient-to-br from-emerald-300/30 to-cyan-300/30 dark:from-emerald-500/10 dark:to-cyan-500/10 rounded-[2.5rem] -rotate-3 scale-95" />
                 <div className="absolute inset-8 rounded-[2rem] overflow-hidden shadow-2xl border border-white/50 dark:border-gray-800/40">
                   <Image
-                    src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&auto=format&fit=crop&q=80"
+                    src="/image copy 3.png"
                     alt="Healthcare"
                     fill
                     className="object-cover"
@@ -738,7 +738,7 @@ export default function HomePage() {
                 {/* Main Image */}
                 <div className="absolute inset-2 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10">
                   <Image
-                    src="https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=600&auto=format&fit=crop&q=80"
+                    src="/image copy 4.png"
                     alt="M S Healthcare Sourcing Lab"
                     fill
                     className="object-cover"
@@ -850,21 +850,21 @@ export default function HomePage() {
                 title: "Understanding Type 2 Diabetes Management",
                 category: "Diabetes",
                 readTime: "5 min read",
-                image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=500&auto=format&fit=crop&q=60",
+                image: "/image.png",
                 desc: "Discover daily meal habits, lifestyle tracking, and the role of metformin in keeping blood glucose balanced."
               },
               {
                 title: "Statins & Heart Health: Myths vs Facts",
                 category: "Cardio",
                 readTime: "7 min read",
-                image: "https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?w=500&auto=format&fit=crop&q=60",
+                image: "/image copy.png",
                 desc: "Learn how Atorvastatin protects arterial pathways, regulates bad LDL cholesterol, and facts surrounding cardiovascular protection."
               },
               {
                 title: "The Ultimate Guide to Daily Vitamin Supplements",
                 category: "Vitamins",
                 readTime: "4 min read",
-                image: "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=500&auto=format&fit=crop&q=60",
+                image: "/image copy 2.png",
                 desc: "Are you taking enough Vitamin D3 and B12? Learn how daily multivitamins replenish trace minerals and support immunity."
               }
             ].map((post, idx) => (
@@ -915,7 +915,7 @@ export default function HomePage() {
             "@context": "https://schema.org",
             "@type": "Pharmacy",
             "name": "M S Healthcare Online Pharmacy",
-            "image": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600",
+            "image": "https://www.oncolifeindia.com/image.png",
             "@id": "https://mscare.com",
             "url": "https://mscare.com",
             "telephone": "+91 9540294099",

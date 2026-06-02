@@ -102,7 +102,7 @@ export default function StaticPages() {
               <div className="lg:col-span-5 relative">
                 <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border border-gray-150 dark:border-gray-800">
                   <Image
-                    src="https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=1000&auto=format&fit=crop&q=80"
+                    src="/image copy 4.png"
                     alt="Pharmacy Workstation"
                     fill
                     className="object-cover"
@@ -143,7 +143,7 @@ export default function StaticPages() {
               <div className="lg:col-span-5 relative order-last lg:order-first">
                 <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border border-gray-150 dark:border-gray-800">
                   <Image
-                    src="https://images.unsplash.com/photo-1579165466541-7881409356d5?w=800&auto=format&fit=crop&q=80"
+                    src="/image copy 5.png"
                     alt="Clinical Quality Control"
                     fill
                     className="object-cover"
@@ -229,19 +229,19 @@ export default function StaticPages() {
                   {
                     name: "Dr. Sneha Sharma, MD",
                     role: "Chief Medical Officer",
-                    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&auto=format&fit=crop&q=80",
+                    image: "/avatar-sneha.png",
                     desc: "Over 12 years of experience in cardiology and preventive clinical practice. Dr. Sneha reviews drug interaction checkers and diagnostic packages."
                   },
                   {
                     name: "Amit Verma, R.Ph.",
                     role: "Head of Pharmacy Operations",
-                    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80",
+                    image: "/avatar-amit.png",
                     desc: "Registered pharmacist with a deep background in hospital formulary control. Oversees dispensing standards and prescription extraction checkers."
                   },
                   {
                     name: "Rajesh Iyer",
                     role: "VP of Cold-Chain Supply",
-                    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=80",
+                    image: "/avatar-rajesh.png",
                     desc: "Cold-chain distribution specialist formerly managing national vaccine logistics. Rajesh secures molecule integrity across India."
                   }
                 ].map((member, i) => (

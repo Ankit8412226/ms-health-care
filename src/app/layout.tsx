@@ -48,7 +48,7 @@ export const metadata: Metadata = {
       "Order genuine anti-cancer medicines with temperature-controlled cold chain delivery. CDSCO licensed, AI prescription verification & 24/7 pharmacist support.",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&auto=format&fit=crop&q=80",
+        url: "https://www.oncolifeindia.com/image.png",
         width: 1200,
         height: 630,
         alt: "Onco Life India – Trusted Oncology Care Delivered",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     description:
       "Order 100% genuine chemotherapy & anti-cancer medicines online. Express cold chain delivery, AI prescription validation, CDSCO licensed.",
     images: [
-      "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&auto=format&fit=crop&q=80",
+      "https://www.oncolifeindia.com/image.png",
     ],
     creator: "@oncolifeindia",
   },

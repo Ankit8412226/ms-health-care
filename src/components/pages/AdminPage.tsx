@@ -239,7 +239,7 @@ export default function AdminPage() {
       ? newProdSideEffects.split(",").map(s => s.trim()).filter(Boolean)
       : ["Mild nausea", "Headache"];
 
-    const defaultImage = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500";
+    const defaultImage = "/default-product.png";
     const finalImage = newProdImage.trim() || defaultImage;
     const finalSlug = newProdSlug.trim() || newProdName.toLowerCase().replace(/\s+/g, "-");
     const finalBrand = newProdBrand.trim() || newProdMfg;
