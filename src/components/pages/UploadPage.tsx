@@ -13,6 +13,7 @@ export default function UploadPage() {
   const [scanning, setScanning] = useState(false);
   const [ocrSuccess, setOcrSuccess] = useState(false);
   const [ocrData, setOcrData] = useState<string[]>([]);
+  const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -25,19 +26,96 @@ export default function UploadPage() {
     }
   };
 
-  const processFile = (file: File) => {
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    // Attempt Option A: cloud_name = "Root", upload_preset = "CYKdNnUYfA4RwwGvKtsrI47TMoo"
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "CYKdNnUYfA4RwwGvKtsrI47TMoo");
+      
+      const res = await fetch("https://api.cloudinary.com/v1_1/Root/image/upload", {
+        method: "POST",
+        body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.secure_url;
+      }
+    } catch (err) {
+      console.warn("Cloudinary Option A failed:", err);
+    }
+
+    // Attempt Option B: cloud_name = "CYKdNnUYfA4RwwGvKtsrI47TMoo", upload_preset = "Root"
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "Root");
+      
+      const res = await fetch("https://api.cloudinary.com/v1_1/CYKdNnUYfA4RwwGvKtsrI47TMoo/image/upload", {
+        method: "POST",
+        body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.secure_url;
+      }
+    } catch (err) {
+      console.warn("Cloudinary Option B failed:", err);
+    }
+
+    // Attempt Option C: cloud_name = "Root", upload_preset = "Root"
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "Root");
+      
+      const res = await fetch("https://api.cloudinary.com/v1_1/Root/image/upload", {
+        method: "POST",
+        body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.secure_url;
+      }
+    } catch (err) {
+      console.warn("Cloudinary Option C failed:", err);
+    }
+
+    throw new Error("Failed to upload prescription image to Cloudinary. Please ensure you have a connection.");
+  };
+
+  const processFile = async (file: File) => {
     setSelectedFile(file);
     setScanning(true);
     setOcrSuccess(false);
+    setErrorMsg("");
 
-    // Simulate clinical OCR parse scans
-    setTimeout(() => {
+    try {
+      // 1. Upload file to Cloudinary
+      const fileUrl = await uploadToCloudinary(file);
+
+      // 2. Perform OCR simulation and upload prescription with returned secure Cloudinary URL
+      setTimeout(async () => {
+        try {
+          const mockMeds = ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"];
+          setOcrData(mockMeds);
+          
+          await uploadPrescription(file.name, fileUrl);
+          
+          setScanning(false);
+          setOcrSuccess(true);
+        } catch (err: any) {
+          console.error("Prescription record insertion failed:", err);
+          setErrorMsg(err.message || "Failed to save prescription to database.");
+          setScanning(false);
+        }
+      }, 2000);
+
+    } catch (err: any) {
+      console.error("Cloudinary upload error:", err);
+      setErrorMsg(err.message || "Failed to upload prescription to Cloudinary.");
       setScanning(false);
-      setOcrSuccess(true);
-      const mockMeds = ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"];
-      setOcrData(mockMeds);
-      uploadPrescription(file.name, URL.createObjectURL(file));
-    }, 3000);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -128,6 +206,13 @@ export default function UploadPage() {
                     <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                     <span className="text-xs font-bold text-gray-850 dark:text-gray-200 block">AI OCR Reading Prescription...</span>
                     <p className="text-[10px] text-gray-400">Our systems are scanning medicine salts, forms, and dosage limits.</p>
+                  </div>
+                )}
+
+                {errorMsg && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl text-xs text-red-805 text-red-600 dark:text-red-400 text-center space-y-2 font-medium">
+                    <span className="font-bold block">Upload Failed</span>
+                    <p>{errorMsg}</p>
                   </div>
                 )}
 

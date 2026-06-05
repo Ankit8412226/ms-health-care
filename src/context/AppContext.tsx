@@ -307,15 +307,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchCategories();
   }, [fetchProducts, fetchCategories]);
 
-  // Load orders and prescriptions when user changes
+  // Load orders, prescriptions and addresses when user changes
   useEffect(() => {
     if (!user) {
       setOrders([]);
       setPrescriptions([]);
+      setAddresses([]);
       return;
     }
 
     const loadUserData = async () => {
+      // Load user addresses
+      try {
+        const resAddresses = await fetch(`${API_URL}/addresses`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        const jsonAddresses = await resAddresses.json();
+        if (jsonAddresses.success && jsonAddresses.data) {
+          const mappedAddresses = jsonAddresses.data.map((a: any) => ({
+            id: a._id || a.id,
+            name: a.name,
+            phone: a.phone,
+            flat: a.flat,
+            area: a.area,
+            city: a.city,
+            pincode: a.pincode,
+            isDefault: a.isDefault,
+          }));
+          setAddresses(mappedAddresses);
+        }
+      } catch (err) {
+        console.warn("Could not load user addresses:", err);
+      }
+
       // If admin, load all orders & prescriptions
       if (user.role === "admin") {
         try {
@@ -578,8 +602,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ── Addresses (client-side for now) ───────────────────────────────────
-  const addAddress = (addr: Omit<UserAddress, "id">) => {
+  // ── Addresses (Integrated with Backend DB) ────────────────────────────
+  const addAddress = async (addr: Omit<UserAddress, "id">) => {
+    if (user && user.token) {
+      try {
+        const res = await fetch(`${API_URL}/addresses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(addr),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const dbAddr: UserAddress = {
+            id: json.data._id || json.data.id,
+            name: json.data.name,
+            phone: json.data.phone,
+            flat: json.data.flat,
+            area: json.data.area,
+            city: json.data.city,
+            pincode: json.data.pincode,
+            isDefault: json.data.isDefault,
+          };
+          
+          if (dbAddr.isDefault) {
+            setAddresses((prev) =>
+              prev.map((a) => ({ ...a, isDefault: false })).concat(dbAddr)
+            );
+          } else {
+            setAddresses((prev) => [...prev, dbAddr]);
+          }
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to add address in backend:", err);
+      }
+    }
+
+    // fallback client-side placement
     const newAddr: UserAddress = {
       ...addr,
       id: `a_${Date.now()}`,
@@ -593,7 +655,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const deleteAddress = (id: string) => {
+  const deleteAddress = async (id: string) => {
+    if (user && user.token && !id.startsWith("a_")) {
+      try {
+        const res = await fetch(`${API_URL}/addresses/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn("Backend address deletion returned success=false:", json.message);
+        }
+      } catch (err) {
+        console.error("Failed to delete address in backend:", err);
+      }
+    }
     setAddresses((prev) => prev.filter((a) => a.id !== id));
   };
 
