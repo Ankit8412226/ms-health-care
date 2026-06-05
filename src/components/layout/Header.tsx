@@ -7,7 +7,8 @@ import Image from "next/image";
 import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
   Phone, ChevronDown, ChevronRight, Package, User,
-  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock, ArrowLeft
+  LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock, ArrowLeft,
+  Activity
 } from "lucide-react";
 
 
@@ -39,6 +40,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 const NAV_LINKS = [
   { label: "Medicines", page: "shop" as const },
+  { label: "Dosage Calc", page: "calculator" as const },
   { label: "Upload Rx", page: "upload" as const },
   { label: "Blog", page: "blog" as const },
 ];
@@ -639,6 +641,7 @@ export default function Header() {
                   {[
                     { label: "Home", page: "home" as const, icon: Home, query: undefined },
                     { label: "Shop Medicines", page: "shop" as const, icon: Package, query: undefined },
+                    { label: "Dosage Calculator", page: "calculator" as const, icon: Activity, query: undefined },
                     { label: "Upload Rx", page: "upload" as const, icon: Upload, query: undefined },
                     { label: "Blog", page: "blog" as const, icon: Pill, query: undefined },
                     { label: "My Wishlist", page: "dashboard" as const, icon: Heart, query: "tab=wish" },

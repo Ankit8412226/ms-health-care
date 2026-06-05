@@ -854,6 +854,15 @@ export default function HomePage() {
                   <span className="text-[10px] text-gray-400 block mt-1">Recommended Water Intake</span>
                 </div>
               </div>
+              <div className="w-full pt-2 flex justify-center lg:justify-start">
+                <button
+                  onClick={() => setActivePage("calculator")}
+                  className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-450 dark:hover:text-emerald-355 font-bold hover:gap-3 transition-all text-xs uppercase tracking-wider group cursor-pointer"
+                >
+                  Try D.Pharm Pediatric Dosage Calculator
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
             </div>
 
             {/* Right Interactive Calculator Widget */}
