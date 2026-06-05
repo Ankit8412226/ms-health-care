@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import { Order, Prescription } from "@/context/AppContext";
 import { Product } from "@/types";
@@ -72,6 +72,8 @@ export default function AdminPage() {
 
   // App Context Data & Updates
   const {
+    user,
+    adminLogin,
     products,
     orders,
     prescriptions,
@@ -83,6 +85,12 @@ export default function AdminPage() {
     addProduct,
     addCategory,
   } = useApp();
+
+  useEffect(() => {
+    if (user && user.role === "admin") {
+      setIsAuthenticated(true);
+    }
+  }, [user]);
 
   // Product Creation Form State
   const [newProdName, setNewProdName] = useState("");
@@ -110,20 +118,30 @@ export default function AdminPage() {
   };
 
   // Handle Admin Authentication
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
+
+    // Attempt real backend authentication first
+    const success = await adminLogin(email, password);
+    if (success) {
+      setIsAuthenticated(true);
+      triggerToast("Welcome back, Chief Administrator!");
+      return;
+    }
+
+    // Fallback to client-side credential verification
     if (email === "admin@oncolifeindia.com" && password === "admin123") {
       setIsAuthenticated(true);
-      setLoginError("");
-      triggerToast("Welcome back, Chief Administrator!");
+      triggerToast("Welcome back, Chief Administrator (Demo Mode)!");
     } else {
       setLoginError("Invalid administrator credentials. Please check and try again.");
     }
   };
 
   const handleQuickFill = () => {
-    setEmail("admin@oncolifeindia.com");
-    setPassword("admin123");
+    setEmail("admin@mscare.com");
+    setPassword("adminpassword123");
     setLoginError("");
   };
 
@@ -388,7 +406,7 @@ export default function AdminPage() {
               Quick Fill Demo Credentials
             </button>
             <p className="text-[10px] text-slate-400 mt-2 font-medium">
-              Demo login is preconfigured with full admin rights.
+              Demo login is preconfigured with database admin credentials (admin@mscare.com / adminpassword123).
             </p>
           </div>
         </div>

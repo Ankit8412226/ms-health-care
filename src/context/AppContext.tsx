@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Product, Category } from "@/types";
 
 // ── API Base URL ────────────────────────────────────────────────────────
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
 function generateOrderId(): string {
   return `OD-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -74,7 +74,8 @@ export type PageName =
   | "privacy"
   | "terms"
   | "refund-returns"
-  | "refund_returns";
+  | "refund_returns"
+  | "blog";
 
 export type AuthMode = "login" | "signup" | "forgot" | "otp";
 
@@ -92,6 +93,7 @@ interface AppContextType {
   toggleWishlist: (productId: string) => void;
   user: { name: string; email: string; phone: string; token?: string; role?: string } | null;
   login: (email: string, password: string) => Promise<boolean>;
+  adminLogin: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   signup: (name: string, email: string, phone: string, password: string) => Promise<boolean>;
   authMode: AuthMode;
@@ -190,7 +192,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const validPages: PageName[] = [
       "home", "shop", "details", "cart", "checkout", "success",
       "dashboard", "auth", "upload",
-      "about", "contact", "faq", "privacy", "terms", "refund-returns", "refund_returns"
+      "about", "contact", "faq", "privacy", "terms", "refund-returns", "refund_returns", "blog"
     ];
     if (validPages.includes(cleanPath as PageName)) {
       return cleanPath as PageName;
@@ -305,13 +307,141 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchCategories();
   }, [fetchProducts, fetchCategories]);
 
-  // ── Navigation ────────────────────────────────────────────────────────
+  // Load orders and prescriptions when user changes
+  useEffect(() => {
+    if (!user) {
+      setOrders([]);
+      setPrescriptions([]);
+      return;
+    }
+
+    const loadUserData = async () => {
+      // If admin, load all orders & prescriptions
+      if (user.role === "admin") {
+        try {
+          const resOrders = await fetch(`${API_URL}/orders`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          });
+          const jsonOrders = await resOrders.json();
+          if (jsonOrders.success && jsonOrders.data) {
+            const mappedOrders = jsonOrders.data.map((o: any) => ({
+              id: o._id || o.id,
+              items: o.items.map((item: any) => ({
+                product: {
+                  id: item.product?._id || item.product?.id || "",
+                  name: item.product?.name || "Unknown Product",
+                  price: item.product?.price || 0,
+                  regularPrice: item.product?.regularPrice || 0,
+                  image: item.product?.image || "",
+                  brand: item.product?.brand || "",
+                  prescriptionRequired: item.product?.prescriptionRequired || false,
+                },
+                quantity: item.quantity,
+              })),
+              subtotal: o.subtotal,
+              discount: o.discount,
+              deliveryFee: o.deliveryFee,
+              total: o.total,
+              address: o.address,
+              paymentMethod: o.paymentMethod,
+              date: new Date(o.createdAt).toISOString().split("T")[0],
+              status: o.status,
+              prescriptionUrl: o.prescriptionUrl,
+              prescriptionStatus: o.prescriptionStatus,
+              paymentStatus: o.paymentStatus,
+              paymentDetails: o.paymentDetails,
+            }));
+            setOrders(mappedOrders);
+          }
+
+          const resRx = await fetch(`${API_URL}/prescriptions`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          });
+          const jsonRx = await resRx.json();
+          if (jsonRx.success && jsonRx.data) {
+            const mappedRx = jsonRx.data.map((p: any) => ({
+              id: p._id || p.id,
+              name: p.name || "Prescription Document",
+              url: p.url,
+              date: new Date(p.createdAt).toISOString().split("T")[0],
+              status: p.status,
+              extractedMedicines: p.extractedMedicines || [],
+            }));
+            setPrescriptions(mappedRx);
+          }
+        } catch (err) {
+          console.warn("Could not load admin collections:", err);
+        }
+      } else {
+        // Normal user: load my orders & my prescriptions
+        try {
+          const resOrders = await fetch(`${API_URL}/orders/myorders`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          });
+          const jsonOrders = await resOrders.json();
+          if (jsonOrders.success && jsonOrders.data) {
+            const mappedOrders = jsonOrders.data.map((o: any) => ({
+              id: o._id || o.id,
+              items: o.items.map((item: any) => ({
+                product: {
+                  id: item.product?._id || item.product?.id || "",
+                  name: item.product?.name || "Unknown Product",
+                  price: item.product?.price || 0,
+                  regularPrice: item.product?.regularPrice || 0,
+                  image: item.product?.image || "",
+                  brand: item.product?.brand || "",
+                  prescriptionRequired: item.product?.prescriptionRequired || false,
+                },
+                quantity: item.quantity,
+              })),
+              subtotal: o.subtotal,
+              discount: o.discount,
+              deliveryFee: o.deliveryFee,
+              total: o.total,
+              address: o.address,
+              paymentMethod: o.paymentMethod,
+              date: new Date(o.createdAt).toISOString().split("T")[0],
+              status: o.status,
+              prescriptionUrl: o.prescriptionUrl,
+              prescriptionStatus: o.prescriptionStatus,
+              paymentStatus: o.paymentStatus,
+              paymentDetails: o.paymentDetails,
+            }));
+            setOrders(mappedOrders);
+          }
+
+          const resRx = await fetch(`${API_URL}/prescriptions/myprescriptions`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          });
+          const jsonRx = await resRx.json();
+          if (jsonRx.success && jsonRx.data) {
+            const mappedRx = jsonRx.data.map((p: any) => ({
+              id: p._id || p.id,
+              name: p.name || "Prescription Document",
+              url: p.url,
+              date: new Date(p.createdAt).toISOString().split("T")[0],
+              status: p.status,
+              extractedMedicines: p.extractedMedicines || [],
+            }));
+            setPrescriptions(mappedRx);
+          }
+        } catch (err) {
+          console.warn("Could not load user collections:", err);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
   const setActivePage = (page: PageName, query?: string) => {
     const basePath = page === "home" ? "/" : `/${page}`;
     const targetPath = query ? `${basePath}?${query}` : basePath;
     router.push(targetPath);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+
 
   // ── Cart ──────────────────────────────────────────────────────────────
   const addToCart = (product: Product, qty: number = 1, showCrossSell: boolean = true) => {
@@ -386,6 +516,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const adminLogin = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_URL}/auth/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const userData = {
+          name: json.data.name,
+          email: json.data.email,
+          phone: json.data.phone || "",
+          token: json.data.token,
+          role: json.data.role,
+        };
+        setUser(userData);
+        localStorage.setItem("mscare_user", JSON.stringify(userData));
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setAddresses([]);
@@ -442,50 +598,93 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ── Orders (client-side for demo) ─────────────────────────────────────
-  const placeOrder = (
+  const placeOrder = async (
     addressId: string,
     paymentMethod: string,
     prescriptionUrl?: string,
     paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
   ) => {
     const address = addresses.find((a) => a.id === addressId) || addresses[0];
-    if (!address) return;
     const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     const discount = Math.round(subtotal * (discountPercentage / 100));
     const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
     const total = subtotal - discount + deliveryFee;
 
-    const newOrder: Order = {
+    const localNewOrder: Order = {
       id: generateOrderId(),
       items: [...cart],
       subtotal,
       discount,
       deliveryFee,
       total,
-      address,
+      address: address || { id: "default", name: "Guest", phone: "", flat: "", area: "", city: "", pincode: "", isDefault: true },
       paymentMethod,
       date: new Date().toISOString().split("T")[0],
       status: "Placed",
       prescriptionUrl,
       prescriptionStatus: prescriptionUrl ? "Pending Review" : undefined,
       paymentStatus: paymentDetails?.paymentStatus || (paymentMethod === "cod" ? "Pending" : "Paid"),
-      paymentDetails: paymentDetails ? {
-        transactionId: paymentDetails.transactionId,
-        razorpayOrderId: paymentDetails.razorpayOrderId,
-        razorpayPaymentId: paymentDetails.razorpayPaymentId,
-        paidAt: new Date().toISOString(),
-      } : undefined,
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
+    if (user && user.token) {
+      try {
+        const payload = {
+          addressId,
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+          })),
+          paymentMethod: paymentMethod === "cod" ? "COD" : "Online",
+          prescriptionUrl,
+        };
+
+        const res = await fetch(`${API_URL}/orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json();
+        if (json.success && json.data) {
+          const dbOrder: Order = {
+            id: json.data._id || json.data.id,
+            items: [...cart], // keep local resolved product list for frontend display
+            subtotal: json.data.subtotal,
+            discount: json.data.discount,
+            deliveryFee: json.data.deliveryFee,
+            total: json.data.total,
+            address: json.data.address,
+            paymentMethod: json.data.paymentMethod,
+            date: new Date(json.data.createdAt).toISOString().split("T")[0],
+            status: json.data.status,
+            prescriptionUrl: json.data.prescriptionUrl,
+            prescriptionStatus: json.data.prescriptionStatus,
+            paymentStatus: json.data.paymentStatus,
+          };
+          setOrders((prev) => [dbOrder, ...prev]);
+          clearCart();
+          removeCoupon();
+          setActivePage("success");
+          return;
+        }
+      } catch (err) {
+        console.warn("API place order failed, placing client-side:", err);
+      }
+    }
+
+    // fallback client-side placement
+    setOrders((prev) => [localNewOrder, ...prev]);
     clearCart();
     removeCoupon();
     setActivePage("success");
   };
 
-  // ── Prescriptions ─────────────────────────────────────────────────────
-  const uploadPrescription = (name: string, url: string) => {
-    const newRx: Prescription = {
+  // ── Prescriptions (Integrated with Backend) ───────────────────────────
+  const uploadPrescription = async (name: string, url: string) => {
+    const localNewRx: Prescription = {
       id: `rx_${Date.now()}`,
       name,
       url,
@@ -493,12 +692,69 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: "Processing (OCR)",
     };
 
-    setPrescriptions((prev) => [newRx, ...prev]);
+    if (user && user.token) {
+      try {
+        const res = await fetch(`${API_URL}/prescriptions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ name, url }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const dbRx: Prescription = {
+            id: json.data._id || json.data.id,
+            name: json.data.name,
+            url: json.data.url,
+            date: new Date(json.data.createdAt).toISOString().split("T")[0],
+            status: json.data.status,
+            extractedMedicines: json.data.extractedMedicines || [],
+          };
+          setPrescriptions((prev) => [dbRx, ...prev]);
 
+          // Poll for OCR verification (since backend simulated it to finish in 5 seconds)
+          setTimeout(async () => {
+            try {
+              const checkRes = await fetch(`${API_URL}/prescriptions`, {
+                headers: { Authorization: `Bearer ${user.token}` },
+              });
+              const checkJson = await checkRes.json();
+              if (checkJson.success && checkJson.data) {
+                const found = checkJson.data.find((item: any) => item._id === dbRx.id || item.id === dbRx.id);
+                if (found) {
+                  setPrescriptions((prevList) =>
+                    prevList.map((item) =>
+                      item.id === dbRx.id
+                        ? {
+                            ...item,
+                            status: found.status,
+                            extractedMedicines: found.extractedMedicines || [],
+                          }
+                        : item
+                    )
+                  );
+                }
+              }
+            } catch (err) {
+              console.warn("OCR polling failed:", err);
+            }
+          }, 6000);
+
+          return;
+        }
+      } catch (err) {
+        console.warn("API upload prescription failed:", err);
+      }
+    }
+
+    // Fallback client-side behavior
+    setPrescriptions((prev) => [localNewRx, ...prev]);
     setTimeout(() => {
       setPrescriptions((prevList) =>
         prevList.map((item) => {
-          if (item.id === newRx.id) {
+          if (item.id === localNewRx.id) {
             return {
               ...item,
               status: "Verified" as const,
@@ -511,14 +767,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   };
 
-  // ── Admin Ops ─────────────────────────────────────────────────────────
-  const updateOrderStatus = (orderId: string, status: Order["status"]) => {
+  // ── Admin Ops (Integrated with Backend) ───────────────────────────────
+  const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
+    try {
+      if (user && user.role === "admin") {
+        await fetch(`${API_URL}/orders/${orderId}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ status }),
+        });
+      }
+    } catch (err) {
+      console.warn("API update order status failed:", err);
+    }
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
   };
 
-  const updatePrescriptionStatus = (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => {
+  const updatePrescriptionStatus = async (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => {
+    try {
+      if (user && user.role === "admin") {
+        await fetch(`${API_URL}/prescriptions/${rxId}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ status, extractedMedicines }),
+        });
+      }
+    } catch (err) {
+      console.warn("API update prescription status failed:", err);
+    }
     setPrescriptions((prev) =>
       prev.map((p) => {
         if (p.id === rxId) {
@@ -533,26 +817,118 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const updateProductPrice = (productId: string, price: number) => {
+  const updateProductPrice = async (productId: string, price: number) => {
+    try {
+      if (user && user.role === "admin") {
+        await fetch(`${API_URL}/products/${productId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ price, regularPrice: Math.round(price * 1.25) }),
+        });
+      }
+    } catch (err) {
+      console.warn("API update product price failed:", err);
+    }
     setProducts((prev) =>
-      prev.map((prod) => (prod.id === productId ? { ...prod, price } : prod))
+      prev.map((prod) => (prod.id === productId ? { ...prod, price, regularPrice: Math.round(price * 1.25) } : prod))
     );
   };
 
-  const deleteProduct = (productId: string) => {
+  const deleteProduct = async (productId: string) => {
+    try {
+      if (user && user.role === "admin") {
+        await fetch(`${API_URL}/products/${productId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+      }
+    } catch (err) {
+      console.warn("API delete product failed:", err);
+    }
     setProducts((prev) => prev.filter((prod) => prod.id !== productId));
   };
 
-  const addProduct = (product: Product) => {
+  const addProduct = async (product: Product) => {
+    try {
+      if (user && user.role === "admin") {
+        const res = await fetch(`${API_URL}/products`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            name: product.name,
+            slug: product.slug,
+            description: product.description,
+            shortDescription: product.shortDescription,
+            price: product.price,
+            regularPrice: product.regularPrice,
+            category: product.category,
+            categoryName: product.categoryName,
+            brand: product.brand,
+            images: product.images,
+            image: product.image,
+            manufacturer: product.manufacturer,
+            prescriptionRequired: product.prescriptionRequired,
+            dosage: product.dosage,
+            packSize: product.packSize,
+            storage: product.storage,
+            howToUse: product.howToUse,
+            sideEffects: product.sideEffects,
+            benefits: product.benefits,
+            salt: product.salt,
+          }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const mapped = mapApiProduct(json.data);
+          setProducts((prev) => [...prev, mapped]);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("API add product failed:", err);
+    }
     setProducts((prev) => [...prev, product]);
   };
 
-  const addCategory = (name: string) => {
+  const addCategory = async (name: string) => {
+    const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
     const newCat = {
-      id: name.toLowerCase().trim().replace(/\s+/g, "-"),
+      id: slug,
       name: name.trim(),
       icon: "Folder",
     };
+    try {
+      if (user && user.role === "admin") {
+        const res = await fetch(`${API_URL}/categories`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ name: name.trim(), icon: "Folder" }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const mapped = {
+            id: json.data.slug || json.data._id,
+            name: json.data.name,
+            icon: CATEGORY_ICON_MAP[json.data.slug || ""] || json.data.icon || "Folder",
+          };
+          setCategories((prev) => [...prev, mapped]);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("API add category failed:", err);
+    }
     setCategories((prev) => [...prev, newCat]);
   };
 
@@ -624,6 +1000,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleWishlist,
         user,
         login,
+        adminLogin,
         logout,
         signup,
         authMode,

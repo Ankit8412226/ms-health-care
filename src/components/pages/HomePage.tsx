@@ -839,7 +839,7 @@ export default function HomePage() {
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-2">Health Library</span>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white">Wellness &amp; Health Insights</h2>
             </div>
-            <button onClick={() => setActivePage("shop")} className="hidden sm:flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold hover:gap-2 transition-all text-sm">
+            <button onClick={() => setActivePage("blog")} className="hidden sm:flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold hover:gap-2 transition-all text-sm">
               Explore Health Library <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -885,7 +885,7 @@ export default function HomePage() {
                       {post.desc}
                     </p>
                   </div>
-                  <button onClick={() => setActivePage("shop")} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center md:justify-start gap-1.5 hover:gap-2 transition-all">
+                  <button onClick={() => setActivePage("blog", `id=${idx}`)} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center md:justify-start gap-1.5 hover:gap-2 transition-all">
                     Read Article <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

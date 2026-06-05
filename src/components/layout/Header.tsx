@@ -40,6 +40,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 const NAV_LINKS = [
   { label: "Medicines", page: "shop" as const },
   { label: "Upload Rx", page: "upload" as const },
+  { label: "Blog", page: "blog" as const },
 ];
 
 interface SearchDropdownProps {
@@ -639,6 +640,7 @@ export default function Header() {
                     { label: "Home", page: "home" as const, icon: Home, query: undefined },
                     { label: "Shop Medicines", page: "shop" as const, icon: Package, query: undefined },
                     { label: "Upload Rx", page: "upload" as const, icon: Upload, query: undefined },
+                    { label: "Blog", page: "blog" as const, icon: Pill, query: undefined },
                     { label: "My Wishlist", page: "dashboard" as const, icon: Heart, query: "tab=wish" },
                   ].map(({ label, page, icon: Icon, query }) => (
                     <button
