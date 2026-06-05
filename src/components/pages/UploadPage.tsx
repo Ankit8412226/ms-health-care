@@ -27,61 +27,57 @@ export default function UploadPage() {
   };
 
   const uploadToCloudinary = async (file: File): Promise<string> => {
-    // Attempt Option A: cloud_name = "Root", upload_preset = "CYKdNnUYfA4RwwGvKtsrI47TMoo"
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "CYKdNnUYfA4RwwGvKtsrI47TMoo");
-      
-      const res = await fetch("https://api.cloudinary.com/v1_1/Root/image/upload", {
-        method: "POST",
-        body: fd,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.secure_url;
+    const combinations = [
+      { cloudName: "Root", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
+      { cloudName: "root", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
+      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "Root" },
+      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "Root" },
+      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "root" },
+      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "root" },
+      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "prescription" },
+      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "prescription" },
+      { cloudName: "Root", preset: "prescription" },
+      { cloudName: "root", preset: "prescription" },
+      { cloudName: "Root", preset: "Root" },
+      { cloudName: "root", preset: "root" },
+      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
+      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" }
+    ];
+
+    const errors: string[] = [];
+
+    for (const combo of combinations) {
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("upload_preset", combo.preset);
+        
+        const url = `https://api.cloudinary.com/v1_1/${combo.cloudName}/image/upload`;
+        const res = await fetch(url, {
+          method: "POST",
+          body: fd,
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          return data.secure_url;
+        } else {
+          const errText = await res.text();
+          let parsedMsg = errText;
+          try {
+            const parsed = JSON.parse(errText);
+            if (parsed.error && parsed.error.message) {
+              parsedMsg = parsed.error.message;
+            }
+          } catch {}
+          errors.push(`[Cloud: ${combo.cloudName}, Preset: ${combo.preset}] failed: ${parsedMsg}`);
+        }
+      } catch (err: any) {
+        errors.push(`[Cloud: ${combo.cloudName}, Preset: ${combo.preset}] error: ${err.message}`);
       }
-    } catch (err) {
-      console.warn("Cloudinary Option A failed:", err);
     }
 
-    // Attempt Option B: cloud_name = "CYKdNnUYfA4RwwGvKtsrI47TMoo", upload_preset = "Root"
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "Root");
-      
-      const res = await fetch("https://api.cloudinary.com/v1_1/CYKdNnUYfA4RwwGvKtsrI47TMoo/image/upload", {
-        method: "POST",
-        body: fd,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.secure_url;
-      }
-    } catch (err) {
-      console.warn("Cloudinary Option B failed:", err);
-    }
-
-    // Attempt Option C: cloud_name = "Root", upload_preset = "Root"
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "Root");
-      
-      const res = await fetch("https://api.cloudinary.com/v1_1/Root/image/upload", {
-        method: "POST",
-        body: fd,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.secure_url;
-      }
-    } catch (err) {
-      console.warn("Cloudinary Option C failed:", err);
-    }
-
-    throw new Error("Failed to upload prescription image to Cloudinary. Please ensure you have a connection.");
+    throw new Error(`Cloudinary upload failed for all configurations:\n${errors.join("\n")}`);
   };
 
   const processFile = async (file: File) => {
