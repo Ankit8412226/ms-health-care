@@ -8,7 +8,8 @@ import SliderBanner from "@/components/ui/SliderBanner";
 import {
   Search, ArrowRight, Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf,
   ShieldCheck, ShieldAlert, LayoutGrid, Folder, Truck, Clock, CreditCard, Upload,
-  Star, ChevronRight, Smartphone, Play, CheckCircle2, TrendingUp, Tag, X
+  Star, ChevronRight, Smartphone, Play, CheckCircle2, TrendingUp, Tag, X,
+  Mail, MapPin
 } from "lucide-react";
 import Image from "next/image";
 
@@ -311,6 +312,38 @@ export default function HomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Contact Us form state
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError, setContactError] = useState("");
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
+      setContactError("Please fill in all fields.");
+      return;
+    }
+    if (!contactEmail.includes("@")) {
+      setContactError("Please enter a valid email address.");
+      return;
+    }
+    setContactSubmitting(true);
+    setContactError("");
+    setContactSuccess(false);
+    
+    // Simulate contact form submission
+    setTimeout(() => {
+      setContactSubmitting(false);
+      setContactSuccess(true);
+      setContactName("");
+      setContactEmail("");
+      setContactMessage("");
+    }, 1500);
+  };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1160,6 +1193,138 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CONTACT US SECTION ===== */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-150 dark:border-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Connect With Us</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">Let&apos;s Start a Conversation</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+              Have questions about custom dosages, billing, prescription status, or clinic setups? Send us a message, and our verified clinical executives will respond.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+            {/* Contact Info Card */}
+            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+              <div className="p-8 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white rounded-3xl space-y-8 shadow-xl border border-white/5 relative overflow-hidden flex-1 flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Clinical Care Desk</h3>
+                  <p className="text-xs text-emerald-100/90 leading-relaxed font-medium">
+                    Our registered pharmacists are available to resolve medicine-related queries or prescription queries.
+                  </p>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                      <Smartphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-200 block uppercase tracking-wider font-bold">Call & Whatsapp Us</span>
+                      <span className="text-sm font-bold block">+91 9540294099</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-200 block uppercase tracking-wider font-bold">Email Query</span>
+                      <span className="text-sm font-bold block">support@oncolifeindia.com</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-200 block uppercase tracking-wider font-bold">Corporate Office</span>
+                      <span className="text-sm font-bold block leading-snug">Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-2xl flex gap-3 text-xs leading-relaxed font-medium">
+                <ShieldAlert className="w-5 h-5 flex-shrink-0 text-amber-500" />
+                <span>
+                  <strong>Medical Emergency Notice:</strong> Onco Life India online portal is for scheduled anti-cancer medicine purchases. If you are experiencing an acute clinical emergency, please visit the nearest local hospital immediately.
+                </span>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <div className="lg:col-span-7 bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-150 dark:border-gray-800 shadow-sm flex flex-col justify-center">
+              <form onSubmit={handleContactSubmit} className="space-y-5">
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Send Patient Inquiry</h3>
+
+                {contactError && (
+                  <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold rounded-xl">
+                    {contactError}
+                  </div>
+                )}
+
+                {contactSuccess && (
+                  <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-xs font-semibold rounded-xl">
+                    Thank you! Your message has been received by our clinical desk. We will respond shortly.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-widest">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="e.g. Ankit Kumar"
+                      className="w-full bg-gray-50/50 dark:bg-gray-950/40 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 dark:text-white font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-widest">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="e.g. ankit@gmail.com"
+                      className="w-full bg-gray-50/50 dark:bg-gray-950/40 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 dark:text-white font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-widest">Inquiry Message</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    placeholder="Describe your inquiry, medicine requirement, or support details..."
+                    className="w-full bg-gray-50/50 dark:bg-gray-950/40 border border-gray-205 dark:border-gray-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 dark:text-white resize-none font-medium"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={contactSubmitting}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
+                >
+                  {contactSubmitting ? "Submitting Inquiry..." : "Submit Inquiry"}
+                </button>
+              </form>
             </div>
           </div>
         </div>
