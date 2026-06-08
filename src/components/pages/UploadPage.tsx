@@ -26,60 +26,6 @@ export default function UploadPage() {
     }
   };
 
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    const combinations = [
-      { cloudName: "Root", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
-      { cloudName: "root", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
-      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "Root" },
-      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "Root" },
-      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "root" },
-      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "root" },
-      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "prescription" },
-      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "prescription" },
-      { cloudName: "Root", preset: "prescription" },
-      { cloudName: "root", preset: "prescription" },
-      { cloudName: "Root", preset: "Root" },
-      { cloudName: "root", preset: "root" },
-      { cloudName: "CYKdNnUYfA4RwwGvKtsrI47TMoo", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" },
-      { cloudName: "cykdnnuyfa4rwwgvktsri47tmoo", preset: "CYKdNnUYfA4RwwGvKtsrI47TMoo" }
-    ];
-
-    const errors: string[] = [];
-
-    for (const combo of combinations) {
-      try {
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("upload_preset", combo.preset);
-        
-        const url = `https://api.cloudinary.com/v1_1/${combo.cloudName}/image/upload`;
-        const res = await fetch(url, {
-          method: "POST",
-          body: fd,
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          return data.secure_url;
-        } else {
-          const errText = await res.text();
-          let parsedMsg = errText;
-          try {
-            const parsed = JSON.parse(errText);
-            if (parsed.error && parsed.error.message) {
-              parsedMsg = parsed.error.message;
-            }
-          } catch {}
-          errors.push(`[Cloud: ${combo.cloudName}, Preset: ${combo.preset}] failed: ${parsedMsg}`);
-        }
-      } catch (err: any) {
-        errors.push(`[Cloud: ${combo.cloudName}, Preset: ${combo.preset}] error: ${err.message}`);
-      }
-    }
-
-    throw new Error(`Cloudinary upload failed for all configurations:\n${errors.join("\n")}`);
-  };
-
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -96,27 +42,24 @@ export default function UploadPage() {
     setErrorMsg("");
 
     try {
-      // 1. Upload file to Cloudinary, fallback to Base64 Data URL if it fails
-      let fileUrl = "";
+      // Convert file to Base64 to send to backend for signed upload
+      let fileData = "";
       try {
-        fileUrl = await uploadToCloudinary(file);
-      } catch (err) {
-        console.warn("Cloudinary upload failed, falling back to Base64 data URL:", err);
-        try {
-          fileUrl = await fileToBase64(file);
-        } catch (base64Err) {
-          console.error("Base64 conversion failed:", base64Err);
-          fileUrl = URL.createObjectURL(file); // Absolute local blob fallback
-        }
+        fileData = await fileToBase64(file);
+      } catch (base64Err) {
+        console.error("Base64 conversion failed:", base64Err);
+        setErrorMsg("Failed to read the prescription file.");
+        setScanning(false);
+        return;
       }
 
-      // 2. Perform OCR simulation and upload prescription with returned secure URL
+      // 2. Perform OCR simulation and upload prescription
       setTimeout(async () => {
         try {
           const mockMeds = ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"];
           setOcrData(mockMeds);
           
-          await uploadPrescription(file.name, fileUrl);
+          await uploadPrescription(file.name, fileData);
           
           setScanning(false);
           setOcrSuccess(true);

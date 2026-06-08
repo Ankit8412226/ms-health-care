@@ -1,4 +1,5 @@
 const Prescription = require('../models/Prescription');
+const crypto = require('crypto');
 
 /**
  * @desc    Upload a new prescription
@@ -6,13 +7,55 @@ const Prescription = require('../models/Prescription');
  * @access  Private
  */
 const uploadPrescription = async (req, res) => {
-  const { name, url } = req.body;
+  const { name, url: fileData } = req.body;
 
   try {
+    let finalUrl = fileData;
+
+    // If fileData is base64 file format, upload to Cloudinary using signed upload
+    if (fileData && fileData.startsWith('data:')) {
+      try {
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const apiSecret = 'CYKdNnUYfA4RwwGvKtsrI47TMoo';
+        const apiKey = '618684992729621';
+        const cloudName = 'dqy6dki64';
+
+        // Generate SHA-1 signature for Cloudinary upload
+        const signature = crypto
+          .createHash('sha1')
+          .update(`timestamp=${timestamp}${apiSecret}`)
+          .digest('hex');
+
+        const fd = new FormData();
+        fd.append('file', fileData);
+        fd.append('timestamp', timestamp.toString());
+        fd.append('api_key', apiKey);
+        fd.append('signature', signature);
+
+        const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: 'POST',
+          body: fd,
+        });
+
+        if (cloudinaryRes.ok) {
+          const cloudinaryData = await cloudinaryRes.json();
+          if (cloudinaryData.secure_url) {
+            finalUrl = cloudinaryData.secure_url;
+            console.log('Successfully uploaded prescription to Cloudinary from backend:', finalUrl);
+          }
+        } else {
+          const errText = await cloudinaryRes.text();
+          console.error('Cloudinary API upload failed on backend:', errText);
+        }
+      } catch (cloudinaryErr) {
+        console.error('Backend Cloudinary upload error:', cloudinaryErr.message);
+      }
+    }
+
     const prescription = await Prescription.create({
       user: req.user._id,
       name,
-      url,
+      url: finalUrl,
       status: 'Processing (OCR)',
     });
 
