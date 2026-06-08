@@ -388,9 +388,11 @@ export default function BlogPage() {
               </div>
               <button
                 onClick={handleCloseArticle}
-                className="w-9 h-9 rounded-full bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors cursor-pointer text-gray-500 dark:text-gray-300"
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-750 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1.5 transition-all cursor-pointer text-gray-600 dark:text-gray-300 font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                aria-label="Close reader"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 text-rose-500" />
+                <span>Close</span>
               </button>
             </div>
 
@@ -512,6 +514,17 @@ export default function BlogPage() {
                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow shadow-emerald-650/20 hover:shadow-lg whitespace-nowrap cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Browse Store
+                </button>
+              </div>
+
+              {/* Explicit bottom close/cut option */}
+              <div className="flex justify-center pt-2 pb-6">
+                <button
+                  onClick={handleCloseArticle}
+                  className="group flex items-center gap-2 px-8 py-3 bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-sm border border-gray-200 dark:border-gray-800"
+                >
+                  <X className="w-4 h-4 text-rose-500" />
+                  Close Article
                 </button>
               </div>
             </div>
