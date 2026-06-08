@@ -310,7 +310,14 @@ export default function Header() {
         <span className="mx-4 opacity-50">|</span>
         <span>🏷️ Use code <span className="font-bold bg-white/20 px-2 py-0.5 rounded">HEALTH30</span> for 30% off</span>
         <span className="mx-4 opacity-50">|</span>
-        <span className="flex items-center gap-1 inline-flex"><Phone className="w-3 h-3" /> +91 9540294099 (Call & Whatsapp)</span>
+        <a
+          href="https://wa.me/919318408060?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 inline-flex hover:underline hover:text-emerald-200 transition-all font-semibold"
+        >
+          <Phone className="w-3 h-3" /> +91 93184 08060 (Call & Whatsapp)
+        </a>
       </div>
 
       {/* Main header */}
@@ -707,7 +714,14 @@ export default function Header() {
                     Login / Sign Up
                   </button>
                 )}
-                <div className="text-[10px] text-center text-gray-400">Call & Whatsapp: +91 9540294099</div>
+                <a
+                  href="https://wa.me/919318408060?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-center text-gray-400 hover:text-emerald-500 transition-colors block font-semibold"
+                >
+                  Call & Whatsapp: +91 93184 08060
+                </a>
               </div>
             </div>
           </div>

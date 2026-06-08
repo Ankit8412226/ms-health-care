@@ -961,7 +961,7 @@ export default function HomePage() {
             "image": "https://www.oncolifeindia.com/image.png",
             "@id": "https://www.oncolifeindia.com",
             "url": "https://www.oncolifeindia.com",
-            "telephone": "+91 9540294099",
+            "telephone": "+91 93184 08060",
             "address": {
               "@type": "PostalAddress",
               "streetAddress": "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station",
@@ -1239,7 +1239,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <span className="text-[10px] text-emerald-200 block uppercase tracking-wider font-bold">Call & Whatsapp Us</span>
-                      <span className="text-sm font-bold block">+91 9540294099</span>
+                      <span className="text-sm font-bold block">+91 93184 08060</span>
                     </div>
                   </div>
 

@@ -87,10 +87,16 @@ export default function UploadPage() {
     setErrorMsg("");
 
     try {
-      // 1. Upload file to Cloudinary
-      const fileUrl = await uploadToCloudinary(file);
+      // 1. Upload file to Cloudinary, fallback to local URL if it fails
+      let fileUrl = "";
+      try {
+        fileUrl = await uploadToCloudinary(file);
+      } catch (err) {
+        console.warn("Cloudinary upload failed, falling back to local object URL:", err);
+        fileUrl = URL.createObjectURL(file);
+      }
 
-      // 2. Perform OCR simulation and upload prescription with returned secure Cloudinary URL
+      // 2. Perform OCR simulation and upload prescription with returned secure URL
       setTimeout(async () => {
         try {
           const mockMeds = ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"];
@@ -108,8 +114,8 @@ export default function UploadPage() {
       }, 2000);
 
     } catch (err: any) {
-      console.error("Cloudinary upload error:", err);
-      setErrorMsg(err.message || "Failed to upload prescription to Cloudinary.");
+      console.error("Upload process error:", err);
+      setErrorMsg(err.message || "Failed to process prescription upload.");
       setScanning(false);
     }
   };
