@@ -3,10 +3,200 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import ProductCard from "@/components/ProductCard";
 import SliderBanner from "@/components/ui/SliderBanner";
+import { useState } from "react";
 import {
   Package, Upload, Heart, MapPin,
-  LogOut, CheckCircle2, Clock, Truck, AlertCircle
+  LogOut, CheckCircle2, Clock, Truck, AlertCircle,
+  Navigation, X, ExternalLink, RefreshCw, MapPinned,
+  Info, Loader2
 } from "lucide-react";
+
+interface TrackingModalProps {
+  orderId: string;
+  onClose: () => void;
+}
+
+function TrackingModal({ orderId, onClose }: TrackingModalProps) {
+  const { trackOrder, orders } = useApp();
+  const order = orders.find((o) => o.id === orderId);
+
+  const [loading, setLoading] = useState(false);
+  const [trackData, setTrackData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [fetched, setFetched] = useState(false);
+
+  const fetchTracking = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await trackOrder(orderId);
+      setTrackData(result);
+      setFetched(true);
+    } catch {
+      setError("Could not fetch tracking info. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statusSteps = ["Placed", "Processing", "Out for Delivery", "Delivered"];
+  const currentStep = statusSteps.indexOf(order?.status || "Placed");
+
+  const trackingEvents: any[] = trackData?.trackingData?.shipment_track_activities || [];
+  const liveStatus = trackData?.trackingData?.shipment_track?.[0]?.current_status;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-5 text-white shrink-0">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black">Track Your Order</h3>
+                <p className="text-xs text-emerald-100 mt-0.5">{orderId}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto p-5 space-y-5 flex-1">
+          {/* Progress Steps */}
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Delivery Progress</p>
+            <div className="relative">
+              {/* Track line */}
+              <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200 dark:bg-gray-700 z-0" />
+              <div
+                className="absolute top-4 left-4 h-0.5 bg-emerald-500 z-0 transition-all duration-700"
+                style={{ width: `${currentStep >= 0 ? (currentStep / (statusSteps.length - 1)) * 100 : 0}%`, right: 'unset' }}
+              />
+              <div className="relative z-10 grid grid-cols-4 gap-1">
+                {statusSteps.map((step, idx) => (
+                  <div key={step} className="flex flex-col items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
+                      idx <= currentStep
+                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30"
+                        : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-400"
+                    }`}>
+                      {idx < currentStep ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                    </div>
+                    <span className={`text-[9px] font-bold text-center leading-tight ${
+                      idx <= currentStep ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
+                    }`}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Courier info */}
+          {(order?.awbCode || trackData?.awbCode) && (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-4 flex items-start gap-3">
+              <div className="w-9 h-9 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center shrink-0">
+                <MapPinned className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-xs font-bold text-gray-800 dark:text-white">
+                  {order?.courierName || trackData?.courierName || "Courier Assigned"}
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono">
+                  AWB: <span className="text-gray-700 dark:text-gray-200">{order?.awbCode || trackData?.awbCode}</span>
+                </p>
+                {liveStatus && (
+                  <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                    📦 {liveStatus}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* No AWB yet */}
+          {!order?.awbCode && !trackData?.awbCode && fetched && (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-3">
+              <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-amber-800 dark:text-amber-200">Shipment Not Yet Dispatched</p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+                  Your order is being prepared. Tracking will be available once the shipment is picked up by our courier partner.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-2xl p-4 text-xs text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* Live tracking events */}
+          {trackingEvents.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tracking History</p>
+              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                {trackingEvents.slice(0, 10).map((ev: any, idx: number) => (
+                  <div key={idx} className="flex gap-3 items-start text-xs">
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${idx === 0 ? "bg-emerald-500" : "bg-gray-300 dark:bg-gray-600"}`} />
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-white">{ev.activity || ev["sr-status-label"] || "Update"}</p>
+                      <p className="text-[10px] text-gray-400">{ev.date} {ev.time ? `• ${ev.time}` : ""} {ev.location ? `• ${ev.location}` : ""}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fetch / Refresh button */}
+          <button
+            onClick={fetchTracking}
+            disabled={loading}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-sm font-bold rounded-2xl transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Fetching Live Status...</>
+            ) : (
+              <><RefreshCw className="w-4 h-4" /> {fetched ? "Refresh Tracking" : "Get Live Tracking"}</>
+            )}
+          </button>
+
+          {/* External tracking link */}
+          {(order?.trackingUrl || trackData?.trackingUrl) && (
+            <a
+              href={order?.trackingUrl || trackData?.trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-sm font-bold rounded-2xl transition-colors flex items-center justify-center gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Track on Shiprocket Website
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const {
@@ -30,6 +220,8 @@ export default function DashboardPage() {
 
   const sourceProducts = products || [];
   const wProducts = sourceProducts.filter((p) => wishlist.includes(p.id));
+
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -104,6 +296,7 @@ export default function DashboardPage() {
                     order.status === "Delivered" ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400" :
                     order.status === "Out for Delivery" ? "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400" :
                     order.status === "Processing" ? "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400" :
+                    order.status === "Cancelled" ? "text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-400" :
                     "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
                   const StatusIcon =
                     order.status === "Delivered" ? CheckCircle2 :
@@ -115,6 +308,9 @@ export default function DashboardPage() {
                         <div>
                           <span className="text-xs text-gray-400">Order ID: <strong className="text-gray-700 dark:text-white">{order.id}</strong></span>
                           <p className="text-[10px] text-gray-400 mt-0.5">Placed on: {order.date}</p>
+                          {order.courierName && (
+                            <p className="text-[10px] text-blue-500 mt-0.5">🚚 {order.courierName} • AWB: {order.awbCode}</p>
+                          )}
                         </div>
                         <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${statusColor}`}>
                           <StatusIcon className="w-3.5 h-3.5" />
@@ -141,9 +337,20 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
-                        <span className="text-gray-400">Paid via: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>
-                        <span className="text-sm font-bold text-gray-800 dark:text-white">Total: ₹{order.total}</span>
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-3">
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                          <span className="text-gray-400">Paid via: <strong className="uppercase text-gray-600 dark:text-gray-300">{order.paymentMethod}</strong></span>
+                          <span className="text-sm font-bold text-gray-800 dark:text-white">Total: ₹{order.total}</span>
+                        </div>
+
+                        {/* Track Order Button */}
+                        <button
+                          onClick={() => setTrackingOrderId(order.id)}
+                          className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30"
+                        >
+                          <Navigation className="w-3.5 h-3.5" />
+                          Track Order
+                        </button>
                       </div>
                     </div>
                   );
@@ -168,18 +375,6 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400">Uploaded on: {rx.date}</p>
-                      {rx.extractedMedicines && (
-                        <div className="pt-2.5 border-t border-gray-100 dark:border-gray-800 space-y-1.5 w-full">
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block text-center sm:text-left">OCR MATCHED DRUGS:</span>
-                          <div className="flex flex-wrap justify-center sm:justify-start gap-1">
-                            {rx.extractedMedicines.map((med) => (
-                              <span key={med} className="inline-block text-[10px] font-medium bg-gray-50 dark:bg-gray-850 px-2.5 py-0.5 rounded text-gray-700 dark:text-gray-300">
-                                {med}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -226,6 +421,14 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Tracking Modal */}
+      {trackingOrderId && (
+        <TrackingModal
+          orderId={trackingOrderId}
+          onClose={() => setTrackingOrderId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -35,7 +35,10 @@ import {
   Tag,
   ListPlus,
   Compass,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Loader2,
+  Navigation,
+  ExternalLink
 } from "lucide-react";
 
 type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers";
@@ -67,6 +70,11 @@ export default function AdminPage() {
     "OD-519834": { name: "Vikas Kumar", phone: "+91 88776 55443" },
     "OD-537201": { name: "Amit Singh", phone: "+91 90123 45678" }
   });
+
+  // Shiprocket shipping state
+  const [srLoading, setSrLoading] = useState<string | null>(null); // orderId that is being shipped
+  const [srError, setSrError] = useState<string | null>(null);
+  const [srSuccess, setSrSuccess] = useState<string | null>(null);
   
   const [tempRiderName, setTempRiderName] = useState("");
   const [tempRiderPhone, setTempRiderPhone] = useState("");
@@ -85,6 +93,7 @@ export default function AdminPage() {
     deleteProduct,
     addProduct,
     addCategory,
+    trackOrder,
   } = useApp();
 
   useEffect(() => {
@@ -352,9 +361,55 @@ export default function AdminPage() {
   // Open Order details and tracking
   const openOrderViewer = (order: Order) => {
     setSelectedOrder(order);
+    setSrError(null);
+    setSrSuccess(null);
     const existingRider = riderDetails[order.id] || { name: "", phone: "" };
     setTempRiderName(existingRider.name);
     setTempRiderPhone(existingRider.phone);
+  };
+
+  // Create Shiprocket Shipment handler
+  const handleCreateShipment = async (order: Order) => {
+    if (!user?.token) return;
+    setSrLoading(order.id);
+    setSrError(null);
+    setSrSuccess(null);
+    try {
+      // Use the MongoDB _id from context — we'll pass orderId and let backend find it
+      // But we need the actual _id for the route. We'll call track to get it, or use orderId route.
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/shiprocket/create/${order.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      const json = await res.json();
+      if (json.success) {
+        setSrSuccess(`✅ Shipment created! AWB: ${json.data.awbCode || "Pending assignment"}`);
+        // Update local order with AWB data
+        if (selectedOrder && selectedOrder.id === order.id) {
+          setSelectedOrder({
+            ...selectedOrder,
+            awbCode: json.data.awbCode,
+            courierName: json.data.courierName,
+            trackingUrl: json.data.trackingUrl,
+            status: "Processing",
+          });
+        }
+        // Also refresh tracking to sync context
+        await trackOrder(order.id);
+      } else {
+        setSrError(json.message || "Shipment creation failed. Check your Shiprocket account.");
+      }
+    } catch (err: any) {
+      setSrError(`Network error: ${err.message}`);
+    } finally {
+      setSrLoading(null);
+    }
   };
 
   // Save assigned delivery tracking rider
@@ -811,6 +866,7 @@ export default function AdminPage() {
                                 <option value="Processing">Processing</option>
                                 <option value="Out for Delivery">Out for Delivery</option>
                                 <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
                               </select>
                             </div>
                           </td>
@@ -1510,16 +1566,58 @@ export default function AdminPage() {
             </div>
 
             {/* Footer Operations */}
-            <div className="px-6 py-4 border-t border-slate-150 flex items-center justify-end gap-3 shrink-0 bg-slate-50/50">
-              <span className="text-xs font-bold text-slate-450 mr-auto">
-                Status is live and immediately synced to client app dashboard.
-              </span>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 bg-slate-200 hover:bg-slate-250 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer"
-              >
-                Close Panel
-              </button>
+            <div className="px-6 py-4 border-t border-slate-150 shrink-0 bg-slate-50/50 space-y-3">
+
+              {/* Shiprocket AWB info */}
+              {selectedOrder.awbCode && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                  <Truck className="w-4 h-4 text-blue-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-blue-700">{selectedOrder.courierName || "Courier"} • AWB: <span className="font-mono">{selectedOrder.awbCode}</span></p>
+                  </div>
+                  {selectedOrder.trackingUrl && (
+                    <a href={selectedOrder.trackingUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline shrink-0">
+                      <ExternalLink className="w-3 h-3" /> Track
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Shiprocket errors/success */}
+              {srError && srLoading === null && (
+                <div className="text-[10px] font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{srError}</div>
+              )}
+              {srSuccess && (
+                <div className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">{srSuccess}</div>
+              )}
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-bold text-slate-450">
+                  Status is live and immediately synced to client app dashboard.
+                </span>
+                <div className="flex items-center gap-2">
+                  {/* Create Shiprocket Shipment */}
+                  {!selectedOrder.awbCode && (
+                    <button
+                      onClick={() => handleCreateShipment(selectedOrder)}
+                      disabled={srLoading === selectedOrder.id}
+                      className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-xl text-[10px] transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      {srLoading === selectedOrder.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</>
+                      ) : (
+                        <><Truck className="w-3.5 h-3.5" /> Create Shipment</>)}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setSelectedOrder(null); setSrError(null); setSrSuccess(null); }}
+                    className="px-4 py-2 bg-slate-200 hover:bg-slate-250 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer"
+                  >
+                    Close Panel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

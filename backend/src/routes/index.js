@@ -9,6 +9,7 @@ const orderRoutes = require('./orderRoutes');
 const prescriptionRoutes = require('./prescriptionRoutes');
 const newsletterRoutes = require('./newsletterRoutes');
 const reviewRoutes = require('./reviewRoutes');
+const shiprocketRoutes = require('./shiprocketRoutes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -19,5 +20,6 @@ router.use('/orders', orderRoutes);
 router.use('/prescriptions', prescriptionRoutes);
 router.use('/newsletters', newsletterRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/shiprocket', shiprocketRoutes);
 
 module.exports = router;

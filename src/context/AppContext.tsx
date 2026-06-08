@@ -37,7 +37,7 @@ export interface Order {
   address: UserAddress;
   paymentMethod: string;
   date: string;
-  status: "Placed" | "Processing" | "Out for Delivery" | "Delivered";
+  status: "Placed" | "Processing" | "Out for Delivery" | "Delivered" | "Cancelled";
   prescriptionUrl?: string;
   prescriptionStatus?: "Pending Review" | "Approved" | "Rejected";
   paymentStatus?: "Pending" | "Paid" | "Failed";
@@ -52,6 +52,12 @@ export interface Order {
     email: string;
     phone: string;
   };
+  // ── Shiprocket fields ──
+  awbCode?: string;
+  courierName?: string;
+  trackingUrl?: string;
+  shiprocketOrderId?: string;
+  shiprocketShipmentId?: string;
 }
 
 export interface Prescription {
@@ -116,6 +122,13 @@ interface AppContextType {
     prescriptionUrl?: string,
     paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
   ) => void;
+  trackOrder: (orderId: string) => Promise<{
+    status: string;
+    awbCode?: string;
+    courierName?: string;
+    trackingUrl?: string;
+    trackingData?: unknown;
+  } | null>;
   prescriptions: Prescription[];
   uploadPrescription: (name: string, url: string) => void;
   couponCode: string;
@@ -401,6 +414,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               prescriptionStatus: o.prescriptionStatus,
               paymentStatus: o.paymentStatus,
               paymentDetails: o.paymentDetails,
+              awbCode: o.awbCode,
+              courierName: o.courierName,
+              trackingUrl: o.trackingUrl,
+              shiprocketOrderId: o.shiprocketOrderId,
+              shiprocketShipmentId: o.shiprocketShipmentId,
               user: o.user ? {
                 name: o.user.name || "",
                 email: o.user.email || "",
@@ -462,6 +480,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               prescriptionStatus: o.prescriptionStatus,
               paymentStatus: o.paymentStatus,
               paymentDetails: o.paymentDetails,
+              awbCode: o.awbCode,
+              courierName: o.courierName,
+              trackingUrl: o.trackingUrl,
+              shiprocketOrderId: o.shiprocketOrderId,
+              shiprocketShipmentId: o.shiprocketShipmentId,
             }));
             setOrders(mappedOrders);
           }
@@ -882,6 +905,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   };
 
+  // ── Order Tracking via Shiprocket ──────────────────────────────────────
+  const trackOrder = async (orderId: string) => {
+    if (!user?.token) return null;
+    try {
+      const res = await fetch(`${API_URL}/shiprocket/track/${orderId}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        // Sync the order in local state with latest tracking data
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: json.data.status || o.status,
+                  awbCode: json.data.awbCode || o.awbCode,
+                  courierName: json.data.courierName || o.courierName,
+                  trackingUrl: json.data.trackingUrl || o.trackingUrl,
+                }
+              : o
+          )
+        );
+        return json.data;
+      }
+      return null;
+    } catch (err) {
+      console.warn("Shiprocket track order failed:", err);
+      return null;
+    }
+  };
+
   // ── Admin Ops (Integrated with Backend) ───────────────────────────────
   const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
     try {
@@ -1127,6 +1182,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deleteAddress,
         orders,
         placeOrder,
+        trackOrder,
         prescriptions,
         uploadPrescription,
         couponCode,

@@ -82,9 +82,15 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Placed', 'Processing', 'Out for Delivery', 'Delivered'],
+      enum: ['Placed', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'],
       default: 'Placed',
     },
+    // ── Shiprocket shipping fields ──────────────────────────────────────
+    shiprocketOrderId: { type: String },
+    shiprocketShipmentId: { type: String },
+    awbCode: { type: String },
+    courierName: { type: String },
+    trackingUrl: { type: String },
     prescriptionUrl: {
       type: String,
       trim: true,

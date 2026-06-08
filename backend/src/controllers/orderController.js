@@ -139,7 +139,7 @@ const getAllOrders = async (req, res) => {
  */
 const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
-  const { status, paymentStatus, prescriptionStatus } = req.body;
+  const { status, paymentStatus, prescriptionStatus, awbCode, courierName, trackingUrl } = req.body;
 
   try {
     const order = await Order.findById(id);
@@ -151,6 +151,11 @@ const updateOrderStatus = async (req, res) => {
     if (status) order.status = status;
     if (paymentStatus) order.paymentStatus = paymentStatus;
     if (prescriptionStatus) order.prescriptionStatus = prescriptionStatus;
+
+    // Allow manual AWB/courier update from admin panel
+    if (awbCode) order.awbCode = awbCode;
+    if (courierName) order.courierName = courierName;
+    if (trackingUrl) order.trackingUrl = trackingUrl;
 
     // Log payment detail timestamps if status changed to Paid
     if (paymentStatus === 'Paid' && !order.paymentDetails.paidAt) {
@@ -172,6 +177,7 @@ const updateOrderStatus = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server Error updating order state' });
   }
 };
+
 
 /**
  * @desc    Create a Razorpay order
