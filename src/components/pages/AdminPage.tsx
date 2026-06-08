@@ -38,7 +38,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 
-type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories";
+type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers";
 
 export default function AdminPage() {
   // Authentication State
@@ -55,6 +55,7 @@ export default function AdminPage() {
   // Local/UI Interactivity Modals
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>("");
   const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
@@ -200,6 +201,54 @@ export default function AdminPage() {
       return matchesSearch && matchesFilter;
     });
   }, [products, searchTerm, statusFilter]);
+
+  // Group orders by customer and calculate aggregates
+  const customers = useMemo(() => {
+    const customerMap: {
+      [email: string]: {
+        name: string;
+        email: string;
+        phone: string;
+        totalOrders: number;
+        totalSpent: number;
+        orders: Order[];
+      };
+    } = {};
+
+    orders.forEach((order) => {
+      const email = order.user?.email || order.address.phone + "@mscare-placeholder.com";
+      const name = order.user?.name || order.address.name || "Walk-in Customer";
+      const phone = order.user?.phone || order.address.phone || "";
+
+      if (!customerMap[email]) {
+        customerMap[email] = {
+          name,
+          email: order.user?.email ? order.user.email : "N/A (Guest Order)",
+          phone,
+          totalOrders: 0,
+          totalSpent: 0,
+          orders: [],
+        };
+      }
+
+      customerMap[email].totalOrders += 1;
+      customerMap[email].totalSpent += order.total;
+      customerMap[email].orders.push(order);
+    });
+
+    return Object.values(customerMap);
+  }, [orders]);
+
+  // Filter customers by search term
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((cust) => {
+      return (
+        cust.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cust.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cust.phone.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [customers, searchTerm]);
 
   // Handle Edit Price inline
   const startEditPrice = (prod: Product) => {
@@ -441,6 +490,7 @@ export default function AdminPage() {
             { id: "prescriptions", label: "Clinical Review", icon: FileText },
             { id: "inventory", label: "Product Inventory", icon: Pill },
             { id: "categories", label: "Category Manager", icon: Tag },
+            { id: "customers", label: "Customer List", icon: User },
           ].map((item) => (
             <button
               key={item.id}
@@ -487,6 +537,7 @@ export default function AdminPage() {
               {activeTab === "prescriptions" && "Clinical Rx Review"}
               {activeTab === "inventory" && "Catalog & Inventory"}
               {activeTab === "categories" && "Category Manager"}
+              {activeTab === "customers" && "Customer Database & History"}
             </h2>
             <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-100 rounded-full">
               LIVE SYSTEM STATE
@@ -1154,6 +1205,87 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* ── [TAB] CUSTOMERS (Customer List Tab) ────────────────────── */}
+          {activeTab === "customers" && (
+            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-100 overflow-hidden space-y-6 p-6 animate-fade-in">
+              {/* Header and Controls */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Customer Database</h3>
+                  <p className="text-xs text-slate-400 mt-1 font-semibold">Audit registered customer contact details, activity metrics, and purchase histories</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Search */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search customer, phone, email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold w-64 placeholder:text-slate-400 text-slate-750"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <th className="py-3 pl-4">Customer Name</th>
+                      <th className="py-3">Email Address</th>
+                      <th className="py-3">Contact Phone</th>
+                      <th className="py-3 text-center">Orders Placed</th>
+                      <th className="py-3 text-right">Total Revenue Spent</th>
+                      <th className="py-3 text-center pr-4">Operations</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {filteredCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-450 font-semibold">
+                          No customer profiles matched your search criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredCustomers.map((cust, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/40 group transition-colors">
+                          <td className="py-4 pl-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0 shadow-sm">
+                                {cust.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                              </div>
+                              <span className="font-bold text-slate-800">{cust.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 font-semibold text-slate-650">{cust.email}</td>
+                          <td className="py-4 font-semibold text-slate-650">{cust.phone || "—"}</td>
+                          <td className="py-4 text-center font-bold text-slate-500">
+                            {cust.totalOrders} order{cust.totalOrders > 1 ? "s" : ""}
+                          </td>
+                          <td className="py-4 text-right font-black text-slate-850">
+                            ₹{cust.totalSpent.toLocaleString()}
+                          </td>
+                          <td className="py-4 text-center pr-4">
+                            <button
+                              onClick={() => setSelectedCustomer(cust)}
+                              className="px-3 py-1.5 hover:bg-emerald-600 hover:text-white text-emerald-700 bg-emerald-50 border border-emerald-250 hover:border-emerald-600 font-bold rounded-lg text-[10px] transition-all cursor-pointer shadow-sm"
+                            >
+                              View Orders History
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
 
@@ -1753,6 +1885,145 @@ export default function AdminPage() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── [MODAL] CUSTOMER ORDER HISTORY DRILL-DOWN VIEW ────────────────── */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedCustomer(null)} />
+          
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl relative z-10 animate-scale-in text-slate-700 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-150 flex items-center justify-between shrink-0 bg-slate-50/50">
+              <div>
+                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">Customer Profile &amp; Purchase Log</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-bold">
+                  Derived Customer Record: <span className="text-emerald-600 font-extrabold">{selectedCustomer.name}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedCustomer(null)}
+                className="p-1.5 hover:bg-slate-250 rounded-xl text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Profile Overview Card */}
+              <div className="bg-slate-50 border border-slate-150 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-800 font-black text-lg shadow-sm shrink-0">
+                    {selectedCustomer.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-800 text-base">{selectedCustomer.name}</h4>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">{selectedCustomer.email}</p>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">{selectedCustomer.phone || "No Phone Number Provided"}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="bg-white border border-slate-200/60 rounded-xl px-4 py-2 text-center shadow-xs">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Orders</span>
+                    <p className="text-lg font-black text-slate-800 mt-0.5">{selectedCustomer.totalOrders}</p>
+                  </div>
+                  <div className="bg-white border border-slate-200/60 rounded-xl px-4 py-2 text-center shadow-xs">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Value Spent</span>
+                    <p className="text-lg font-black text-emerald-700 mt-0.5">₹{selectedCustomer.totalSpent.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order History Timeline List */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Customer Purchase Orders Log ({selectedCustomer.orders.length})</h4>
+                
+                {selectedCustomer.orders.map((order: Order) => (
+                  <div key={order.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                    {/* Order summary bar */}
+                    <div className="bg-slate-50/70 border-b border-slate-150 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order);
+                          }}
+                          className="font-mono text-emerald-600 hover:text-emerald-700 font-black text-left flex items-center gap-1 cursor-pointer"
+                        >
+                          {order.id}
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <span className="text-slate-450">{order.date}</span>
+                        <span className="text-slate-300">|</span>
+                        <span className="text-slate-500">{order.paymentMethod}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-block border ${
+                          order.status === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          order.status === "Out for Delivery" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                          order.status === "Processing" ? "bg-blue-50 text-cyan-700 border-cyan-200" :
+                          "bg-amber-50 text-orange-700 border-orange-200"
+                        }`}>
+                          {order.status}
+                        </span>
+                        
+                        {order.prescriptionUrl && (
+                          <a
+                            href={order.prescriptionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[9px] font-extrabold px-2 py-0.5 border border-emerald-250 rounded transition-all flex items-center gap-0.5"
+                          >
+                            <FileText className="w-2.5 h-2.5" /> Rx Scan
+                          </a>
+                        )}
+                        
+                        <span className="text-slate-800 font-black pl-2">Total: ₹{order.total}</span>
+                      </div>
+                    </div>
+
+                    {/* Order items nested list */}
+                    <div className="divide-y divide-slate-100">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3.5 text-xs hover:bg-slate-50/30 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded border border-slate-150 overflow-hidden relative bg-slate-50 shrink-0">
+                              <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-800 truncate max-w-xs md:max-w-md">{item.product.name}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">
+                                Brand: {item.product.brand || "Generics"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right whitespace-nowrap pl-4">
+                            <span className="font-semibold text-slate-550 mr-4">Qty: {item.quantity}</span>
+                            <span className="font-bold text-slate-850">₹{item.product.price * item.quantity}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-150 flex items-center justify-end gap-3 shrink-0 bg-slate-50/50">
+              <button
+                onClick={() => setSelectedCustomer(null)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-250 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Close Logs
+              </button>
+            </div>
           </div>
         </div>
       )}

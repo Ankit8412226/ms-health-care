@@ -47,6 +47,11 @@ export interface Order {
     razorpayPaymentId?: string;
     paidAt?: string;
   };
+  user?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
 }
 
 export interface Prescription {
@@ -371,7 +376,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const jsonOrders = await resOrders.json();
           if (jsonOrders.success && jsonOrders.data) {
             const mappedOrders = jsonOrders.data.map((o: any) => ({
-              id: o._id || o.id,
+              id: o.orderId || o._id || o.id,
               items: o.items.map((item: any) => ({
                 product: {
                   id: item.product?._id || item.product?.id || "",
@@ -396,6 +401,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               prescriptionStatus: o.prescriptionStatus,
               paymentStatus: o.paymentStatus,
               paymentDetails: o.paymentDetails,
+              user: o.user ? {
+                name: o.user.name || "",
+                email: o.user.email || "",
+                phone: o.user.phone || "",
+              } : undefined,
             }));
             setOrders(mappedOrders);
           }
@@ -427,7 +437,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const jsonOrders = await resOrders.json();
           if (jsonOrders.success && jsonOrders.data) {
             const mappedOrders = jsonOrders.data.map((o: any) => ({
-              id: o._id || o.id,
+              id: o.orderId || o._id || o.id,
               items: o.items.map((item: any) => ({
                 product: {
                   id: item.product?._id || item.product?.id || "",
@@ -750,7 +760,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const json = await res.json();
         if (json.success && json.data) {
           const dbOrder: Order = {
-            id: json.data._id || json.data.id,
+            id: json.data.orderId || json.data._id || json.data.id,
             items: [...cart], // keep local resolved product list for frontend display
             subtotal: json.data.subtotal,
             discount: json.data.discount,
@@ -763,6 +773,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             prescriptionUrl: json.data.prescriptionUrl,
             prescriptionStatus: json.data.prescriptionStatus,
             paymentStatus: json.data.paymentStatus,
+            user: user ? {
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+            } : undefined,
           };
           setOrders((prev) => [dbOrder, ...prev]);
           clearCart();
