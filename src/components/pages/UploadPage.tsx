@@ -163,38 +163,33 @@ export default function UploadPage() {
                 {scanning && (
                   <div className="space-y-3 text-center">
                     <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
-                    <span className="text-xs font-bold text-gray-850 dark:text-gray-200 block">AI OCR Reading Prescription...</span>
-                    <p className="text-[10px] text-gray-400">Our systems are scanning medicine salts, forms, and dosage limits.</p>
+                    <span className="text-xs font-bold text-gray-850 dark:text-gray-200 block">Uploading Prescription...</span>
+                    <p className="text-[10px] text-gray-400">Please wait while your document is securely transmitted.</p>
                   </div>
                 )}
-
+ 
                 {errorMsg && (
                   <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl text-xs text-red-805 text-red-600 dark:text-red-400 text-center space-y-2 font-medium">
                     <span className="font-bold block">Upload Failed</span>
                     <p>{errorMsg}</p>
                   </div>
                 )}
-
+ 
                 {ocrSuccess && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
-                      <Sparkles className="w-4 h-4" /> OCR SCAN COMPLETE
+                  <div className="space-y-4 text-center">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+                      <CheckCircle className="w-6 h-6" />
                     </div>
-                    <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-2">
-                      <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 block uppercase tracking-wider">MAPPED MEDICINES:</span>
-                      {ocrData.map((m) => (
-                        <div key={m} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                          {m}
-                        </div>
-                      ))}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-800 dark:text-white">Prescription Uploaded</h3>
+                      <p className="text-[11px] text-gray-400 mt-1">Our clinical experts will review your prescription slip and package the correct items.</p>
                     </div>
-
+ 
                     <button
                       onClick={() => setActivePage("shop")}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
                     >
-                      Search mapped drugs <ArrowRight className="w-4 h-4" />
+                      Continue Shopping <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -202,8 +197,8 @@ export default function UploadPage() {
             ) : (
               <div className="text-center space-y-3">
                 <FileText className="w-12 h-12 text-gray-300 mx-auto" />
-                <span className="text-xs font-bold text-gray-450 dark:text-gray-500 block">Scan Status Screen</span>
-                <p className="text-[10px] text-gray-400 max-w-xs mx-auto">Upload a prescription slip to activate our instant medical parser validation checks.</p>
+                <span className="text-xs font-bold text-gray-450 dark:text-gray-500 block">Upload Status Screen</span>
+                <p className="text-[10px] text-gray-400 max-w-xs mx-auto">Upload your prescription slip to attach it securely to your order review profile.</p>
               </div>
             )}
           </div>
