@@ -1,24 +1,27 @@
 /**
  * Shiprocket API Client
  * Uses Node.js built-in https module — no axios needed.
- * Credentials are hardcoded as per project requirements.
+ * Authenticates with email+password to get a JWT, then caches it.
  */
 
 const https = require('https');
 
-// ── Hardcoded Shiprocket API Key (Bearer Token) ───────────────────────────
-const SHIPROCKET_API_KEY  = 'wD0Jyv#WbQz2cWcr#vd2TyJz$k8la55e';
+// ── Shiprocket Credentials (hardcoded as per project requirements) ─────────
+// NOTE: These are the Shiprocket ACCOUNT login credentials, not a bare API key.
+// The client must provide their Shiprocket portal email + password.
+const SHIPROCKET_EMAIL    = 'admin@oncolifeindia.com'; // update if client gives different email
+const SHIPROCKET_PASSWORD = 'wD0Jyv#WbQz2cWcr#vd2TyJz$k8la55e';
 const SHIPROCKET_BASE     = 'apiv2.shiprocket.in';
 const SHIPROCKET_API_BASE = '/v1/external';
 
+// ── Token cache (refreshed automatically on expiry) ───────────────────────
+let cachedToken = null;
+let tokenExpiry  = 0; // epoch ms
+
 /**
  * Make an HTTPS JSON request to Shiprocket
- * @param {string} method   - HTTP method
- * @param {string} path     - API path (without base)
- * @param {object|null} body - Request body (for POST/PUT)
- * @returns {Promise<object>}
  */
-function shiprocketRequest(method, path, body = null) {
+function shiprocketRequest(method, path, body = null, token = null) {
   return new Promise((resolve, reject) => {
     const postData = body ? JSON.stringify(body) : null;
 
@@ -29,8 +32,8 @@ function shiprocketRequest(method, path, body = null) {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SHIPROCKET_API_KEY}`,
         ...(postData ? { 'Content-Length': Buffer.byteLength(postData) } : {}),
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
     };
 
@@ -47,58 +50,68 @@ function shiprocketRequest(method, path, body = null) {
     });
 
     req.on('error', reject);
-
-    if (postData) {
-      req.write(postData);
-    }
+    if (postData) req.write(postData);
     req.end();
   });
 }
 
 /**
- * Returns the hardcoded API key (kept for compatibility)
- * @returns {string}
+ * Authenticate with Shiprocket and cache the JWT token (valid 24h).
  */
 async function getToken() {
-  return SHIPROCKET_API_KEY;
+  const now = Date.now();
+  if (cachedToken && now < tokenExpiry) {
+    return cachedToken;
+  }
+
+  console.log('🚚 Shiprocket: Logging in to get token...');
+  const response = await shiprocketRequest('POST', '/auth/login', {
+    email: SHIPROCKET_EMAIL,
+    password: SHIPROCKET_PASSWORD,
+  });
+
+  if (!response.token) {
+    throw new Error(`Shiprocket auth failed: ${JSON.stringify(response)}`);
+  }
+
+  cachedToken = response.token;
+  tokenExpiry  = now + 23 * 60 * 60 * 1000; // 23 hours
+  console.log('✅ Shiprocket token obtained successfully');
+  return cachedToken;
 }
 
 /**
- * Create a Shiprocket order + shipment (auto-assigns AWB)
- * @param {object} orderData - Order fields
- * @returns {Promise<object>} Shiprocket response
+ * Create a Shiprocket order + shipment
  */
 async function createShipment(orderData) {
-  return shiprocketRequest('POST', '/orders/create/adhoc', orderData);
+  const token = await getToken();
+  return shiprocketRequest('POST', '/orders/create/adhoc', orderData, token);
 }
 
 /**
  * Track a shipment by AWB number
- * @param {string} awb - Airway Bill number
- * @returns {Promise<object>} Tracking response
  */
 async function trackByAwb(awb) {
-  return shiprocketRequest('GET', `/courier/track/awb/${awb}`);
+  const token = await getToken();
+  return shiprocketRequest('GET', `/courier/track/awb/${awb}`, null, token);
 }
 
 /**
- * Get courier serviceability for a pickup/delivery pincode pair
- * @param {object} params - { pickup_postcode, delivery_postcode, weight, cod }
- * @returns {Promise<object>}
+ * Check serviceability for a pincode pair
  */
 async function checkServiceability(params) {
+  const token = await getToken();
   const { pickup_postcode, delivery_postcode, weight = 0.5, cod = 0 } = params;
   const query = `pickup_postcode=${pickup_postcode}&delivery_postcode=${delivery_postcode}&weight=${weight}&cod=${cod}`;
-  return shiprocketRequest('GET', `/courier/serviceability/?${query}`);
+  return shiprocketRequest('GET', `/courier/serviceability/?${query}`, null, token);
 }
 
 /**
- * Cancel a Shiprocket shipment by AWB
- * @param {string[]} awbs - Array of AWB numbers
- * @returns {Promise<object>}
+ * Cancel shipments by AWB
  */
 async function cancelShipment(awbs) {
-  return shiprocketRequest('POST', '/orders/cancel/shipment/awbs', { awbs });
+  const token = await getToken();
+  return shiprocketRequest('POST', '/orders/cancel/shipment/awbs', { awbs }, token);
 }
 
 module.exports = {
