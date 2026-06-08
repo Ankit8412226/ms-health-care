@@ -10,7 +10,7 @@ const https = require('https');
 // NOTE: These are the Shiprocket ACCOUNT login credentials, not a bare API key.
 // The client must provide their Shiprocket portal email + password.
 const SHIPROCKET_EMAIL    = 'www.mshealthcare@gmail.com';
-const SHIPROCKET_PASSWORD = 'Affan@9312';
+const SHIPROCKET_PASSWORD = 'Google.com00111';
 const SHIPROCKET_BASE     = 'apiv2.shiprocket.in';
 const SHIPROCKET_API_BASE = '/v1/external';
 
