@@ -228,9 +228,7 @@ const orderValidation = [
     .withMessage('Payment method is required'),
   body('prescriptionUrl')
     .optional()
-    .trim()
-    .isURL()
-    .withMessage('Prescription must be a valid URL'),
+    .trim(),
   validateResult,
 ];
 
@@ -242,9 +240,7 @@ const prescriptionValidation = [
   body('url')
     .trim()
     .notEmpty()
-    .withMessage('Prescription URL is required')
-    .isURL()
-    .withMessage('Prescription must be a valid URL'),
+    .withMessage('Prescription URL is required'),
   validateResult,
 ];
 

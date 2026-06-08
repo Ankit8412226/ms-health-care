@@ -230,11 +230,10 @@ export default function CheckoutPage() {
                   <button
                     key={rx.id}
                     onClick={() => setSelectedRxUrl(rx.url)}
-                    className={`p-4 rounded-2xl text-left border transition-all ${
-                      selectedRxUrl === rx.url
+                    className={`p-4 rounded-2xl text-left border transition-all ${selectedRxUrl === rx.url
                         ? "border-blue-500 bg-white dark:bg-gray-800 shadow-md ring-2 ring-blue-500/20"
                         : "border-gray-200 dark:border-gray-700 bg-white/50 hover:bg-white dark:bg-gray-900/30"
-                    }`}
+                      }`}
                   >
                     <span className="text-xs font-bold text-gray-800 dark:text-white block truncate">{rx.name}</span>
                     <span className="text-[10px] text-gray-400 block mt-1">Uploaded on: {rx.date}</span>
@@ -273,11 +272,10 @@ export default function CheckoutPage() {
                 <button
                   key={addr.id}
                   onClick={() => setSelectedAddrId(addr.id)}
-                  className={`p-4 rounded-2xl text-left border transition-all relative ${
-                    selectedAddrId === addr.id
+                  className={`p-4 rounded-2xl text-left border transition-all relative ${selectedAddrId === addr.id
                       ? "border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15 shadow-md ring-2 ring-emerald-500/20"
                       : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  }`}
+                    }`}
                 >
                   <span className="text-xs font-bold text-gray-800 dark:text-white block">{addr.name}</span>
                   <span className="text-[11px] text-gray-400 block mt-1">{addr.phone}</span>
@@ -308,11 +306,10 @@ export default function CheckoutPage() {
                 <button
                   key={id}
                   onClick={() => setSelectedPayment(id)}
-                  className={`p-4 rounded-2xl text-left border transition-all flex gap-3 ${
-                    selectedPayment === id
+                  className={`p-4 rounded-2xl text-left border transition-all flex gap-3 ${selectedPayment === id
                       ? "border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/15 shadow-md ring-2 ring-emerald-500/20"
                       : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  }`}
+                    }`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 text-emerald-600">
                     <Icon className="w-5 h-5" />

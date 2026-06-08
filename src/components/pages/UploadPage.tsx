@@ -80,6 +80,15 @@ export default function UploadPage() {
     throw new Error(`Cloudinary upload failed for all configurations:\n${errors.join("\n")}`);
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const processFile = async (file: File) => {
     setSelectedFile(file);
     setScanning(true);
@@ -87,13 +96,18 @@ export default function UploadPage() {
     setErrorMsg("");
 
     try {
-      // 1. Upload file to Cloudinary, fallback to local URL if it fails
+      // 1. Upload file to Cloudinary, fallback to Base64 Data URL if it fails
       let fileUrl = "";
       try {
         fileUrl = await uploadToCloudinary(file);
       } catch (err) {
-        console.warn("Cloudinary upload failed, falling back to local object URL:", err);
-        fileUrl = URL.createObjectURL(file);
+        console.warn("Cloudinary upload failed, falling back to Base64 data URL:", err);
+        try {
+          fileUrl = await fileToBase64(file);
+        } catch (base64Err) {
+          console.error("Base64 conversion failed:", base64Err);
+          fileUrl = URL.createObjectURL(file); // Absolute local blob fallback
+        }
       }
 
       // 2. Perform OCR simulation and upload prescription with returned secure URL
