@@ -177,33 +177,54 @@ export default function DetailPage() {
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : 0;
 
-  // Find similar products based on matching salt composition first, then fallback/pad with category
+  // Helper to extract clean chemical salt keywords
+  const getCleanSalts = (saltStr: string) => {
+    if (!saltStr) return [];
+    const ignoredWords = new Set([
+      "ip", "usp", "bp", "tablet", "tablets", "capsule", "capsules", 
+      "mg", "mcg", "g", "ml", "sr", "er", "dr", "with", "and", "or", 
+      "of", "in", "for", "to", "at", "by", "from", "on", "an", "the", "a",
+      "technology", "optizorb", "hydrochloride", "sodium", "calcium",
+      "potassium", "chloride", "sulfate", "phosphate", "maleate",
+      "acetate", "mesylate", "tartrate", "citrate", "fumarate", 
+      "succinate", "hydrate"
+    ]);
+    return saltStr
+      .toLowerCase()
+      .split(/[\s,()\-+./]+/)
+      .map(w => w.replace(/[\d\W_]+/g, "").trim())
+      .filter(w => w.length > 2 && !ignoredWords.has(w));
+  };
+
+  // Find similar products based on matching salt composition AND exact dosage/strength
   const getSimilarProducts = () => {
-    let matches: Product[] = [];
     if (product.salt) {
-      const currentSalts = product.salt.toLowerCase().split(/[\s,()\-+]+/).filter((w: string) => w.length > 3);
-      matches = sourceProducts.filter((p) => {
+      const currentSalts = getCleanSalts(product.salt);
+      const currentDosage = product.dosage ? product.dosage.toLowerCase().replace(/\s+/g, "") : "";
+      
+      return sourceProducts.filter((p) => {
         if (p.id === product.id) return false;
         if (!p.salt) return false;
-        const otherSalts = p.salt.toLowerCase();
-        return currentSalts.some((salt: string) => otherSalts.includes(salt));
-      });
+        
+        // 1. Check if they share at least one clean salt keyword
+        const otherSalts = getCleanSalts(p.salt);
+        const sharesSalt = currentSalts.some((s) => otherSalts.includes(s));
+        if (!sharesSalt) return false;
+        
+        // 2. Check if dosage is same (if dosage exists on both)
+        const otherDosage = p.dosage ? p.dosage.toLowerCase().replace(/\s+/g, "") : "";
+        if (currentDosage && otherDosage && currentDosage !== otherDosage) {
+          return false;
+        }
+        
+        return true;
+      }).slice(0, 4);
     }
 
-    if (matches.length < 4) {
-      const categoryMatches = sourceProducts.filter(
-        (p) => p.category === product.category && p.id !== product.id && !matches.some(m => m.id === p.id)
-      );
-      matches = [...matches, ...categoryMatches];
-    }
-
-    if (matches.length < 4) {
-      const otherProducts = sourceProducts.filter(
-        (p) => p.id !== product.id && !matches.some(m => m.id === p.id)
-      );
-      matches = [...matches, ...otherProducts];
-    }
-    return matches.slice(0, 4);
+    // Fallback: If no salt composition exists (e.g. devices/baby care), show other items in same category
+    return sourceProducts.filter(
+      (p) => p.category === product.category && p.id !== product.id
+    ).slice(0, 4);
   };
 
   const similar = getSimilarProducts();

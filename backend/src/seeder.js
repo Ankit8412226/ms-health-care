@@ -302,8 +302,8 @@ const seedData = async () => {
     // Note: User.create triggers password hashing pre-save
     await User.create({
       name: "Admin User",
-      email: "admin@mscare.com",
-      password: "adminpassword123",
+      email: "admin@oncolifeindia.com",
+      password: "admin123",
       phone: "+91 99999 88888",
       role: "admin"
     });

@@ -176,11 +176,32 @@ const CATEGORY_ICON_MAP: Record<string, string> = {
   ayurvedic: "Leaf",
   prescription: "Pill",
   uncategorized: "LayoutGrid",
-  "anti-cancer": "ShieldAlert",
+  "anti-cancer": "ShieldCheck",
   "kidney-care": "Activity",
   "liver-care": "Activity",
   "eye-care": "Sun",
   vaccine: "ShieldAlert",
+  
+  // New visual category mappings:
+  gynecology: "Baby",
+  "hiv-aids": "ShieldAlert",
+  others: "Folder",
+  arthritis: "Bone",
+  hepatitis: "Droplet",
+  allergies: "Wind",
+  anticoagulants: "Droplet",
+  "liver-disease": "Activity",
+  antibiotics: "Pill",
+  vaccinations: "Syringe",
+  nephrology: "Activity",
+  "heart-disorder": "Heart",
+  immunoglobulins: "ShieldCheck",
+  "anti-viral-drugs": "Pill",
+  osteoporosis: "Bone",
+  respiratory: "Wind",
+  "iron-deficiency": "Droplet",
+  "anti-fungal": "Sparkles",
+  anaesthetics: "Moon",
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {

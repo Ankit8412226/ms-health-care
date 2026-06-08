@@ -127,21 +127,14 @@ export default function AdminPage() {
     if (success) {
       setIsAuthenticated(true);
       triggerToast("Welcome back, Chief Administrator!");
-      return;
-    }
-
-    // Fallback to client-side credential verification
-    if (email === "admin@oncolifeindia.com" && password === "admin123") {
-      setIsAuthenticated(true);
-      triggerToast("Welcome back, Chief Administrator (Demo Mode)!");
     } else {
       setLoginError("Invalid administrator credentials. Please check and try again.");
     }
   };
 
   const handleQuickFill = () => {
-    setEmail("admin@mscare.com");
-    setPassword("adminpassword123");
+    setEmail("admin@oncolifeindia.com");
+    setPassword("admin123");
     setLoginError("");
   };
 
@@ -406,7 +399,7 @@ export default function AdminPage() {
               Quick Fill Demo Credentials
             </button>
             <p className="text-[10px] text-slate-400 mt-2 font-medium">
-              Demo login is preconfigured with database admin credentials (admin@mscare.com / adminpassword123).
+              Demo login is preconfigured with database admin credentials (admin@oncolifeindia.com / admin123).
             </p>
           </div>
         </div>

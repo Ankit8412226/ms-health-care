@@ -6,11 +6,12 @@ import ProductCard from "@/components/ProductCard";
 import { Product } from "@/types";
 import {
   SlidersHorizontal, Loader2, Pill, Activity, HeartPulse, Sparkles,
-  ShieldAlert, Baby, Sun, Leaf, LayoutGrid, Folder
+  ShieldAlert, Baby, Sun, Leaf, LayoutGrid, Folder, ShieldCheck, Bone, Droplet, Wind, Syringe, Heart, Moon
 } from "lucide-react";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldAlert, LayoutGrid, Folder
+  Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldAlert, LayoutGrid, Folder,
+  ShieldCheck, Bone, Droplet, Wind, Syringe, Heart, Moon
 };
 
 export default function ShopPage() {

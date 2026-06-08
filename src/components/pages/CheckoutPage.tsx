@@ -143,7 +143,7 @@ export default function CheckoutPage() {
         key: "rzp_live_SwTSEkWxau6fbi", // Live Key ID
         amount: rzpOrder.amount,
         currency: rzpOrder.currency,
-        name: "M S Healthcare",
+        name: "Onco Life India",
         description: "Specialized Oncology & Cancer Care Pharmacy",
         image: "/logo-light.png",
         order_id: rzpOrder.id,

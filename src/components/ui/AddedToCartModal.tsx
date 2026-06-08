@@ -12,17 +12,55 @@ export default function AddedToCartModal() {
 
   if (!addedProduct) return null;
 
+  // Helper to extract clean chemical salt keywords
+  const getCleanSalts = (saltStr: string) => {
+    if (!saltStr) return [];
+    const ignoredWords = new Set([
+      "ip", "usp", "bp", "tablet", "tablets", "capsule", "capsules", 
+      "mg", "mcg", "g", "ml", "sr", "er", "dr", "with", "and", "or", 
+      "of", "in", "for", "to", "at", "by", "from", "on", "an", "the", "a",
+      "technology", "optizorb", "hydrochloride", "sodium", "calcium",
+      "potassium", "chloride", "sulfate", "phosphate", "maleate",
+      "acetate", "mesylate", "tartrate", "citrate", "fumarate", 
+      "succinate", "hydrate"
+    ]);
+    return saltStr
+      .toLowerCase()
+      .split(/[\s,()\-+./]+/)
+      .map(w => w.replace(/[\d\W_]+/g, "").trim())
+      .filter(w => w.length > 2 && !ignoredWords.has(w));
+  };
+
   // Find similar products in the same category, pad with other products if needed
   const sourceProducts = products || [];
-  let similarProducts = sourceProducts.filter(
-    (p) => p.category === addedProduct.category && p.id !== addedProduct.id
-  );
-  if (similarProducts.length < 3) {
-    const extra = sourceProducts.filter(
-      (p) => p.id !== addedProduct.id && !similarProducts.some((s) => s.id === p.id)
+  let similarProducts: Product[] = [];
+  
+  if (addedProduct.salt) {
+    const currentSalts = getCleanSalts(addedProduct.salt);
+    const currentDosage = addedProduct.dosage ? addedProduct.dosage.toLowerCase().replace(/\s+/g, "") : "";
+    
+    similarProducts = sourceProducts.filter((p) => {
+      if (p.id === addedProduct.id) return false;
+      if (!p.salt) return false;
+      
+      const otherSalts = getCleanSalts(p.salt);
+      const sharesSalt = currentSalts.some((s) => otherSalts.includes(s));
+      if (!sharesSalt) return false;
+      
+      const otherDosage = p.dosage ? p.dosage.toLowerCase().replace(/\s+/g, "") : "";
+      if (currentDosage && otherDosage && currentDosage !== otherDosage) {
+        return false;
+      }
+      
+      return true;
+    });
+  } else {
+    // If no salt exists, fallback to category matching
+    similarProducts = sourceProducts.filter(
+      (p) => p.category === addedProduct.category && p.id !== addedProduct.id
     );
-    similarProducts = [...similarProducts, ...extra];
   }
+  
   similarProducts = similarProducts.slice(0, 3);
 
   // Cart statistics

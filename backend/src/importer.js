@@ -106,8 +106,17 @@ function mapWcProduct(wc) {
 
   // Category
   const cat = wc.categories && wc.categories.length > 0 ? wc.categories[0] : null;
-  const categorySlug = cat ? cat.slug : 'uncategorized';
-  const categoryName = cat ? cat.name : 'Uncategorized';
+  let categorySlug = cat ? cat.slug : 'uncategorized';
+  let categoryName = cat ? cat.name : 'Uncategorized';
+
+  if (categorySlug === 'ransplant') {
+    categorySlug = 'transplant';
+    categoryName = 'Transplant';
+  } else if (categorySlug === 'cipla-ltd') {
+    const rxReq = getMeta(meta, '_prescription_required') === 'yes';
+    categorySlug = rxReq ? 'prescription' : 'others';
+    categoryName = rxReq ? 'Prescription Drugs' : 'Others';
+  }
 
   // Brand
   const brandObj = wc.brands && wc.brands.length > 0 ? wc.brands[0] : null;
@@ -291,16 +300,17 @@ async function migrateData() {
 
     // 8. Seed admin user if not exists
     console.log('\n👤 Checking admin user...');
-    const existingAdmin = await User.findOne({ email: 'admin@mscare.com' });
+    await User.deleteOne({ email: 'admin@mscare.com' });
+    const existingAdmin = await User.findOne({ email: 'admin@oncolifeindia.com' });
     if (!existingAdmin) {
       await User.create({
         name: 'Admin User',
-        email: 'admin@mscare.com',
-        password: 'adminpassword123',
+        email: 'admin@oncolifeindia.com',
+        password: 'admin123',
         phone: '+91 99999 88888',
         role: 'admin',
       });
-      console.log('   ✅ Admin user created (admin@mscare.com / adminpassword123)');
+      console.log('   ✅ Admin user created (admin@oncolifeindia.com / admin123)');
     } else {
       console.log('   ℹ️  Admin user already exists, skipping.');
     }
