@@ -383,8 +383,18 @@ export default function Header() {
                     setDropdownOpen(true);
                   }}
                   placeholder="Search medicines, salt compositions..."
-                  className="w-full bg-gray-50/80 dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-700/80 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-900 transition-all placeholder:text-gray-400 font-medium shadow-sm hover:border-gray-300 dark:hover:border-gray-600 focus:shadow-md focus:shadow-emerald-500/5"
+                  className="w-full bg-gray-50/80 dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-700/80 rounded-xl pl-4 pr-20 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-900 transition-all placeholder:text-gray-400 font-medium shadow-sm hover:border-gray-300 dark:hover:border-gray-600 focus:shadow-md focus:shadow-emerald-500/5"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-11 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    type="button"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => { if (searchQuery.trim()) { setActivePage("shop"); closeDropdown(); } }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition-colors cursor-pointer"
@@ -431,8 +441,9 @@ export default function Header() {
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Toggle search"
               >
-                <Search className="w-5 h-5" />
+                {searchOpen ? <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Search className="w-5 h-5" />}
               </button>
 
               {/* Dark mode */}
@@ -554,8 +565,18 @@ export default function Header() {
                   }}
                   placeholder="Search medicines, vitamins..."
                   autoFocus
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all placeholder:text-gray-400"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-20 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all placeholder:text-gray-400"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-11 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    type="button"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => { if (searchQuery.trim()) { setActivePage("shop"); closeDropdown(); } }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition-colors"
@@ -589,10 +610,10 @@ export default function Header() {
             />
 
             {/* Slide-in panel */}
-            <div className="absolute top-0 right-0 bottom-0 w-full bg-white dark:bg-gray-950 shadow-2xl flex flex-col animate-slide-in-right z-10">
+            <div className="absolute top-0 left-0 bottom-0 w-full bg-gradient-to-b from-white via-gray-50/98 to-white dark:from-gray-950 dark:via-gray-900/98 dark:to-gray-950 shadow-2xl flex flex-col animate-slide-in-left z-10">
 
               {/* Panel header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800/80 flex-shrink-0">
                 <div className="relative h-9 w-36 flex items-center justify-start group">
                   <Image
                     src="/logo-light.png"
@@ -611,105 +632,120 @@ export default function Header() {
                     style={{ mixBlendMode: "screen" }}
                   />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setDark(!dark)}
-                    className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="p-2.5 rounded-full border border-gray-250/50 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer flex items-center justify-center shadow-sm"
                     aria-label="Toggle theme"
                   >
-                    {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    {dark ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
                   </button>
                   <button
                     onClick={() => setMobileOpen(false)}
-                    className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="p-2.5 rounded-full border border-gray-250/50 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-850 hover:text-red-500 dark:hover:text-red-400 transition-all cursor-pointer flex items-center justify-center shadow-sm"
+                    aria-label="Close menu"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4.5 h-4.5" />
                   </button>
                 </div>
               </div>
 
               {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto py-4">
                 {/* User profile strip */}
-                {user && (
-                  <div className="flex items-center gap-3 px-5 py-4 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow">
+                {user ? (
+                  <div className="mx-5 mb-6 p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/15 dark:border-emerald-500/10 rounded-2xl flex items-center gap-4">
+                    <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-base font-extrabold flex-shrink-0 shadow-md border border-white/50 dark:border-gray-800">
                       {user.name.charAt(0)}
+                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-gray-950 rounded-full" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-gray-800 dark:text-white leading-tight truncate">{user.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{user.email}</div>
+                      <div className="text-sm font-black text-gray-800 dark:text-white leading-tight truncate">{user.name}</div>
+                      <div className="text-xs text-gray-550 dark:text-gray-400 truncate mt-0.5">{user.email}</div>
                     </div>
+                  </div>
+                ) : (
+                  <div className="mx-5 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-150 dark:border-gray-800 rounded-2xl">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Access your orders, prescription history and personalized health recommendations.</p>
                   </div>
                 )}
 
-                {/* Nav links */}
-                <div className="px-3 py-3 space-y-1">
-                  {[
-                    { label: "Home", page: "home" as const, icon: Home, query: undefined },
-                    { label: "Shop Medicines", page: "shop" as const, icon: Package, query: undefined },
-                    { label: "Dosage Calculator", page: "calculator" as const, icon: Activity, query: undefined },
-                    { label: "Upload Rx", page: "upload" as const, icon: Upload, query: undefined },
-                    { label: "Blog", page: "blog" as const, icon: Pill, query: undefined },
-                    { label: "My Wishlist", page: "dashboard" as const, icon: Heart, query: "tab=wish" },
-                  ].map(({ label, page, icon: Icon, query }) => (
-                    <button
-                      key={label}
-                      onClick={() => { setActivePage(page, query); setMobileOpen(false); }}
-                      className={`w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3 ${
-                        activePage === page
-                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${activePage === page ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"}`} />
-                      <span className="flex-1">{label}</span>
-                      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                    </button>
-                  ))}
-                </div>
+                {/* Navigation Section */}
+                <div className="px-5 space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">Primary Menu</span>
+                    <div className="mt-2 space-y-1.5">
+                      {[
+                        { label: "Home Page", page: "home" as const, icon: Home, query: undefined },
+                        { label: "Shop Medicines", page: "shop" as const, icon: Package, query: undefined },
+                        { label: "Dosage Calculator", page: "calculator" as const, icon: Activity, query: undefined },
+                        { label: "Upload Prescription", page: "upload" as const, icon: Upload, query: undefined },
+                        { label: "Health Blog", page: "blog" as const, icon: Pill, query: undefined },
+                        { label: "My Wishlist", page: "dashboard" as const, icon: Heart, query: "tab=wish" },
+                      ].map(({ label, page, icon: Icon, query }) => (
+                        <button
+                          key={label}
+                          onClick={() => { setActivePage(page, query); setMobileOpen(false); }}
+                          className={`w-full text-left px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-3.5 border ${
+                            activePage === page
+                              ? "bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-500/10 dark:border-emerald-900/20 shadow-sm"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 hover:text-gray-900 dark:hover:text-white border-transparent"
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                            activePage === page
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                              : "bg-gray-100 dark:bg-gray-900 text-gray-450 dark:text-gray-500"
+                          }`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className="flex-1">{label}</span>
+                          <ChevronRight className="w-4 h-4 text-gray-350 dark:text-gray-650" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Divider */}
-                <div className="mx-5 border-t border-gray-100 dark:border-gray-800 my-1" />
-
-                {/* Account actions */}
-                <div className="px-3 py-3 space-y-1">
-                  {user ? (
-                    <>
-                      <button
-                        onClick={() => { setActivePage("dashboard"); setMobileOpen(false); }}
-                        className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all flex items-center gap-3"
-                      >
-                        <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="flex-1">My Dashboard</span>
-                        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => { setActivePage("dashboard", "tab=orders"); setMobileOpen(false); }}
-                        className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all flex items-center gap-3"
-                      >
-                        <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="flex-1">My Orders</span>
-                        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                      </button>
-                    </>
-                  ) : null}
+                  {/* Account Actions Section */}
+                  {user && (
+                    <div className="pt-2">
+                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">Customer Space</span>
+                      <div className="mt-2 space-y-1.5">
+                        {[
+                          { label: "My Dashboard", icon: User, page: "dashboard" as const, query: undefined },
+                          { label: "My Orders & Tracking", icon: Package, page: "dashboard" as const, query: "tab=orders" },
+                        ].map(({ label, icon: Icon, page, query }) => (
+                          <button
+                            key={label}
+                            onClick={() => { setActivePage(page, query); setMobileOpen(false); }}
+                            className="w-full text-left px-4 py-3 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-3.5 border border-transparent"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-900 text-gray-450 dark:text-gray-500 flex items-center justify-center flex-shrink-0">
+                              <Icon className="w-4 h-4" />
+                            </div>
+                            <span className="flex-1">{label}</span>
+                            <ChevronRight className="w-4 h-4 text-gray-350 dark:text-gray-650" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Footer — stays pinned at bottom */}
-              <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
+              <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 dark:border-gray-800 space-y-3 bg-white/95 dark:bg-gray-950/95">
                 {user ? (
                   <button
                     onClick={() => { logout(); setMobileOpen(false); }}
-                    className="w-full py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition-all text-center flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-black rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer border border-transparent hover:border-red-200 dark:hover:border-red-900/20"
                   >
                     <LogOut className="w-3.5 h-3.5" /> Sign Out
                   </button>
                 ) : (
                   <button
                     onClick={() => { setActivePage("auth"); setMobileOpen(false); }}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all text-center shadow-lg shadow-emerald-500/25"
+                    className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-black rounded-xl transition-all text-center shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                   >
                     Login / Sign Up
                   </button>
@@ -718,7 +754,7 @@ export default function Header() {
                   href="https://wa.me/919318408060?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-center text-gray-400 hover:text-emerald-500 transition-colors block font-semibold"
+                  className="w-full py-3 px-4 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-500/10 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-450 text-center flex items-center justify-center gap-2 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/50 transition-all"
                 >
                   Call & Whatsapp: +91 93184 08060
                 </a>
