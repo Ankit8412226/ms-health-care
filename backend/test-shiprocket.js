@@ -8,8 +8,8 @@ const https = require('https');
 
 // The client's Shiprocket credentials
 // The "API key" they gave is actually the account password
-const SHIPROCKET_EMAIL    = 'www.mshealthcare@gmail.com';
-const SHIPROCKET_PASSWORD = 'Google.com00111';
+const SHIPROCKET_EMAIL    = 'mohdaffanahmad007@gmail.com';
+const SHIPROCKET_PASSWORD = 'fbggKvwZFrQ40Dk6EUgPKw&#O#Ea&dZf';
 
 function request(method, path, body = null, token = null) {
   return new Promise((resolve, reject) => {

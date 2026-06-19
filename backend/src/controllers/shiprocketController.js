@@ -61,7 +61,7 @@ const createShipment = async (req, res) => {
     const payload = {
       order_id: order.orderId,
       order_date: orderDate,
-      pickup_location: 'Primary',
+      pickup_location: 'work',
       comment: 'Prescription Medicine Order',
       billing_customer_name: order.address.name,
       billing_last_name: '',

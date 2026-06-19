@@ -38,8 +38,19 @@ import {
   Link as LinkIcon,
   Loader2,
   Navigation,
-  ExternalLink
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
+
+interface CustomerData {
+  name: string;
+  email: string;
+  phone: string;
+  totalOrders: number;
+  totalSpent: number;
+  orders: Order[];
+}
 
 type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers";
 
@@ -58,7 +69,7 @@ export default function AdminPage() {
   // Local/UI Interactivity Modals
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>("");
   const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
@@ -79,6 +90,13 @@ export default function AdminPage() {
   const [tempRiderName, setTempRiderName] = useState("");
   const [tempRiderPhone, setTempRiderPhone] = useState("");
 
+  // Pagination State
+  const [productPage, setProductPage] = useState<number>(1);
+  const [orderPage, setOrderPage] = useState<number>(1);
+  const [prescriptionPage, setPrescriptionPage] = useState<number>(1);
+  const [customerPage, setCustomerPage] = useState<number>(1);
+  const itemsPerPage = 10;
+
   // App Context Data & Updates
   const {
     user,
@@ -98,7 +116,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (user && user.role === "admin") {
-      setIsAuthenticated(true);
+      setTimeout(() => setIsAuthenticated(true), 0);
     }
   }, [user]);
 
@@ -255,6 +273,156 @@ export default function AdminPage() {
     });
   }, [customers, searchTerm]);
 
+  // Helper handlers to reset page states when user searches or filters
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setProductPage(1);
+    setOrderPage(1);
+    setPrescriptionPage(1);
+    setCustomerPage(1);
+  };
+
+  const handleFilterChange = (val: string) => {
+    setStatusFilter(val);
+    setProductPage(1);
+    setOrderPage(1);
+    setPrescriptionPage(1);
+    setCustomerPage(1);
+  };
+
+  // Paginated Products
+  const productMaxPages = useMemo(() => {
+    return Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+  }, [filteredProducts]);
+  const activeProductPage = Math.min(productPage, productMaxPages);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (activeProductPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, activeProductPage]);
+
+  // Paginated Orders
+  const orderMaxPages = useMemo(() => {
+    return Math.ceil(filteredOrders.length / itemsPerPage) || 1;
+  }, [filteredOrders]);
+  const activeOrderPage = Math.min(orderPage, orderMaxPages);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (activeOrderPage - 1) * itemsPerPage;
+    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredOrders, activeOrderPage]);
+
+  // Paginated Prescriptions
+  const prescriptionMaxPages = useMemo(() => {
+    return Math.ceil(filteredPrescriptions.length / itemsPerPage) || 1;
+  }, [filteredPrescriptions]);
+  const activePrescriptionPage = Math.min(prescriptionPage, prescriptionMaxPages);
+  const paginatedPrescriptions = useMemo(() => {
+    const startIndex = (activePrescriptionPage - 1) * itemsPerPage;
+    return filteredPrescriptions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredPrescriptions, activePrescriptionPage]);
+
+  // Paginated Customers
+  const customerMaxPages = useMemo(() => {
+    return Math.ceil(filteredCustomers.length / itemsPerPage) || 1;
+  }, [filteredCustomers]);
+  const activeCustomerPage = Math.min(customerPage, customerMaxPages);
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = (activeCustomerPage - 1) * itemsPerPage;
+    return filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCustomers, activeCustomerPage]);
+
+  // Reusable Pagination Component / HUD
+  const renderPagination = (
+    currentPage: number,
+    maxPages: number,
+    totalItems: number,
+    onPageChange: (page: number) => void
+  ) => {
+    if (totalItems <= itemsPerPage) return null;
+
+    const startRange = (currentPage - 1) * itemsPerPage + 1;
+    const endRange = Math.min(currentPage * itemsPerPage, totalItems);
+
+    return (
+      <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6 rounded-b-2xl shadow-xs">
+        <div className="flex flex-1 justify-between sm:hidden">
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.min(currentPage + 1, maxPages))}
+            disabled={currentPage === maxPages}
+            className="relative ml-3 inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs text-slate-550 font-semibold">
+              Showing <span className="font-bold text-slate-800">{startRange}</span> to{" "}
+              <span className="font-bold text-slate-800">{endRange}</span> of{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span> results
+            </p>
+          </div>
+          <div>
+            <nav className="isolate inline-flex -space-x-px rounded-xl gap-1" aria-label="Pagination">
+              <button
+                type="button"
+                onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              {Array.from({ length: maxPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === maxPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => {
+                  const prev = arr[idx - 1];
+                  const showEllipsis = prev && p - prev > 1;
+                  return (
+                    <React.Fragment key={p}>
+                      {showEllipsis && (
+                        <span className="relative inline-flex items-center px-3 py-2 text-xs font-semibold text-slate-500">
+                          ...
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onPageChange(p)}
+                        className={`relative inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-bold border transition-all cursor-pointer ${
+                          currentPage === p
+                            ? "z-10 bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                            : "border-slate-200 bg-white text-slate-650 hover:bg-slate-50"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+
+              <button
+                type="button"
+                onClick={() => onPageChange(Math.min(currentPage + 1, maxPages))}
+                disabled={currentPage === maxPages}
+                className="relative inline-flex items-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Handle Edit Price inline
   const startEditPrice = (prod: Product) => {
     setEditingProductId(prod.id);
@@ -405,8 +573,9 @@ export default function AdminPage() {
       } else {
         setSrError(json.message || "Shipment creation failed. Check your Shiprocket account.");
       }
-    } catch (err: any) {
-      setSrError(`Network error: ${err.message}`);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setSrError(`Network error: ${errMsg}`);
     } finally {
       setSrLoading(null);
     }
@@ -549,6 +718,10 @@ export default function AdminPage() {
                 setActiveTab(item.id as AdminTab);
                 setSearchTerm("");
                 setStatusFilter("all");
+                setProductPage(1);
+                setOrderPage(1);
+                setPrescriptionPage(1);
+                setCustomerPage(1);
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === item.id
@@ -672,6 +845,7 @@ export default function AdminPage() {
                       onClick={() => {
                         setActiveTab("orders");
                         setStatusFilter("Placed");
+                        setOrderPage(1);
                       }}
                       className="w-full flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/10 rounded-xl transition-all text-left group cursor-pointer"
                     >
@@ -686,6 +860,7 @@ export default function AdminPage() {
                       onClick={() => {
                         setActiveTab("prescriptions");
                         setStatusFilter("Processing (OCR)");
+                        setPrescriptionPage(1);
                       }}
                       className="w-full flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/10 rounded-xl transition-all text-left group cursor-pointer"
                     >
@@ -759,7 +934,7 @@ export default function AdminPage() {
                       type="text"
                       placeholder="Search ID, Customer..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold w-52 placeholder:text-slate-400 text-slate-750"
                     />
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -770,7 +945,7 @@ export default function AdminPage() {
                     <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) => handleFilterChange(e.target.value)}
                       className="bg-transparent text-xs text-slate-600 font-bold focus:outline-none cursor-pointer pr-1"
                     >
                       <option value="all">All Statuses</option>
@@ -806,7 +981,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredOrders.map((order) => (
+                      paginatedOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-slate-50/40 group transition-colors">
                           <td className="py-4 pl-4">
                             <button
@@ -876,6 +1051,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(orderPage, orderMaxPages, filteredOrders.length, setOrderPage)}
             </div>
           )}
 
@@ -896,7 +1072,7 @@ export default function AdminPage() {
                       type="text"
                       placeholder="Search Patient, Medicines..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold w-52 placeholder:text-slate-400 text-slate-750"
                     />
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -907,7 +1083,7 @@ export default function AdminPage() {
                     <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) => handleFilterChange(e.target.value)}
                       className="bg-transparent text-xs text-slate-600 font-bold focus:outline-none cursor-pointer pr-1"
                     >
                       <option value="all">All Statuses</option>
@@ -939,7 +1115,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredPrescriptions.map((rx) => (
+                      paginatedPrescriptions.map((rx) => (
                         <tr key={rx.id} className="hover:bg-slate-50/40 group transition-colors">
                           <td className="py-4 pl-4 font-mono font-bold text-emerald-600">{rx.id}</td>
                           <td className="py-4 font-semibold text-slate-800">{rx.name}</td>
@@ -995,6 +1171,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(prescriptionPage, prescriptionMaxPages, filteredPrescriptions.length, setPrescriptionPage)}
             </div>
           )}
 
@@ -1015,7 +1192,7 @@ export default function AdminPage() {
                       type="text"
                       placeholder="Search brand, salt, manufacturer..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold w-52 placeholder:text-slate-400 text-slate-750"
                     />
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -1026,7 +1203,7 @@ export default function AdminPage() {
                     <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) => handleFilterChange(e.target.value)}
                       className="bg-transparent text-xs text-slate-650 font-bold focus:outline-none cursor-pointer pr-1"
                     >
                       <option value="all">All Categories</option>
@@ -1069,7 +1246,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredProducts.map((prod) => (
+                      paginatedProducts.map((prod) => (
                         <tr key={prod.id} className="hover:bg-slate-50/40 group transition-colors">
                           <td className="py-4 pl-4">
                             <div className="flex items-center gap-3">
@@ -1168,6 +1345,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(productPage, productMaxPages, filteredProducts.length, setProductPage)}
             </div>
           )}
 
@@ -1258,7 +1436,7 @@ export default function AdminPage() {
                       type="text"
                       placeholder="Search customer, phone, email..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold w-64 placeholder:text-slate-400 text-slate-750"
                     />
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -1287,7 +1465,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredCustomers.map((cust, idx) => (
+                      paginatedCustomers.map((cust, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/40 group transition-colors">
                           <td className="py-4 pl-4">
                             <div className="flex items-center gap-3">
@@ -1319,6 +1497,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(customerPage, customerMaxPages, filteredCustomers.length, setCustomerPage)}
             </div>
           )}
 
@@ -1922,7 +2101,7 @@ export default function AdminPage() {
                   className="w-4 h-4 text-emerald-600 focus:ring-emerald-500/20 bg-white border-slate-300 rounded cursor-pointer"
                 />
                 <label htmlFor="newProdRx" className="text-xs font-bold text-slate-700 cursor-pointer">
-                  Requires Doctor's Prescription (Rx Badge)
+                  Requires Doctor&apos;s Prescription (Rx Badge)
                 </label>
               </div>
 
