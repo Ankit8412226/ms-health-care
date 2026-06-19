@@ -9,18 +9,16 @@ const https = require('https');
 // ── Shiprocket Credentials (hardcoded as per project requirements) ─────────
 // NOTE: These are the Shiprocket ACCOUNT login credentials, not a bare API key.
 // The client must provide their Shiprocket portal email + password.
-const SHIPROCKET_EMAIL    = 'mohdaffanahmad007@gmail.com';
+const SHIPROCKET_EMAIL = 'mohdaffanahmad007@gmail.com';
 const SHIPROCKET_PASSWORD = 'fbggKvwZFrQ40Dk6EUgPKw&#O#Ea&dZf';
-const SHIPROCKET_BASE     = 'apiv2.shiprocket.in';
+const SHIPROCKET_BASE = 'apiv2.shiprocket.in';
 const SHIPROCKET_API_BASE = '/v1/external';
 
 // ── Token cache (refreshed automatically on expiry) ───────────────────────
 let cachedToken = null;
-let tokenExpiry  = 0; // epoch ms
+let tokenExpiry = 0; // epoch ms
 
-/**
- * Make an HTTPS JSON request to Shiprocket
- */
+
 function shiprocketRequest(method, path, body = null, token = null) {
   return new Promise((resolve, reject) => {
     const postData = body ? JSON.stringify(body) : null;
@@ -75,7 +73,7 @@ async function getToken() {
   }
 
   cachedToken = response.token;
-  tokenExpiry  = now + 23 * 60 * 60 * 1000; // 23 hours
+  tokenExpiry = now + 23 * 60 * 60 * 1000; // 23 hours
   console.log('✅ Shiprocket token obtained successfully');
   return cachedToken;
 }

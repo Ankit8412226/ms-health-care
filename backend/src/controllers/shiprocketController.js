@@ -15,11 +15,7 @@ const SELLER = {
   email: 'admin@oncolifeindia.com',
 };
 
-/**
- * @desc    Create a Shiprocket order & shipment for an existing platform order
- * @route   POST /api/shiprocket/create/:orderId
- * @access  Private/Admin
- */
+
 const createShipment = async (req, res) => {
   const { orderId } = req.params;
 
