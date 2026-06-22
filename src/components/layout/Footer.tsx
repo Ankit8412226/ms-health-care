@@ -79,7 +79,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400 mb-2">
               <Phone className="w-4 h-4 text-emerald-400" />
-              +91 93184 08060
+              +91 95402 94099
             </div>
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400 mb-2">
               <Mail className="w-4 h-4 text-emerald-400" />
@@ -185,7 +185,7 @@ export default function Footer() {
       </div>
 
       <a
-        href="https://wa.me/919318408060?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
+        href="https://wa.me/919540294099?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-20 md:bottom-6 right-6 z-[9999] bg-[#25D366] hover:bg-[#22c35e] text-white p-3.5 md:px-5 md:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"

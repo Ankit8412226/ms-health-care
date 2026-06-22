@@ -307,7 +307,7 @@ export default function StaticPages() {
                       </div>
                       <div>
                         <span className="text-[10px] text-emerald-200 block uppercase tracking-wider">Call & Whatsapp Us</span>
-                        <span className="text-sm font-bold block">+91 93184 08060</span>
+                        <span className="text-sm font-bold block">+91 95402 94099</span>
                       </div>
                     </div>
 
@@ -488,7 +488,7 @@ export default function StaticPages() {
                   },
                   {
                     title: "Corporate & Support Info",
-                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 93184 08060"
+                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 95402 94099"
                   }
                 ].map((section, idx) => (
                   <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
@@ -588,7 +588,7 @@ export default function StaticPages() {
                   },
                   {
                     title: "Corporate & Support Info",
-                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 93184 08060"
+                    desc: "Office Add. PRA-05A, Ground Floor, Pratap Nagar Metro Station, Delhi-110007\nCall & Whatsapp Us: +91 95402 94099"
                   }
                 ].map((section, idx) => (
                   <div key={idx} className="p-5 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-1.5">
