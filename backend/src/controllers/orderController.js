@@ -248,6 +248,42 @@ const verifyRazorpayPayment = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Upload/link prescription to an existing order
+ * @route   PUT /api/orders/:id/prescription
+ * @access  Private
+ */
+const updateOrderPrescription = async (req, res) => {
+  const { id } = req.params;
+  const { prescriptionUrl } = req.body;
+
+  try {
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to update this order' });
+    }
+
+    order.prescriptionUrl = prescriptionUrl;
+    order.prescriptionStatus = 'Pending Review';
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Prescription linked to order successfully!',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Update Order Prescription Error:', error.message);
+    return res.status(500).json({ success: false, message: 'Server Error linking prescription to order' });
+  }
+};
+
 module.exports = {
   placeOrder,
   getMyOrders,
@@ -255,4 +291,5 @@ module.exports = {
   updateOrderStatus,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  updateOrderPrescription,
 };

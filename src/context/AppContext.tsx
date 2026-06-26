@@ -131,6 +131,7 @@ interface AppContextType {
   } | null>;
   prescriptions: Prescription[];
   uploadPrescription: (name: string, url: string) => void;
+  attachPrescriptionToOrder: (orderId: string, prescriptionUrl: string) => Promise<boolean>;
   couponCode: string;
   discountPercentage: number;
   applyCoupon: (code: string) => boolean;
@@ -970,6 +971,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const attachPrescriptionToOrder = async (orderId: string, prescriptionUrl: string) => {
+    if (user && user.token) {
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}/prescription`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({ prescriptionUrl }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === orderId
+                ? { ...o, prescriptionUrl, prescriptionStatus: "Pending Review" }
+                : o
+            )
+          );
+          return true;
+        }
+      } catch (err) {
+        console.warn("API attach prescription to order failed:", err);
+      }
+    }
+    return false;
+  };
+
   const updatePrescriptionStatus = async (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => {
     try {
       if (user && user.role === "admin") {
@@ -1197,6 +1227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         trackOrder,
         prescriptions,
         uploadPrescription,
+        attachPrescriptionToOrder,
         couponCode,
         discountPercentage,
         applyCoupon,

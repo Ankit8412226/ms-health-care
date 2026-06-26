@@ -207,7 +207,8 @@ export default function DashboardPage() {
     wishlist,
     addresses,
     deleteAddress,
-    products
+    products,
+    attachPrescriptionToOrder
   } = useApp();
 
   const router = useRouter();
@@ -328,12 +329,57 @@ export default function DashboardPage() {
                       </div>
 
                       {order.items.some(item => item.product.prescriptionRequired) && !order.prescriptionUrl && (
-                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-3 rounded-2xl text-[10px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <div>
-                            <span className="font-bold block">⚠️ Prescription Required for Delivery</span>
-                            This order is currently held at dispatch because a valid doctor's prescription has not been uploaded yet. Please upload it under the "My Prescriptions" tab or during checkout.
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-4 rounded-2xl text-xs text-amber-800 dark:text-amber-300 flex flex-col gap-3">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-amber-650 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold block text-amber-900 dark:text-amber-200">⚠️ Prescription Required for Delivery</span>
+                              This order contains prescription-only items. Please attach an uploaded prescription scan below to verify and proceed with dispatch.
+                            </div>
                           </div>
+                          
+                          {prescriptions.length > 0 ? (
+                            <div className="flex flex-col sm:flex-row gap-2 items-center bg-white dark:bg-gray-800 p-3 rounded-xl border border-amber-200 dark:border-amber-900/40">
+                              <select
+                                id={`select-rx-${order.id}`}
+                                className="bg-transparent text-xs text-gray-700 dark:text-gray-200 font-bold focus:outline-none cursor-pointer flex-1 w-full p-1"
+                                defaultValue=""
+                              >
+                                <option value="" disabled>-- Select Uploaded Prescription --</option>
+                                {prescriptions.map(rx => (
+                                  <option key={rx.id} value={rx.url}>{rx.name} ({rx.date})</option>
+                                ))}
+                              </select>
+                              <button
+                                onClick={async () => {
+                                  const selectEl = document.getElementById(`select-rx-${order.id}`) as HTMLSelectElement;
+                                  if (selectEl && selectEl.value) {
+                                    const success = await attachPrescriptionToOrder(order.id, selectEl.value);
+                                    if (success) {
+                                      alert("Prescription linked to order successfully!");
+                                    } else {
+                                      alert("Failed to link prescription. Please try again.");
+                                    }
+                                  } else {
+                                    alert("Please select a prescription first.");
+                                  }
+                                }}
+                                className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] transition-colors cursor-pointer whitespace-nowrap"
+                              >
+                                Link Prescription
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-amber-200/50">
+                              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mb-2">No prescriptions uploaded yet.</p>
+                              <button
+                                onClick={() => router.push('/upload')}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[10px] transition-colors cursor-pointer"
+                              >
+                                Go to Upload Page
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
 

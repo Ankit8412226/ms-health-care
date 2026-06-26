@@ -7,6 +7,7 @@ const {
   updateOrderStatus,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  updateOrderPrescription,
 } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { orderValidation } = require('../middleware/validationMiddleware');
@@ -34,5 +35,9 @@ router.get('/', protect, adminOnly, getAllOrders);
 // Admin-only update order status details
 // @route   PUT /api/orders/:id/status
 router.put('/:id/status', protect, adminOnly, updateOrderStatus);
+
+// Link/upload prescription to existing order
+// @route   PUT /api/orders/:id/prescription
+router.put('/:id/prescription', protect, updateOrderPrescription);
 
 module.exports = router;
