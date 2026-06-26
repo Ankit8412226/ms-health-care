@@ -1020,6 +1020,17 @@ export default function AdminPage() {
                                 Rx Missing
                               </span>
                             )}
+                            {order.prescriptionUrl && (
+                              <a
+                                href={order.prescriptionUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="mt-1 flex items-center justify-center gap-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-250 rounded px-1.5 py-0.5 max-w-[80px] mx-auto uppercase tracking-wide hover:bg-emerald-100 transition-colors"
+                              >
+                                <FileText className="w-2.5 h-2.5" /> Rx View
+                              </a>
+                            )}
                           </td>
                           <td className="py-4 text-center pr-4">
                             <div className="flex items-center justify-center gap-2">
@@ -1561,6 +1572,71 @@ export default function AdminPage() {
                     <div className="text-xs">
                       <strong className="text-red-900 block mb-0.5">⚠️ Delivery Alert: Prescription Missing</strong>
                       This order contains prescription-only items, but no prescription slip was uploaded by the customer. Delivery should not proceed until the prescription is uploaded.
+                    </div>
+                  </div>
+                )}
+
+                {selectedOrder.prescriptionUrl && (
+                  <div className="bg-emerald-50 border border-emerald-150 rounded-2xl p-4 flex flex-col gap-3 text-slate-800">
+                    <div className="flex items-center justify-between border-b border-emerald-200/50 pb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-emerald-600" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-855 block">Uploaded Prescription Scan</span>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">
+                            Status: <strong className="text-emerald-700 capitalize">{selectedOrder.prescriptionStatus || "Pending Review"}</strong>
+                          </span>
+                        </div>
+                      </div>
+                      <a
+                        href={selectedOrder.prescriptionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> View Full Image
+                      </a>
+                    </div>
+                    <div className="relative w-full h-48 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center">
+                      <img
+                        src={selectedOrder.prescriptionUrl}
+                        alt="Uploaded Prescription"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    {/* Status update controls inside order details */}
+                    <div className="flex items-center justify-between pt-2 border-t border-emerald-200/50">
+                      <span className="text-[10px] font-bold text-slate-450">Prescription Action:</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await updateOrderStatus(selectedOrder.id, undefined, "Approved");
+                              setSelectedOrder({ ...selectedOrder, prescriptionStatus: "Approved" });
+                              triggerToast("Prescription status updated to Approved.");
+                            } catch (err) {
+                              triggerToast("Error updating prescription status.");
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold cursor-pointer transition-all"
+                        >
+                          Approve Rx
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await updateOrderStatus(selectedOrder.id, undefined, "Rejected");
+                              setSelectedOrder({ ...selectedOrder, prescriptionStatus: "Rejected" });
+                              triggerToast("Prescription status updated to Rejected.");
+                            } catch (err) {
+                              triggerToast("Error updating prescription status.");
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white border border-red-200 rounded text-[10px] font-bold cursor-pointer transition-all"
+                        >
+                          Reject
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

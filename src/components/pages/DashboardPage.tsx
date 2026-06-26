@@ -368,13 +368,34 @@ export default function DashboardPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   {prescriptions.map((rx) => (
                     <div key={rx.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
-                      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start w-full gap-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start w-full gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
                         <span className="text-xs font-bold text-gray-800 dark:text-white truncate max-w-[200px]">{rx.name}</span>
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full text-center">
                           {rx.status}
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-400">Uploaded on: {rx.date}</p>
+                      {rx.url && (
+                        <div className="relative w-full h-32 bg-gray-55 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 flex items-center justify-center">
+                          <img
+                            src={rx.url}
+                            alt={rx.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between w-full pt-1">
+                        <p className="text-[10px] text-gray-400">Uploaded on: {rx.date}</p>
+                        {rx.url && (
+                          <a
+                            href={rx.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold text-emerald-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <ExternalLink className="w-3 h-3" /> View Scan
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

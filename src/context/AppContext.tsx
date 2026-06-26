@@ -139,7 +139,7 @@ interface AppContextType {
   setAddedProduct: (product: Product | null) => void;
   products: Product[];
   loading: boolean;
-  updateOrderStatus: (orderId: string, status: Order["status"]) => void;
+  updateOrderStatus: (orderId: string, status?: Order["status"], prescriptionStatus?: Order["prescriptionStatus"]) => void;
   updatePrescriptionStatus: (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => void;
   updateProductPrice: (productId: string, price: number) => void;
   deleteProduct: (productId: string) => void;
@@ -938,23 +938,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ── Admin Ops (Integrated with Backend) ───────────────────────────────
-  const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
+  const updateOrderStatus = async (orderId: string, status?: Order["status"], prescriptionStatus?: Order["prescriptionStatus"]) => {
     try {
       if (user && user.role === "admin") {
+        const updateBody: any = {};
+        if (status) updateBody.status = status;
+        if (prescriptionStatus) updateBody.prescriptionStatus = prescriptionStatus;
+
         await fetch(`${API_URL}/orders/${orderId}/status`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`,
           },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify(updateBody),
         });
       }
     } catch (err) {
       console.warn("API update order status failed:", err);
     }
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+      prev.map((o) => {
+        if (o.id === orderId) {
+          const updated = { ...o };
+          if (status) updated.status = status;
+          if (prescriptionStatus) updated.prescriptionStatus = prescriptionStatus;
+          return updated;
+        }
+        return o;
+      })
     );
   };
 
