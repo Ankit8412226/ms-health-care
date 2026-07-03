@@ -22,14 +22,14 @@ const SLIDES: Slide[] = [
   {
     id: 1,
     tagline: "Exclusive First Order Offer",
-    title: "Flat 30% Discount on Health Essentials",
+    title: "Flat 5% Discount on Health Essentials",
     description: "Get genuine clinical medicines and daily vitamins delivered with maximum care and safety.",
     buttonText: "Shop & Save Now",
     pageTarget: "shop",
     image: "/image.png",
     gradient: "from-emerald-600/90 to-teal-800/90 dark:from-emerald-950/95 dark:to-teal-950/95",
     icon: Sparkles,
-    code: "HEALTH30",
+    code: "HEALTH5",
   },
   {
     id: 2,

@@ -30,7 +30,7 @@ export default function CartPage() {
     if (!couponInput.trim()) return;
     const success = applyCoupon(couponInput);
     if (!success) {
-      setCouponError("Invalid coupon code. Try 'HEALTH30' or 'MSCARE20'.");
+      setCouponError("Invalid coupon code. Try 'HEALTH5' or 'MSCARE20'.");
     } else {
       setCouponInput("");
     }
@@ -150,7 +150,7 @@ export default function CartPage() {
                     <input
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="e.g. HEALTH30"
+                      placeholder="e.g. HEALTH5"
                       className="flex-1 bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                     <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow">
@@ -158,7 +158,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   {couponError && <p className="text-[10px] text-red-500 font-medium">{couponError}</p>}
-                  <p className="text-[10px] text-gray-400">Available: HEALTH30 (30% Off) | MSCARE20 (20% Off)</p>
+                  <p className="text-[10px] text-gray-400">Available: HEALTH5 (5% Off) | MSCARE20 (20% Off)</p>
                 </form>
               )}
             </div>

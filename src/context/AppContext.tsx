@@ -1147,9 +1147,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ── Coupons ───────────────────────────────────────────────────────────
   const applyCoupon = (code: string) => {
     const cleanCode = code.toUpperCase().trim();
-    if (cleanCode === "HEALTH30") {
-      setCouponCode("HEALTH30");
-      setDiscountPercentage(30);
+    if (cleanCode === "HEALTH5") {
+      setCouponCode("HEALTH5");
+      setDiscountPercentage(5);
       return true;
     } else if (cleanCode === "MSCARE20") {
       setCouponCode("MSCARE20");

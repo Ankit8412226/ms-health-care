@@ -308,7 +308,7 @@ export default function Header() {
       <div className="bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-700 text-white text-xs py-2 px-4 text-center hidden md:block">
         <span className="font-medium">🚚 Free delivery on orders above ₹1100</span>
         <span className="mx-4 opacity-50">|</span>
-        <span>🏷️ Use code <span className="font-bold bg-white/20 px-2 py-0.5 rounded">HEALTH30</span> for 30% off</span>
+        <span>🏷️ Use code <span className="font-bold bg-white/20 px-2 py-0.5 rounded">HEALTH5</span> for 5% off</span>
         <span className="mx-4 opacity-50">|</span>
         <a
           href="https://wa.me/919540294099?text=Hello%20Onco%20Life%20India%2C%20I%20have%20a%20query%20about%20medicines."
