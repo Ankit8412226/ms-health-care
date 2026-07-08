@@ -30,7 +30,7 @@ export default function CartPage() {
     if (!couponInput.trim()) return;
     const success = applyCoupon(couponInput);
     if (!success) {
-      setCouponError("Invalid coupon code. Try 'HEALTH5' or 'MSCARE20'.");
+      setCouponError("Invalid coupon code. Try 'HEALTH5' or 'MSCARE5'.");
     } else {
       setCouponInput("");
     }
@@ -158,7 +158,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   {couponError && <p className="text-[10px] text-red-500 font-medium">{couponError}</p>}
-                  <p className="text-[10px] text-gray-400">Available: HEALTH5 (5% Off) | MSCARE20 (20% Off)</p>
+                  <p className="text-[10px] text-gray-400">Available: HEALTH5 (5% Off) | MSCARE5 (5% Off)</p>
                 </form>
               )}
             </div>

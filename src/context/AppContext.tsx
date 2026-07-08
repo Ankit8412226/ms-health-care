@@ -1151,9 +1151,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCouponCode("HEALTH5");
       setDiscountPercentage(5);
       return true;
-    } else if (cleanCode === "MSCARE20") {
-      setCouponCode("MSCARE20");
-      setDiscountPercentage(20);
+    } else if (cleanCode === "MSCARE20" || cleanCode === "MSCARE5") {
+      setCouponCode("MSCARE5");
+      setDiscountPercentage(5);
+      return true;
+    } else if (cleanCode === "REFILL25" || cleanCode === "REFILL5") {
+      setCouponCode("REFILL5");
+      setDiscountPercentage(5);
       return true;
     }
     return false;

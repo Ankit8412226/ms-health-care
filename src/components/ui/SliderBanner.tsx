@@ -56,14 +56,14 @@ const SLIDES: Slide[] = [
   {
     id: 6,
     tagline: "Refill Subscription",
-    title: "Chronic Care Refill at Flat 25% Off",
+    title: "Chronic Care Refill at Flat 5% Off",
     description: "Never run out of essential health treatments. Setup automatic monthly refills for diabetes, thyroid, or hypertension meds and save big.",
     buttonText: "Subscribe & Save",
     pageTarget: "shop",
     image: "/image copy 3.png",
     gradient: "from-amber-600/90 to-orange-850/90 dark:from-amber-950/95 dark:to-orange-950/95",
     icon: Calendar,
-    code: "REFILL25",
+    code: "REFILL5",
   },
   {
     id: 7,
