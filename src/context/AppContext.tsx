@@ -756,7 +756,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const address = addresses.find((a) => a.id === addressId) || addresses[0];
     const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     const discount = Math.round(subtotal * (discountPercentage / 100));
-    const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
+    const deliveryFee = paymentMethod === "cod" ? 99 : (subtotal - discount >= 1100 ? 0 : 49);
     const total = subtotal - discount + deliveryFee;
 
     const localNewOrder: Order = {
@@ -785,6 +785,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           })),
           paymentMethod: paymentMethod === "cod" ? "COD" : "Online",
           prescriptionUrl,
+          couponCode,
+          discountPercentage,
         };
 
         const res = await fetch(`${API_URL}/orders`, {

@@ -10,7 +10,7 @@ const crypto = require('crypto');
  * @access  Private
  */
 const placeOrder = async (req, res) => {
-  const { addressId, items, paymentMethod, prescriptionUrl } = req.body;
+  const { addressId, items, paymentMethod, prescriptionUrl, couponCode, discountPercentage } = req.body;
 
   try {
     // 1. Resolve and check Address
@@ -25,7 +25,7 @@ const placeOrder = async (req, res) => {
 
     // 2. Fetch products and calculate pricing dynamically
     let subtotal = 0;
-    let discount = 0;
+    let productDiscount = 0;
     const orderItems = [];
 
     for (const item of items) {
@@ -38,7 +38,7 @@ const placeOrder = async (req, res) => {
       const itemRegular = product.regularPrice * item.quantity;
 
       subtotal += itemSubtotal;
-      discount += (itemRegular - itemSubtotal);
+      productDiscount += (itemRegular - itemSubtotal);
 
       orderItems.push({
         product: product._id,
@@ -46,9 +46,22 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    // Delivery fee logic: Free above ₹1100, else ₹49
-    const deliveryFee = subtotal > 1100 ? 0 : 49;
-    const total = subtotal + deliveryFee;
+    // Calculate coupon discount
+    const pct = parseFloat(discountPercentage) || 0;
+    const couponDiscount = Math.round(subtotal * (pct / 100));
+
+    // Combined discount (product-level sale discount + coupon discount)
+    const discount = productDiscount + couponDiscount;
+
+    // Delivery fee logic: COD is ₹99, Online is free above ₹1100, else ₹49
+    let deliveryFee = 0;
+    if (paymentMethod === 'COD') {
+      deliveryFee = 99;
+    } else {
+      deliveryFee = (subtotal - couponDiscount) >= 1100 ? 0 : 49;
+    }
+
+    const total = subtotal - couponDiscount + deliveryFee;
 
     // 3. Create the order instance
     const order = new Order({
@@ -68,6 +81,8 @@ const placeOrder = async (req, res) => {
       },
       paymentMethod,
       prescriptionUrl,
+      couponCode,
+      discountPercentage: pct,
     });
 
     // 4. Mock payment execution

@@ -99,6 +99,15 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ['Pending Review', 'Approved', 'Rejected'],
     },
+    couponCode: {
+      type: String,
+      trim: true,
+    },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,

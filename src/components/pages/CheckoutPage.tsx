@@ -53,7 +53,7 @@ export default function CheckoutPage() {
   // Calculate pricing for Razorpay
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const discount = Math.round(subtotal * (discountPercentage / 100));
-  const deliveryFee = subtotal - discount > 1100 ? 0 : 49;
+  const deliveryFee = selectedPayment === "cod" ? 99 : (subtotal - discount >= 1100 ? 0 : 49);
   const total = subtotal - discount + deliveryFee;
 
   // Redirect to Auth if not logged in
@@ -339,6 +339,37 @@ export default function CheckoutPage() {
                   <span className="text-xs font-bold text-gray-800 dark:text-white flex-shrink-0">₹{item.product.price * item.quantity}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Pricing Summary */}
+            <div className="space-y-2.5 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs">
+              <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                <span>Subtotal</span>
+                <span className="font-semibold text-gray-800 dark:text-white">₹{subtotal}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                  <span>Coupon Discount ({discountPercentage}%)</span>
+                  <span className="font-semibold">-₹{discount}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                <span>
+                  Delivery Fee
+                  {selectedPayment === "cod" && (
+                    <span className="text-[9px] bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 px-1.5 py-0.5 rounded font-black ml-1.5 align-middle">
+                      COD CHARGE
+                    </span>
+                  )}
+                </span>
+                <span className="font-semibold text-gray-800 dark:text-white">
+                  {deliveryFee === 0 ? <span className="text-emerald-650 dark:text-emerald-400 font-bold">FREE</span> : `₹${deliveryFee}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2.5 border-t border-gray-100 dark:border-gray-800 text-sm font-black text-gray-800 dark:text-white">
+                <span>Total Amount</span>
+                <span className="text-base text-emerald-600 dark:text-emerald-400">₹{total}</span>
+              </div>
             </div>
 
             {requiresRx && !selectedRxUrl && (
