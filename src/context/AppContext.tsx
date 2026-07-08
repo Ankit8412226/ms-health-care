@@ -67,6 +67,11 @@ export interface Prescription {
   date: string;
   status: "Processing (OCR)" | "Verified" | "Rejected";
   extractedMedicines?: string[];
+  user?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
 }
 
 export type PageName =
@@ -441,6 +446,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               date: new Date(p.createdAt).toISOString().split("T")[0],
               status: p.status,
               extractedMedicines: p.extractedMedicines || [],
+              user: p.user ? {
+                name: p.user.name || "",
+                email: p.user.email || "",
+                phone: p.user.phone || "",
+              } : undefined,
             }));
             setPrescriptions(mappedRx);
           }
@@ -502,6 +512,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               date: new Date(p.createdAt).toISOString().split("T")[0],
               status: p.status,
               extractedMedicines: p.extractedMedicines || [],
+              user: p.user ? {
+                name: p.user.name || "",
+                email: p.user.email || "",
+                phone: p.user.phone || "",
+              } : undefined,
             }));
             setPrescriptions(mappedRx);
           }

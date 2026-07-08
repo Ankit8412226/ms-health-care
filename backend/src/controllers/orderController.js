@@ -142,7 +142,12 @@ const updateOrderStatus = async (req, res) => {
   const { status, paymentStatus, prescriptionStatus, awbCode, courierName, trackingUrl } = req.body;
 
   try {
-    const order = await Order.findById(id);
+    let order;
+    if (id.startsWith('OD-')) {
+      order = await Order.findOne({ orderId: id });
+    } else {
+      order = await Order.findById(id);
+    }
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
@@ -258,7 +263,12 @@ const updateOrderPrescription = async (req, res) => {
   const { prescriptionUrl } = req.body;
 
   try {
-    const order = await Order.findById(id);
+    let order;
+    if (id.startsWith('OD-')) {
+      order = await Order.findOne({ orderId: id });
+    } else {
+      order = await Order.findById(id);
+    }
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });

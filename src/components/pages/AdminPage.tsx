@@ -206,7 +206,10 @@ export default function AdminPage() {
     return prescriptions.filter((rx) => {
       const matchesSearch =
         rx.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rx.name.toLowerCase().includes(searchTerm.toLowerCase());
+        rx.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (rx.user && rx.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (rx.user && rx.user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (rx.user && rx.user.phone.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesFilter =
         statusFilter === "all" || rx.status === statusFilter;
       return matchesSearch && matchesFilter;
@@ -1113,6 +1116,7 @@ export default function AdminPage() {
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       <th className="py-3 pl-4">Rx ID</th>
+                      <th className="py-3">Patient Details</th>
                       <th className="py-3">Clinical PDF File Name</th>
                       <th className="py-3">Upload Date</th>
                       <th className="py-3 text-center">Status</th>
@@ -1122,7 +1126,7 @@ export default function AdminPage() {
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {filteredPrescriptions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-450 font-semibold">
+                        <td colSpan={6} className="py-12 text-center text-slate-450 font-semibold">
                           No prescriptions matching criteria.
                         </td>
                       </tr>
@@ -1130,6 +1134,16 @@ export default function AdminPage() {
                       paginatedPrescriptions.map((rx) => (
                         <tr key={rx.id} className="hover:bg-slate-50/40 group transition-colors">
                           <td className="py-4 pl-4 font-mono font-bold text-emerald-600">{rx.id}</td>
+                          <td className="py-4">
+                            {rx.user ? (
+                              <div>
+                                <p className="font-bold text-slate-850">{rx.user.name}</p>
+                                <p className="text-[10px] text-slate-400 font-semibold">{rx.user.email} | {rx.user.phone}</p>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
                           <td className="py-4 font-semibold text-slate-800">{rx.name}</td>
                           <td className="py-4 font-semibold text-slate-650">{rx.date}</td>
                           <td className="py-4 text-center">
@@ -1916,6 +1930,13 @@ export default function AdminPage() {
               {/* Patient and Clinical details */}
               <div className="p-6 flex flex-col justify-between">
                 <div className="space-y-4">
+                  {selectedPrescription.user && (
+                    <div>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Patient Details</span>
+                      <p className="font-bold text-slate-850 text-sm mt-0.5">{selectedPrescription.user.name}</p>
+                      <p className="text-[10px] text-slate-450 font-semibold">{selectedPrescription.user.email} | {selectedPrescription.user.phone}</p>
+                    </div>
+                  )}
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Patient Attachment</span>
                     <p className="font-bold text-slate-800 text-sm mt-0.5">{selectedPrescription.name}</p>
