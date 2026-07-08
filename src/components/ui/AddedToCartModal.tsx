@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
 import { Check, ShoppingBag, ArrowRight, X, Sparkles, Star, Plus } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 export default function AddedToCartModal() {
   const { addedProduct, setAddedProduct, addToCart, cart, setActivePage, products } = useApp();
@@ -116,7 +116,7 @@ export default function AddedToCartModal() {
             {/* Left Column: Added Product details */}
             <div className="flex gap-4">
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-150 dark:border-gray-700 flex-shrink-0">
-                <Image src={addedProduct.image} alt={addedProduct.name} fill className="object-cover" />
+                <SafeImage src={addedProduct.image} alt={addedProduct.name} fill className="object-cover" />
               </div>
               <div className="space-y-1 select-none min-w-0">
                 <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block truncate">
@@ -184,7 +184,7 @@ export default function AddedToCartModal() {
                       <div className="space-y-2">
                         {/* Thumbnail */}
                         <div className="relative aspect-[4/3] bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-150 dark:border-gray-700">
-                          <Image src={p.image} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <SafeImage src={p.image} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                           {discount > 0 && (
                             <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
                               -{discount}%

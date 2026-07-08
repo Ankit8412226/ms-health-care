@@ -5,6 +5,7 @@ import { useApp } from "@/context/AppContext";
 import { Order, Prescription } from "@/context/AppContext";
 import { Product } from "@/types";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -1262,7 +1263,7 @@ export default function AdminPage() {
                           <td className="py-4 pl-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-250 bg-slate-100 shrink-0 relative">
-                                <Image
+                                <SafeImage
                                   src={prod.image}
                                   alt={prod.name}
                                   width={40}
@@ -1648,7 +1649,7 @@ export default function AdminPage() {
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3 p-3 bg-white hover:bg-slate-50/50 transition-colors">
                         <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shrink-0 relative">
-                          <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
+                          <SafeImage src={item.product.image} alt={item.product.name} fill className="object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-850 truncate">{item.product.name}</p>
@@ -2307,7 +2308,7 @@ export default function AdminPage() {
                         <div key={idx} className="flex items-center justify-between p-3.5 text-xs hover:bg-slate-50/30 transition-colors">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded border border-slate-150 overflow-hidden relative bg-slate-50 shrink-0">
-                              <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
+                              <SafeImage src={item.product.image} alt={item.product.name} fill className="object-cover" />
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-slate-800 truncate max-w-xs md:max-w-md">{item.product.name}</p>

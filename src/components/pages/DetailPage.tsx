@@ -7,7 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import {
   Star, Heart, ShoppingCart, AlertCircle, ShieldCheck
 } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 export default function DetailPage() {
   const { selectedProductId, addToCart, wishlist, toggleWishlist, setActivePage, products, getProductById, user } = useApp();
@@ -256,7 +256,7 @@ export default function DetailPage() {
             onMouseLeave={() => setIsZoomed(false)}
             onMouseMove={handleMouseMove}
           >
-            <Image
+            <SafeImage
               src={selectedImage || product.image}
               alt={product.name}
               fill
@@ -304,7 +304,7 @@ export default function DetailPage() {
                         : "border-emerald-500/20 hover:border-emerald-500/50"
                     }`}
                   >
-                    <Image
+                    <SafeImage
                       src={img.thumbnail || img.src || product.image}
                       alt={img.alt || product.name}
                       fill

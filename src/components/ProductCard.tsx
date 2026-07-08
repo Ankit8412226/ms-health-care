@@ -2,7 +2,7 @@
 import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
 import { Heart, ShoppingCart, Star, Eye, ShieldCheck } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, wishlist, toggleWishlist, setActivePage, setSelectedProductId } = useApp();
@@ -43,7 +43,7 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Image */}
       <button onClick={handleView} className="relative w-full aspect-square bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden flex items-center justify-center p-4 border-b border-gray-50/80 dark:border-gray-900/40">
         <div className="relative w-full h-full transition-transform duration-500 group-hover:scale-105">
-          <Image
+          <SafeImage
             src={product.image}
             alt={product.name}
             fill

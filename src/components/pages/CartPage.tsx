@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Trash2, ShoppingBag, ShieldCheck, Ticket, ArrowRight, ArrowLeft } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 export default function CartPage() {
   const {
@@ -74,7 +74,7 @@ export default function CartPage() {
                 {cart.map((item) => (
                   <div key={item.product.id} className="p-4 sm:p-6 flex gap-4 items-center">
                     <div className="relative w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden flex-shrink-0">
-                      <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
+                      <SafeImage src={item.product.image} alt={item.product.name} fill className="object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">
