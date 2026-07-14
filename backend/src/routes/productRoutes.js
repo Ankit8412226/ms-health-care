@@ -8,7 +8,7 @@ const {
   deleteProduct,
 } = require('../controllers/productController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
-const { productValidation } = require('../middleware/validationMiddleware');
+const { productValidation, productUpdateValidation } = require('../middleware/validationMiddleware');
 
 // Public route to fetch all products
 // @route   GET /api/products
@@ -24,7 +24,7 @@ router.post('/', protect, adminOnly, productValidation, createProduct);
 
 // Admin-guarded route to update product
 // @route   PUT /api/products/:id
-router.put('/:id', protect, adminOnly, productValidation, updateProduct);
+router.put('/:id', protect, adminOnly, productUpdateValidation, updateProduct);
 
 // Admin-guarded route to delete product
 // @route   DELETE /api/products/:id

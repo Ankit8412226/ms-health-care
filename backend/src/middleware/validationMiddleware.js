@@ -154,6 +154,121 @@ const productValidation = [
   validateResult,
 ];
 
+const productUpdateValidation = [
+  body('name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Product name is required'),
+  body('description')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Product description is required'),
+  body('shortDescription')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Product short description is required'),
+  body('price')
+    .optional()
+    .notEmpty()
+    .withMessage('Price is required')
+    .isFloat({ min: 0 })
+    .withMessage('Price must be a positive number'),
+  body('regularPrice')
+    .optional()
+    .notEmpty()
+    .withMessage('Regular price is required')
+    .isFloat({ min: 0 })
+    .withMessage('Regular price must be a positive number')
+    .custom((value, { req }) => {
+      const price = req.body.price;
+      if (price !== undefined && parseFloat(value) < parseFloat(price)) {
+        throw new Error('Regular price cannot be less than sale price');
+      }
+      return true;
+    }),
+  body('category')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Category slug is required'),
+  body('categoryName')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Category name is required'),
+  body('brand')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Brand is required'),
+  body('image')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Main image URL is required')
+    .isURL()
+    .withMessage('Main image must be a valid URL'),
+  body('manufacturer')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Manufacturer is required'),
+  body('packSize')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Pack size is required'),
+  body('storage')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Storage instructions are required'),
+  body('howToUse')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('How to use instructions are required'),
+  body('benefits')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Benefits details are required'),
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images must be an array of objects'),
+  body('images.*.id')
+    .optional()
+    .isNumeric()
+    .withMessage('Image ID must be a number'),
+  body('images.*.src')
+    .optional()
+    .isURL()
+    .withMessage('Image source must be a valid URL'),
+  body('images.*.thumbnail')
+    .optional()
+    .isURL()
+    .withMessage('Image thumbnail must be a valid URL'),
+  body('salt')
+    .optional()
+    .trim(),
+  body('dosage')
+    .optional()
+    .trim(),
+  body('prescriptionRequired')
+    .optional()
+    .isBoolean()
+    .withMessage('prescriptionRequired must be a boolean value'),
+  body('sideEffects')
+    .optional()
+    .isArray()
+    .withMessage('Side effects must be an array of strings'),
+  validateResult,
+];
+
 const categoryValidation = [
   body('name')
     .trim()
@@ -258,6 +373,7 @@ module.exports = {
   registerValidation,
   loginValidation,
   productValidation,
+  productUpdateValidation,
   categoryValidation,
   addressValidation,
   orderValidation,
