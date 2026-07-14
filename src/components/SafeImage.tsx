@@ -19,6 +19,7 @@ export default function SafeImage({ src, fallbackSrc = "/default-product.png", a
       {...props}
       src={imgSrc}
       alt={alt || "Product Image"}
+      unoptimized={imgSrc.startsWith("http")}
       onError={() => {
         if (imgSrc !== fallbackSrc) {
           setImgSrc(fallbackSrc);
