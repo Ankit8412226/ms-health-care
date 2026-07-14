@@ -787,6 +787,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           prescriptionUrl,
           couponCode,
           discountPercentage,
+          paymentDetails, // Pass actual Razorpay details (txId, paidAt) to DB
         };
 
         const res = await fetch(`${API_URL}/orders`, {
@@ -814,6 +815,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             prescriptionUrl: json.data.prescriptionUrl,
             prescriptionStatus: json.data.prescriptionStatus,
             paymentStatus: json.data.paymentStatus,
+            paymentDetails: json.data.paymentDetails, // Map real payment details
             user: user ? {
               name: user.name,
               email: user.email,

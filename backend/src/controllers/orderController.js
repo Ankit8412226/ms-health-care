@@ -85,15 +85,14 @@ const placeOrder = async (req, res) => {
       discountPercentage: pct,
     });
 
-    // 4. Mock payment execution
+    // 4. Payment execution details
     if (paymentMethod === 'COD') {
       order.paymentStatus = 'Pending';
     } else {
-      // Simulate successful Card/UPI transaction
-      order.paymentStatus = 'Paid';
+      order.paymentStatus = req.body.paymentDetails?.paymentStatus || 'Paid';
       order.paymentDetails = {
-        transactionId: `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`,
-        paidAt: new Date(),
+        transactionId: req.body.paymentDetails?.transactionId || `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`,
+        paidAt: req.body.paymentDetails?.paidAt ? new Date(req.body.paymentDetails.paidAt) : new Date(),
       };
     }
 
