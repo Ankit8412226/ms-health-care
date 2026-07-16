@@ -147,7 +147,7 @@ interface AppContextType {
   loading: boolean;
   updateOrderStatus: (orderId: string, status?: Order["status"], prescriptionStatus?: Order["prescriptionStatus"]) => void;
   updatePrescriptionStatus: (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => void;
-  updateProductPrice: (productId: string, price: number) => Promise<{ success: boolean; message?: string }>;
+  updateProductPrice: (productId: string, price: number, regularPrice: number) => Promise<{ success: boolean; message?: string }>;
   deleteProduct: (productId: string) => void;
   addProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
   updateProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
@@ -1049,7 +1049,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const updateProductPrice = async (productId: string, price: number): Promise<{ success: boolean; message?: string }> => {
+  const updateProductPrice = async (productId: string, price: number, regularPrice: number): Promise<{ success: boolean; message?: string }> => {
     try {
       if (user && user.role === "admin") {
         const res = await fetch(`${API_URL}/products/${productId}`, {
@@ -1058,12 +1058,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`,
           },
-          body: JSON.stringify({ price, regularPrice: Math.round(price * 1.25) }),
+          body: JSON.stringify({ price, regularPrice }),
         });
         const json = await res.json();
         if (json.success && json.data) {
           setProducts((prev) =>
-            prev.map((prod) => (prod.id === productId ? { ...prod, price, regularPrice: Math.round(price * 1.25) } : prod))
+            prev.map((prod) => (prod.id === productId ? { ...prod, price, regularPrice } : prod))
           );
           return { success: true };
         } else {

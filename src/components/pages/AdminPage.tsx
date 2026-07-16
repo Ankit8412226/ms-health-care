@@ -73,6 +73,7 @@ export default function AdminPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>("");
+  const [editingRegularPrice, setEditingRegularPrice] = useState<string>("");
   const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newCategoryName, setNewCategoryName] = useState<string>("");
@@ -127,6 +128,7 @@ export default function AdminPage() {
   const [newProdName, setNewProdName] = useState("");
   const [newProdSlug, setNewProdSlug] = useState("");
   const [newProdPrice, setNewProdPrice] = useState("");
+  const [newProdRegularPrice, setNewProdRegularPrice] = useState("");
   const [newProdCategory, setNewProdCategory] = useState("prescription");
   const [newProdDosage, setNewProdDosage] = useState("");
   const [newProdPack, setNewProdPack] = useState("10 Tablets in 1 Strip");
@@ -435,16 +437,26 @@ export default function AdminPage() {
   const startEditPrice = (prod: Product) => {
     setEditingProductId(prod.id);
     setEditingPrice(prod.price.toString());
+    setEditingRegularPrice(prod.regularPrice.toString());
   };
 
-  const saveEditPrice = (prodId: string) => {
+  const saveEditPrice = async (prodId: string) => {
     const numPrice = parseFloat(editingPrice);
-    if (!isNaN(numPrice) && numPrice > 0) {
-      updateProductPrice(prodId, numPrice);
+    const numRegularPrice = parseFloat(editingRegularPrice);
+    if (isNaN(numPrice) || numPrice <= 0 || isNaN(numRegularPrice) || numRegularPrice <= 0) {
+      triggerToast("Please enter valid positive numbers for price and MRP.");
+      return;
+    }
+    if (numRegularPrice < numPrice) {
+      triggerToast("MRP (Regular Price) cannot be less than Sale Price.");
+      return;
+    }
+    const res = await updateProductPrice(prodId, numPrice, numRegularPrice);
+    if (res.success) {
       setEditingProductId(null);
-      triggerToast(`Product price updated to ₹${numPrice}`);
+      triggerToast(`Product price updated: Sale ₹${numPrice}, MRP ₹${numRegularPrice}`);
     } else {
-      triggerToast("Please enter a valid price.");
+      triggerToast(`Error: ${res.message || "Failed to update price"}`);
     }
   };
 
@@ -473,6 +485,7 @@ export default function AdminPage() {
     setNewProdName(prod.name);
     setNewProdSlug(prod.slug);
     setNewProdPrice(prod.price.toString());
+    setNewProdRegularPrice(prod.regularPrice.toString());
     setNewProdCategory(prod.category);
     setNewProdDosage(prod.dosage || "");
     setNewProdPack(prod.packSize);
@@ -500,6 +513,7 @@ export default function AdminPage() {
     setNewProdName("");
     setNewProdSlug("");
     setNewProdPrice("");
+    setNewProdRegularPrice("");
     setNewProdCategory("prescription");
     setNewProdDosage("");
     setNewProdPack("10 Tablets in 1 Strip");
@@ -556,8 +570,13 @@ export default function AdminPage() {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNum = parseFloat(newProdPrice);
+    const regularPriceNum = parseFloat(newProdRegularPrice) || Math.round(priceNum * 1.25);
     if (!newProdName || isNaN(priceNum) || priceNum <= 0) {
       triggerToast("Please fill brand name and a valid price.");
+      return;
+    }
+    if (regularPriceNum < priceNum) {
+      triggerToast("MRP (Regular Price) cannot be less than Sale Price.");
       return;
     }
 
@@ -593,7 +612,7 @@ export default function AdminPage() {
         description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
         shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
         price: priceNum,
-        regularPrice: Math.round(priceNum * 1.25),
+        regularPrice: regularPriceNum,
         category: newProdCategory,
         categoryName: categories.find(c => c.id === newProdCategory)?.name || newProdCategory,
         brand: finalBrand,
@@ -623,7 +642,7 @@ export default function AdminPage() {
         description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
         shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
         price: priceNum,
-        regularPrice: Math.round(priceNum * 1.25),
+        regularPrice: regularPriceNum,
         onSale: true,
         rating: 0,
         reviewCount: 0,
@@ -650,6 +669,7 @@ export default function AdminPage() {
         setNewProdName("");
         setNewProdSlug("");
         setNewProdPrice("");
+        setNewProdRegularPrice("");
         setNewProdCategory("prescription");
         setNewProdDosage("");
         setNewProdPack("10 Tablets in 1 Strip");
@@ -1456,38 +1476,58 @@ export default function AdminPage() {
                           </td>
                           <td className="py-4 text-right">
                             {editingProductId === prod.id ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <span className="text-slate-400 font-bold">₹</span>
-                                <input
-                                  type="text"
-                                  value={editingPrice}
-                                  onChange={(e) => setEditingPrice(e.target.value)}
-                                  className="w-16 bg-white border border-slate-350 text-right rounded px-1.5 py-1 text-xs font-bold text-slate-850 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() => saveEditPrice(prod.id)}
-                                  className="p-1 hover:bg-emerald-600 rounded bg-emerald-50 text-emerald-600 hover:text-white transition-all border border-emerald-200 cursor-pointer"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => setEditingProductId(null)}
-                                  className="p-1 hover:bg-slate-200 rounded text-slate-400 transition-all cursor-pointer"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
+                              <div className="flex flex-col items-end gap-1.5">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[9px] font-bold text-slate-400">Sale: ₹</span>
+                                  <input
+                                    type="text"
+                                    value={editingPrice}
+                                    onChange={(e) => setEditingPrice(e.target.value)}
+                                    className="w-14 bg-white border border-slate-350 text-right rounded px-1 py-0.5 text-[10px] font-bold text-slate-850 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    placeholder="Sale"
+                                    autoFocus
+                                  />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[9px] font-bold text-slate-400">MRP: ₹</span>
+                                  <input
+                                    type="text"
+                                    value={editingRegularPrice}
+                                    onChange={(e) => setEditingRegularPrice(e.target.value)}
+                                    className="w-14 bg-white border border-slate-350 text-right rounded px-1 py-0.5 text-[10px] font-bold text-slate-850 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    placeholder="MRP"
+                                  />
+                                </div>
+                                <div className="flex gap-1.5 mt-1">
+                                  <button
+                                    onClick={() => saveEditPrice(prod.id)}
+                                    className="p-1 hover:bg-emerald-600 rounded bg-emerald-50 text-emerald-600 hover:text-white transition-all border border-emerald-200 cursor-pointer"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingProductId(null)}
+                                    className="p-1 hover:bg-slate-200 rounded text-slate-400 transition-all cursor-pointer"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </div>
                             ) : (
-                              <div className="flex items-center justify-end gap-2 group/price">
-                                <span className="font-black text-slate-850">₹{prod.price}</span>
-                                <button
-                                  onClick={() => startEditPrice(prod)}
-                                  className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-slate-400 hover:text-slate-800 cursor-pointer"
-                                  title="Edit price inline"
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </button>
+                              <div className="flex flex-col items-end justify-center group/price">
+                                <div className="flex items-center gap-1 font-black text-slate-850 text-xs">
+                                  <span>₹{prod.price}</span>
+                                  <button
+                                    onClick={() => startEditPrice(prod)}
+                                    className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-slate-400 hover:text-slate-800 cursor-pointer"
+                                    title="Edit price inline"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-semibold line-through">
+                                  ₹{prod.regularPrice}
+                                </span>
                               </div>
                             )}
                           </td>
@@ -2239,10 +2279,10 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Pricing */}
+                {/* Sale Price */}
                 <div>
                   <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                    Retail Price (₹)
+                    Sale Price (₹)
                   </label>
                   <input
                     type="number"
@@ -2254,6 +2294,23 @@ export default function AdminPage() {
                   />
                 </div>
 
+                {/* MRP / Regular Price */}
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                    MRP / Regular Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 199"
+                    value={newProdRegularPrice}
+                    onChange={(e) => setNewProdRegularPrice(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 {/* Pack Size */}
                 <div>
                   <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
@@ -2268,9 +2325,7 @@ export default function AdminPage() {
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 {/* Manufacturer */}
                 <div>
                   <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
@@ -2284,20 +2339,20 @@ export default function AdminPage() {
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
                 </div>
+              </div>
 
-                {/* Brand */}
-                <div>
-                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
-                    Brand Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CONCORD BIOTECH LIMITED"
-                    value={newProdBrand}
-                    onChange={(e) => setNewProdBrand(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
-                  />
-                </div>
+              {/* Brand Name */}
+              <div>
+                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                  Brand Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. CONCORD BIOTECH LIMITED"
+                  value={newProdBrand}
+                  onChange={(e) => setNewProdBrand(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
+                />
               </div>
 
               {/* Main and Gallery Image uploads */}
