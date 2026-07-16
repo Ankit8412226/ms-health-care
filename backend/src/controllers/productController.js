@@ -1,4 +1,46 @@
 const Product = require('../models/Product');
+const crypto = require('crypto');
+
+// Cloudinary image upload helper
+const uploadToCloudinary = async (fileData) => {
+  if (fileData && fileData.startsWith('data:')) {
+    try {
+      const timestamp = Math.round(new Date().getTime() / 1000);
+      const apiSecret = 'CYKdNnUYfA4RwwGvKtsrI47TMoo';
+      const apiKey = '618684992729621';
+      const cloudName = 'dqy6dki64';
+
+      const signature = crypto
+        .createHash('sha1')
+        .update(`timestamp=${timestamp}${apiSecret}`)
+        .digest('hex');
+
+      const fd = new FormData();
+      fd.append('file', fileData);
+      fd.append('timestamp', timestamp.toString());
+      fd.append('api_key', apiKey);
+      fd.append('signature', signature);
+
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: 'POST',
+        body: fd,
+      });
+
+      if (cloudinaryRes.ok) {
+        const cloudinaryData = await cloudinaryRes.json();
+        if (cloudinaryData.secure_url) {
+          return cloudinaryData.secure_url;
+        }
+      } else {
+        const errText = await cloudinaryRes.text();
+        console.error('Cloudinary API upload failed:', errText);
+      }
+    } catch (cloudinaryErr) {
+      console.error('Cloudinary upload error:', cloudinaryErr.message);
+    }
+  }
+  return fileData;
+};
 
 /**
  * @desc    Get all products (with optional search and category filters)
@@ -101,6 +143,23 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: 'A product with this name or slug already exists' });
     }
 
+    // Process main image
+    if (req.body.image) {
+      req.body.image = await uploadToCloudinary(req.body.image);
+    }
+
+    // Process gallery images
+    if (req.body.images && Array.isArray(req.body.images)) {
+      for (let i = 0; i < req.body.images.length; i++) {
+        if (req.body.images[i].src) {
+          req.body.images[i].src = await uploadToCloudinary(req.body.images[i].src);
+        }
+        if (req.body.images[i].thumbnail) {
+          req.body.images[i].thumbnail = await uploadToCloudinary(req.body.images[i].thumbnail);
+        }
+      }
+    }
+
     const product = await Product.create(req.body);
     return res.status(201).json({ success: true, data: product });
   } catch (error) {
@@ -128,6 +187,23 @@ const updateProduct = async (req, res) => {
       const slugExists = await Product.findOne({ slug: req.body.slug });
       if (slugExists) {
         return res.status(400).json({ success: false, message: 'A product with this slug already exists' });
+      }
+    }
+
+    // Process main image
+    if (req.body.image) {
+      req.body.image = await uploadToCloudinary(req.body.image);
+    }
+
+    // Process gallery images
+    if (req.body.images && Array.isArray(req.body.images)) {
+      for (let i = 0; i < req.body.images.length; i++) {
+        if (req.body.images[i].src) {
+          req.body.images[i].src = await uploadToCloudinary(req.body.images[i].src);
+        }
+        if (req.body.images[i].thumbnail) {
+          req.body.images[i].thumbnail = await uploadToCloudinary(req.body.images[i].thumbnail);
+        }
       }
     }
 

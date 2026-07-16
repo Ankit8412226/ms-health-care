@@ -147,9 +147,10 @@ interface AppContextType {
   loading: boolean;
   updateOrderStatus: (orderId: string, status?: Order["status"], prescriptionStatus?: Order["prescriptionStatus"]) => void;
   updatePrescriptionStatus: (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => void;
-  updateProductPrice: (productId: string, price: number) => void;
+  updateProductPrice: (productId: string, price: number) => Promise<{ success: boolean; message?: string }>;
   deleteProduct: (productId: string) => void;
-  addProduct: (product: Product) => void;
+  addProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
+  updateProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
   categories: { id: string; name: string; icon: string }[];
   addCategory: (name: string) => void;
   subscribeNewsletter: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -1048,10 +1049,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const updateProductPrice = async (productId: string, price: number) => {
+  const updateProductPrice = async (productId: string, price: number): Promise<{ success: boolean; message?: string }> => {
     try {
       if (user && user.role === "admin") {
-        await fetch(`${API_URL}/products/${productId}`, {
+        const res = await fetch(`${API_URL}/products/${productId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -1059,13 +1060,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           },
           body: JSON.stringify({ price, regularPrice: Math.round(price * 1.25) }),
         });
+        const json = await res.json();
+        if (json.success && json.data) {
+          setProducts((prev) =>
+            prev.map((prod) => (prod.id === productId ? { ...prod, price, regularPrice: Math.round(price * 1.25) } : prod))
+          );
+          return { success: true };
+        } else {
+          return { success: false, message: json.message || "Failed to update product price" };
+        }
       }
+      return { success: false, message: "Not authorized" };
     } catch (err) {
       console.warn("API update product price failed:", err);
+      return { success: false, message: "Network error updating product price" };
     }
-    setProducts((prev) =>
-      prev.map((prod) => (prod.id === productId ? { ...prod, price, regularPrice: Math.round(price * 1.25) } : prod))
-    );
   };
 
   const deleteProduct = async (productId: string) => {
@@ -1084,7 +1093,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => prev.filter((prod) => prod.id !== productId));
   };
 
-  const addProduct = async (product: Product) => {
+  const addProduct = async (product: Product): Promise<{ success: boolean; message?: string }> => {
     try {
       if (user && user.role === "admin") {
         const res = await fetch(`${API_URL}/products`, {
@@ -1120,13 +1129,68 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (json.success && json.data) {
           const mapped = mapApiProduct(json.data);
           setProducts((prev) => [...prev, mapped]);
-          return;
+          return { success: true };
+        } else {
+          const errMsg = json.errors ? json.errors.map((e: any) => e.message).join(", ") : json.message;
+          return { success: false, message: errMsg || "Failed to add product" };
         }
       }
+      return { success: false, message: "Not authorized as admin" };
     } catch (err) {
       console.warn("API add product failed:", err);
+      return { success: false, message: "Network error adding product" };
     }
-    setProducts((prev) => [...prev, product]);
+  };
+
+  const updateProduct = async (product: Product): Promise<{ success: boolean; message?: string }> => {
+    try {
+      if (user && user.role === "admin") {
+        const res = await fetch(`${API_URL}/products/${product.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            name: product.name,
+            slug: product.slug,
+            description: product.description,
+            shortDescription: product.shortDescription,
+            price: product.price,
+            regularPrice: product.regularPrice,
+            category: product.category,
+            categoryName: product.categoryName,
+            brand: product.brand,
+            images: product.images,
+            image: product.image,
+            manufacturer: product.manufacturer,
+            prescriptionRequired: product.prescriptionRequired,
+            dosage: product.dosage,
+            packSize: product.packSize,
+            storage: product.storage,
+            howToUse: product.howToUse,
+            sideEffects: product.sideEffects,
+            benefits: product.benefits,
+            salt: product.salt,
+          }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const mapped = mapApiProduct(json.data);
+          setProducts((prev) =>
+            prev.map((prod) => (prod.id === product.id ? mapped : prod))
+          );
+          return { success: true };
+        } else {
+          const errMsg = json.errors ? json.errors.map((e: any) => e.message).join(", ") : json.message;
+          return { success: false, message: errMsg || "Failed to update product" };
+        }
+      }
+      return { success: false, message: "Not authorized as admin" };
+    } catch (err) {
+      console.warn("API update product failed:", err);
+      return { success: false, message: "Network error updating product" };
+    }
   };
 
   const addCategory = async (name: string) => {
@@ -1264,6 +1328,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateProductPrice,
         deleteProduct,
         addProduct,
+        updateProduct,
         categories,
         addCategory,
         subscribeNewsletter,

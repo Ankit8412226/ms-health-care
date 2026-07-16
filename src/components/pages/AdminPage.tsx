@@ -74,6 +74,7 @@ export default function AdminPage() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>("");
   const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newCategoryName, setNewCategoryName] = useState<string>("");
 
   // Delivery Tracking Rider assignments (local mock store to feel extremely interactive)
@@ -111,6 +112,7 @@ export default function AdminPage() {
     updateProductPrice,
     deleteProduct,
     addProduct,
+    updateProduct,
     addCategory,
     trackOrder,
   } = useApp();
@@ -132,6 +134,8 @@ export default function AdminPage() {
   const [newProdBrand, setNewProdBrand] = useState("");
   const [newProdRxReq, setNewProdRxReq] = useState(false);
   const [newProdImage, setNewProdImage] = useState("");
+  const [newProdGallery, setNewProdGallery] = useState<string[]>([]);
+  const [mainImageInputMode, setMainImageInputMode] = useState<"upload" | "link">("upload");
   const [newProdSalt, setNewProdSalt] = useState("");
   const [newProdDesc, setNewProdDesc] = useState("");
   const [newProdShortDesc, setNewProdShortDesc] = useState("");
@@ -463,8 +467,93 @@ export default function AdminPage() {
     triggerToast(`Category "${cleanName}" created successfully!`);
   };
 
-  // Handle Expanded Product Launch Submit
-  const handleAddProduct = (e: React.FormEvent) => {
+  // Helper for starting product edit modal
+  const startEditProduct = (prod: Product) => {
+    setEditingProduct(prod);
+    setNewProdName(prod.name);
+    setNewProdSlug(prod.slug);
+    setNewProdPrice(prod.price.toString());
+    setNewProdCategory(prod.category);
+    setNewProdDosage(prod.dosage || "");
+    setNewProdPack(prod.packSize);
+    setNewProdMfg(prod.manufacturer);
+    setNewProdBrand(prod.brand);
+    setNewProdRxReq(prod.prescriptionRequired);
+    setNewProdImage(prod.image);
+    setMainImageInputMode(prod.image.startsWith("data:") ? "upload" : "link");
+    
+    // Map gallery images (filter out the main image if it exists in the array)
+    const galleryUrls = prod.images ? prod.images.map(img => img.src).filter(src => src !== prod.image) : [];
+    setNewProdGallery(galleryUrls);
+
+    setNewProdSalt(prod.salt || "");
+    setNewProdDesc(prod.description);
+    setNewProdShortDesc(prod.shortDescription);
+    setNewProdSideEffects(prod.sideEffects.join(", "));
+    setNewProdStorage(prod.storage);
+    setShowAddProductModal(true);
+  };
+
+  // Helper for starting product addition modal (resets values)
+  const startAddProduct = () => {
+    setEditingProduct(null);
+    setNewProdName("");
+    setNewProdSlug("");
+    setNewProdPrice("");
+    setNewProdCategory("prescription");
+    setNewProdDosage("");
+    setNewProdPack("10 Tablets in 1 Strip");
+    setNewProdMfg("Cipla Pharmaceuticals");
+    setNewProdBrand("");
+    setNewProdRxReq(false);
+    setNewProdImage("");
+    setNewProdGallery([]);
+    setMainImageInputMode("upload");
+    setNewProdSalt("");
+    setNewProdDesc("");
+    setNewProdShortDesc("");
+    setNewProdSideEffects("");
+    setNewProdStorage("Store below 25°C. Protect from light and moisture.");
+    setShowAddProductModal(true);
+  };
+
+  // Close formulation modal safely
+  const closeModal = () => {
+    setShowAddProductModal(false);
+    setEditingProduct(null);
+  };
+
+  // File upload handler to base64
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      if (index !== undefined) {
+        setNewProdGallery((prev) => {
+          const updated = [...prev];
+          updated[index] = base64String;
+          return updated.filter(Boolean);
+        });
+      } else {
+        setNewProdImage(base64String);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setNewProdGallery((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      return updated.filter(Boolean);
+    });
+  };
+
+  // Handle Expanded Product Launch or Edit Submit
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNum = parseFloat(newProdPrice);
     if (!newProdName || isNaN(priceNum) || priceNum <= 0) {
@@ -481,53 +570,104 @@ export default function AdminPage() {
     const finalSlug = newProdSlug.trim() || newProdName.toLowerCase().replace(/\s+/g, "-");
     const finalBrand = newProdBrand.trim() || newProdMfg;
 
-    const newProduct: Product = {
-      id: `p_${Date.now()}`,
-      name: newProdName,
-      slug: finalSlug,
-      description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
-      shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
-      price: priceNum,
-      regularPrice: Math.round(priceNum * 1.25),
-      onSale: true,
-      rating: 0,
-      reviewCount: 0,
-      category: newProdCategory,
-      categoryName: categories.find(c => c.id === newProdCategory)?.name || newProdCategory,
-      brand: finalBrand,
-      images: [{ id: Date.now(), src: finalImage, alt: newProdName, thumbnail: finalImage }],
-      image: finalImage,
-      manufacturer: newProdMfg || "Cipla Pharmaceuticals",
-      prescriptionRequired: newProdRxReq,
-      dosage: newProdDosage.trim() || undefined,
-      packSize: newProdPack || "10 Tablets in 1 Strip",
-      storage: newProdStorage || "Store below 25°C. Protect from light and moisture.",
-      howToUse: "Take as prescribed by your doctor.",
-      sideEffects: sideEffectsArr,
-      benefits: `Effective clinical formulation for ${newProdCategory} indications.`,
-      salt: newProdSalt.trim() || undefined,
-    };
+    // Construct images array
+    const imagesArr = [
+      { id: Date.now(), src: finalImage, alt: newProdName, thumbnail: finalImage }
+    ];
+    newProdGallery.forEach((url, idx) => {
+      if (url && url !== finalImage) {
+        imagesArr.push({
+          id: Date.now() + 1 + idx,
+          src: url,
+          alt: `${newProdName} Gallery ${idx + 1}`,
+          thumbnail: url
+        });
+      }
+    });
 
-    addProduct(newProduct);
-    setShowAddProductModal(false);
-    
-    setNewProdName("");
-    setNewProdSlug("");
-    setNewProdPrice("");
-    setNewProdCategory("prescription");
-    setNewProdDosage("");
-    setNewProdPack("10 Tablets in 1 Strip");
-    setNewProdMfg("Cipla Pharmaceuticals");
-    setNewProdBrand("");
-    setNewProdRxReq(false);
-    setNewProdImage("");
-    setNewProdSalt("");
-    setNewProdDesc("");
-    setNewProdShortDesc("");
-    setNewProdSideEffects("");
-    setNewProdStorage("Store below 25°C. Protect from light and moisture.");
-    
-    triggerToast(`Added ${newProdName} to catalog successfully!`);
+    if (editingProduct) {
+      const updatedProduct: Product = {
+        ...editingProduct,
+        name: newProdName,
+        slug: finalSlug,
+        description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
+        shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
+        price: priceNum,
+        regularPrice: Math.round(priceNum * 1.25),
+        category: newProdCategory,
+        categoryName: categories.find(c => c.id === newProdCategory)?.name || newProdCategory,
+        brand: finalBrand,
+        images: imagesArr,
+        image: finalImage,
+        manufacturer: newProdMfg || "Cipla Pharmaceuticals",
+        prescriptionRequired: newProdRxReq,
+        dosage: newProdDosage.trim() || undefined,
+        packSize: newProdPack || "10 Tablets in 1 Strip",
+        storage: newProdStorage || "Store below 25°C. Protect from light and moisture.",
+        sideEffects: sideEffectsArr,
+        salt: newProdSalt.trim() || undefined,
+      };
+
+      const res = await updateProduct(updatedProduct);
+      if (res.success) {
+        closeModal();
+        triggerToast(`Updated ${newProdName} successfully!`);
+      } else {
+        triggerToast(`Error: ${res.message || "Failed to update product"}`);
+      }
+    } else {
+      const newProduct: Product = {
+        id: `p_${Date.now()}`,
+        name: newProdName,
+        slug: finalSlug,
+        description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
+        shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
+        price: priceNum,
+        regularPrice: Math.round(priceNum * 1.25),
+        onSale: true,
+        rating: 0,
+        reviewCount: 0,
+        category: newProdCategory,
+        categoryName: categories.find(c => c.id === newProdCategory)?.name || newProdCategory,
+        brand: finalBrand,
+        images: imagesArr,
+        image: finalImage,
+        manufacturer: newProdMfg || "Cipla Pharmaceuticals",
+        prescriptionRequired: newProdRxReq,
+        dosage: newProdDosage.trim() || undefined,
+        packSize: newProdPack || "10 Tablets in 1 Strip",
+        storage: newProdStorage || "Store below 25°C. Protect from light and moisture.",
+        howToUse: "Take as prescribed by your doctor.",
+        sideEffects: sideEffectsArr,
+        benefits: `Effective clinical formulation for ${newProdCategory} indications.`,
+        salt: newProdSalt.trim() || undefined,
+      };
+
+      const res = await addProduct(newProduct);
+      if (res.success) {
+        closeModal();
+        // Clear all fields
+        setNewProdName("");
+        setNewProdSlug("");
+        setNewProdPrice("");
+        setNewProdCategory("prescription");
+        setNewProdDosage("");
+        setNewProdPack("10 Tablets in 1 Strip");
+        setNewProdMfg("Cipla Pharmaceuticals");
+        setNewProdBrand("");
+        setNewProdRxReq(false);
+        setNewProdImage("");
+        setNewProdGallery([]);
+        setNewProdSalt("");
+        setNewProdDesc("");
+        setNewProdShortDesc("");
+        setNewProdSideEffects("");
+        setNewProdStorage("Store below 25°C. Protect from light and moisture.");
+        triggerToast(`Added ${newProdName} to catalog successfully!`);
+      } else {
+        triggerToast(`Error: ${res.message || "Failed to add product"}`);
+      }
+    }
   };
 
   // Open Order details and tracking
@@ -1241,7 +1381,7 @@ export default function AdminPage() {
 
                   {/* Launch Product button */}
                   <button
-                    onClick={() => setShowAddProductModal(true)}
+                    onClick={startAddProduct}
                     className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
@@ -1352,18 +1492,27 @@ export default function AdminPage() {
                             )}
                           </td>
                           <td className="py-4 text-center pr-4">
-                            <button
-                              onClick={() => {
-                                if (confirm(`Are you sure you want to delete ${prod.name} from catalog?`)) {
-                                  deleteProduct(prod.id);
-                                  triggerToast(`Deleted ${prod.name} from product catalog.`);
-                                }
-                              }}
-                              className="p-1.5 hover:bg-red-50 hover:text-red-500 rounded-lg text-slate-400 transition-all cursor-pointer"
-                              title="Delete from inventory catalog"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => startEditProduct(prod)}
+                                className="p-1.5 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg text-slate-400 transition-all cursor-pointer"
+                                title="Edit formulation details"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to delete ${prod.name} from catalog?`)) {
+                                    deleteProduct(prod.id);
+                                    triggerToast(`Deleted ${prod.name} from product catalog.`);
+                                  }
+                                }}
+                                className="p-1.5 hover:bg-red-50 hover:text-red-500 rounded-lg text-slate-400 transition-all cursor-pointer"
+                                title="Delete from inventory catalog"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1990,17 +2139,21 @@ export default function AdminPage() {
       {/* ── [MODAL] LAUNCH NEW PRODUCT (Expanded medical fields) ───────── */}
       {showAddProductModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddProductModal(false)} />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={closeModal} />
           
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 animate-scale-in text-slate-800 flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-150 flex items-center justify-between shrink-0 bg-slate-50/50">
               <div>
-                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">Launch New Product formulation</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5 font-bold">Synthesize and release new clinical inventory stock</p>
+                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+                  {editingProduct ? "Edit Product formulation" : "Launch New Product formulation"}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-bold">
+                  {editingProduct ? "Modify existing clinical inventory details" : "Synthesize and release new clinical inventory stock"}
+                </p>
               </div>
               <button
-                onClick={() => setShowAddProductModal(false)}
+                onClick={closeModal}
                 className="p-1.5 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -2147,18 +2300,135 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Image URL */}
-              <div>
-                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                  <LinkIcon className="w-3 h-3" /> Image Link / URL
+              {/* Main and Gallery Image uploads */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                    <LinkIcon className="w-3 h-3 text-emerald-500" /> Main Product Image
+                  </label>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMainImageInputMode("upload")}
+                      className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                        mainImageInputMode === "upload"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-250"
+                          : "text-slate-400 hover:text-slate-750 bg-slate-100/50"
+                      }`}
+                    >
+                      Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMainImageInputMode("link")}
+                      className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                        mainImageInputMode === "link"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-250"
+                          : "text-slate-400 hover:text-slate-750 bg-slate-100/50"
+                      }`}
+                    >
+                      Provide URL
+                    </button>
+                  </div>
+                </div>
+
+                {mainImageInputMode === "upload" ? (
+                  <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageFileChange(e)}
+                      className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-750 file:hover:bg-emerald-100 cursor-pointer w-full"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="e.g. https://domain.com/image.jpg"
+                    value={newProdImage.startsWith("data:") ? "" : newProdImage}
+                    onChange={(e) => setNewProdImage(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
+                  />
+                )}
+
+                {newProdImage && (
+                  <div className="flex items-center gap-3 bg-emerald-50/20 border border-emerald-100 rounded-xl p-2.5">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-white relative">
+                      <img
+                        src={newProdImage}
+                        alt="Preview Main"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-700 truncate">Main Image Loaded</p>
+                      <p className="text-[9px] text-slate-400 font-semibold truncate">
+                        {newProdImage.startsWith("data:") ? "Uploaded Base64 Data" : newProdImage}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewProdImage("")}
+                      className="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg text-slate-400 transition-all cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Gallery Images (up to 4) */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                  Product Gallery Images (Upload up to 4 images)
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. https://domain.com/tablet.jpg"
-                  value={newProdImage}
-                  onChange={(e) => setNewProdImage(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
-                />
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {[0, 1, 2, 3].map((index) => {
+                    const imgUrl = newProdGallery[index];
+                    return (
+                      <div
+                        key={index}
+                        className="border border-dashed border-slate-250 bg-slate-50/50 rounded-xl p-3 flex flex-col justify-center items-center gap-2 min-h-[90px] relative transition-all hover:bg-slate-50"
+                      >
+                        {imgUrl ? (
+                          <div className="w-full h-full flex items-center gap-2">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-white relative">
+                              <img
+                                src={imgUrl}
+                                alt={`Gallery ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[9px] font-bold text-slate-700">Image {index + 1}</p>
+                              <button
+                                type="button"
+                                onClick={() => removeGalleryImage(index)}
+                                className="mt-1 text-[9px] text-red-500 hover:text-red-700 font-bold flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" /> Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-1 w-full h-full">
+                            <span className="text-[10px] text-slate-400 font-bold">Image Slot {index + 1}</span>
+                            <label className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-650 rounded-lg cursor-pointer transition-all shadow-xs">
+                              Select File
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageFileChange(e, index)}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Side Effects list (comma separated) */}
@@ -2207,7 +2477,7 @@ export default function AdminPage() {
               <div className="pt-4 border-t border-slate-150 flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setShowAddProductModal(false)}
+                  onClick={closeModal}
                   className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-550 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200"
                 >
                   Cancel
@@ -2216,7 +2486,7 @@ export default function AdminPage() {
                   type="submit"
                   className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-xs font-bold rounded-xl transition-all shadow shadow-emerald-600/15 cursor-pointer"
                 >
-                  Synthesize Formulation
+                  {editingProduct ? "Update Formulation" : "Synthesize Formulation"}
                 </button>
               </div>
 

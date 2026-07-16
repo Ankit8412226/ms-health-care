@@ -98,9 +98,7 @@ const productValidation = [
   body('image')
     .trim()
     .notEmpty()
-    .withMessage('Main image URL is required')
-    .isURL()
-    .withMessage('Main image must be a valid URL'),
+    .withMessage('Main image is required'),
   body('manufacturer')
     .trim()
     .notEmpty()
@@ -131,12 +129,14 @@ const productValidation = [
     .withMessage('Image ID must be a number'),
   body('images.*.src')
     .optional()
-    .isURL()
-    .withMessage('Image source must be a valid URL'),
+    .trim()
+    .notEmpty()
+    .withMessage('Image source is required'),
   body('images.*.thumbnail')
     .optional()
-    .isURL()
-    .withMessage('Image thumbnail must be a valid URL'),
+    .trim()
+    .notEmpty()
+    .withMessage('Image thumbnail is required'),
   body('salt')
     .optional()
     .trim(),
@@ -208,9 +208,7 @@ const productUpdateValidation = [
     .optional()
     .trim()
     .notEmpty()
-    .withMessage('Main image URL is required')
-    .isURL()
-    .withMessage('Main image must be a valid URL'),
+    .withMessage('Main image is required'),
   body('manufacturer')
     .optional()
     .trim()
@@ -246,12 +244,14 @@ const productUpdateValidation = [
     .withMessage('Image ID must be a number'),
   body('images.*.src')
     .optional()
-    .isURL()
-    .withMessage('Image source must be a valid URL'),
+    .trim()
+    .notEmpty()
+    .withMessage('Image source is required'),
   body('images.*.thumbnail')
     .optional()
-    .isURL()
-    .withMessage('Image thumbnail must be a valid URL'),
+    .trim()
+    .notEmpty()
+    .withMessage('Image thumbnail is required'),
   body('salt')
     .optional()
     .trim(),
