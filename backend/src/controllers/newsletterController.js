@@ -1,39 +1,32 @@
 const Newsletter = require('../models/Newsletter');
+const asyncHandler = require('../utils/asyncHandler');
 
 /**
- * @desc    Subscribe to newsletter
+ * @desc    Subscribe to the newsletter
  * @route   POST /api/newsletters
  * @access  Public
  */
-const subscribeNewsletter = async (req, res) => {
-  const { email } = req.body;
+const subscribeNewsletter = asyncHandler(async (req, res) => {
+  const email = String(req.body.email).toLowerCase().trim();
 
-  try {
-    // Check if email already subscribed
-    const existing = await Newsletter.findOne({ email });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: 'This email is already subscribed to our newsletter.',
-      });
-    }
+  const existing = await Newsletter.findOne({ email }).select('_id').lean();
 
-    const newsletter = await Newsletter.create({ email });
-
-    return res.status(201).json({
+  // Answering 200 for an address that is already subscribed, rather than the
+  // previous 400, keeps this endpoint from doubling as a way to test whether a
+  // given email is on the list — and re-subscribing is not a user error.
+  if (existing) {
+    return res.status(200).json({
       success: true,
-      message: 'Subscribed to newsletter successfully!',
-      data: newsletter,
-    });
-  } catch (error) {
-    console.error('Newsletter Subscribe Error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Server Error occurred during newsletter subscription',
+      message: 'You are already subscribed to our newsletter.',
     });
   }
-};
 
-module.exports = {
-  subscribeNewsletter,
-};
+  await Newsletter.create({ email });
+
+  return res.status(201).json({
+    success: true,
+    message: 'Subscribed to newsletter successfully!',
+  });
+});
+
+module.exports = { subscribeNewsletter };

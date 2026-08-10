@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('../utils/slugify');
 
 const productImageSchema = new mongoose.Schema({
   id: {
@@ -136,10 +137,7 @@ const productSchema = new mongoose.Schema(
 // Pre-validate to auto-generate slug if not present
 productSchema.pre('validate', function (next) {
   if (this.name && !this.slug) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    this.slug = slugify(this.name);
   }
 
   // Set onSale dynamically if price is lower than regularPrice

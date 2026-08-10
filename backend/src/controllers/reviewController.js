@@ -1,119 +1,129 @@
+const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const { getPagination, paginatedResponse } = require('../utils/pagination');
 
-// @desc    Create new product review
-// @route   POST /api/reviews/:productId
-// @access  Private
-const createReview = async (req, res) => {
-  try {
-    const { rating, comment } = req.body;
-    const productId = req.params.productId;
+/**
+ * Recompute a product's rating and review count from the reviews collection.
+ *
+ * Done with an aggregation rather than by loading every review into memory —
+ * this codebase already has products with several hundred reviews, and the
+ * previous implementation fetched them all just to average one field.
+ */
+const recalculateProductRating = async (productId) => {
+  const [stats] = await Review.aggregate([
+    { $match: { product: new mongoose.Types.ObjectId(String(productId)) } },
+    { $group: { _id: '$product', avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+  ]);
 
-    if (!rating || !comment) {
-      return res.status(400).json({ success: false, message: 'Please provide rating and comment' });
-    }
-
-    const ratingNum = Number(rating);
-    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
-      return res.status(400).json({ success: false, message: 'Rating must be a number between 1 and 5' });
-    }
-
-    // 1. Verify product exists
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    // 2. Check if user already reviewed
-    const alreadyReviewed = await Review.findOne({ user: req.user._id, product: productId });
-    if (alreadyReviewed) {
-      return res.status(400).json({ success: false, message: 'You have already reviewed this product' });
-    }
-
-    // 3. Verify user has purchased this product and it has been delivered
-    const hasPurchased = await Order.countDocuments({
-      user: req.user._id,
-      status: 'Delivered',
-      'items.product': productId
-    });
-
-    if (hasPurchased === 0) {
-      return res.status(403).json({
-        success: false,
-        message: 'Bhai, safety check! You can only review products you have purchased and received (Delivered status).'
-      });
-    }
-
-    // 4. Create review
-    const review = await Review.create({
-      user: req.user._id,
-      userName: req.user.name,
-      product: productId,
-      rating: ratingNum,
-      comment: comment.trim()
-    });
-
-    // 5. Recalculate average rating and reviewCount for product
-    const reviews = await Review.find({ product: productId });
-    const reviewCount = reviews.length;
-    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount;
-
-    product.rating = Math.round(avgRating * 10) / 10;
-    product.reviewCount = reviewCount;
-    await product.save();
-
-    res.status(201).json({ success: true, data: review });
-  } catch (error) {
-    console.error('Error creating review:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  await Product.findByIdAndUpdate(productId, {
+    rating: stats ? Math.round(stats.avg * 10) / 10 : 0,
+    reviewCount: stats ? stats.count : 0,
+  });
 };
 
-// @desc    Get all reviews for a product
-// @route   GET /api/reviews/:productId
-// @access  Public
-const getProductReviews = async (req, res) => {
-  try {
-    const reviews = await Review.find({ product: req.params.productId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: reviews });
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+/**
+ * @desc    Create a product review
+ * @route   POST /api/reviews/:productId
+ * @access  Private
+ */
+const createReview = asyncHandler(async (req, res) => {
+  const { rating, comment } = req.body;
+  const { productId } = req.params;
+
+  const ratingNum = Number(rating);
+  if (!Number.isFinite(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    throw ApiError.badRequest('Rating must be a number between 1 and 5');
   }
-};
 
-// @desc    Check if active user is eligible to write a review
-// @route   GET /api/reviews/:productId/eligible
-// @access  Private
-const checkReviewEligibility = async (req, res) => {
-  try {
-    const productId = req.params.productId;
+  const text = String(comment || '').trim();
+  if (!text) throw ApiError.badRequest('Please write a review comment');
+  if (text.length > 2000) throw ApiError.badRequest('Review comment must be 2000 characters or fewer');
 
-    const alreadyReviewed = await Review.findOne({ user: req.user._id, product: productId });
-    if (alreadyReviewed) {
-      return res.status(200).json({ success: true, eligible: false, reason: 'already_reviewed' });
-    }
+  const product = await Product.findById(productId).select('_id').lean();
+  if (!product) throw ApiError.notFound('Product not found');
 
-    const hasPurchased = await Order.countDocuments({
-      user: req.user._id,
-      status: 'Delivered',
-      'items.product': productId
-    });
-
-    res.status(200).json({
-      success: true,
-      eligible: hasPurchased > 0,
-      reason: hasPurchased > 0 ? 'eligible' : 'no_purchase'
-    });
-  } catch (error) {
-    console.error('Error checking review eligibility:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+  const alreadyReviewed = await Review.findOne({ user: req.user._id, product: productId })
+    .select('_id')
+    .lean();
+  if (alreadyReviewed) {
+    throw ApiError.conflict('You have already reviewed this product');
   }
-};
+
+  // Only customers who actually received the product may review it.
+  const hasPurchased = await Order.countDocuments({
+    user: req.user._id,
+    status: 'Delivered',
+    'items.product': productId,
+  });
+
+  if (hasPurchased === 0) {
+    throw ApiError.forbidden(
+      'You can only review products you have purchased and received.'
+    );
+  }
+
+  const review = await Review.create({
+    user: req.user._id,
+    userName: req.user.name,
+    product: productId,
+    rating: ratingNum,
+    comment: text,
+  });
+
+  await recalculateProductRating(productId);
+
+  return res.status(201).json({ success: true, data: review });
+});
+
+/**
+ * @desc    List reviews for a product
+ * @route   GET /api/reviews/:productId
+ * @access  Public
+ */
+const getProductReviews = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req, { defaultLimit: 10 });
+  const filter = { product: req.params.productId };
+
+  // This collection holds 5,000+ reviews and the endpoint returned every
+  // review for a product in one unbounded response.
+  const [data, total] = await Promise.all([
+    Review.find(filter).sort({ createdAt: -1, _id: 1 }).skip(skip).limit(limit).lean(),
+    Review.countDocuments(filter),
+  ]);
+
+  return res.status(200).json(paginatedResponse({ data, total, page, limit }));
+});
+
+/**
+ * @desc    Report whether the caller may review a product
+ * @route   GET /api/reviews/:productId/eligible
+ * @access  Private
+ */
+const checkReviewEligibility = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  const [alreadyReviewed, purchaseCount] = await Promise.all([
+    Review.findOne({ user: req.user._id, product: productId }).select('_id').lean(),
+    Order.countDocuments({ user: req.user._id, status: 'Delivered', 'items.product': productId }),
+  ]);
+
+  if (alreadyReviewed) {
+    return res.status(200).json({ success: true, eligible: false, reason: 'already_reviewed' });
+  }
+
+  return res.status(200).json({
+    success: true,
+    eligible: purchaseCount > 0,
+    reason: purchaseCount > 0 ? 'eligible' : 'no_purchase',
+  });
+});
 
 module.exports = {
   createReview,
   getProductReviews,
-  checkReviewEligibility
+  checkReviewEligibility,
 };

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
+import { useProductSearch } from "@/lib/useProductSearch";
 import Marquee from "@/components/magicui/marquee";
 import SliderBanner from "@/components/ui/SliderBanner";
 import {
@@ -366,7 +367,11 @@ export default function HomePage() {
 
   const sourceProducts = products || [];
   const sourceCategories = (categories && categories.length > 0) ? categories : FALLBACK_CATEGORIES;
-  const featured = sourceProducts.filter((p) => p.onSale).slice(0, 8);
+  // Prefer on-sale items, but fall back to the rest rather than rendering an
+  // empty strip. The context now holds one page of products instead of the
+  // whole catalogue, so it is possible none of them happen to be on sale.
+  const onSaleProducts = sourceProducts.filter((p) => p.onSale);
+  const featured = (onSaleProducts.length >= 4 ? onSaleProducts : sourceProducts).slice(0, 8);
 
   /* hero search state */
   const [heroQ, setHeroQ] = useState("");
@@ -374,11 +379,9 @@ export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
 
   const trimmedHeroQ = heroQ.trim();
-  const heroResults = trimmedHeroQ.length >= 2 ? sourceProducts.filter(
-    (p) =>
-      p.name.toLowerCase().includes(trimmedHeroQ.toLowerCase()) ||
-      (p.salt && p.salt.toLowerCase().includes(trimmedHeroQ.toLowerCase()))
-  ).slice(0, 6) : [];
+  // Searches the API rather than the in-memory product list, so results cover
+  // the whole catalogue instead of just the products already downloaded.
+  const { results: heroResults } = useProductSearch(heroQ, 6);
 
   const closeHero = useCallback(() => {
     setHeroOpen(false);

@@ -8,8 +8,9 @@ import {
   ShoppingCart, Heart, Search, Menu, X, Sun, Moon,
   Phone, ChevronDown, ChevronRight, Package, User,
   LogOut, Upload, Home, Pill, Tag, ArrowRight, TrendingUp, Clock, ArrowLeft,
-  Activity
+  Activity, Loader2
 } from "lucide-react";
+import { useProductSearch } from "@/lib/useProductSearch";
 
 
 const TRENDING_SEARCHES = ["Paracetamol", "Vitamin D3", "Metformin", "Omron BP Monitor", "Cetaphil"];
@@ -49,6 +50,8 @@ interface SearchDropdownProps {
   trimmedQ: string;
   resultProducts: Product[];
   hasResults: boolean;
+  /** True while a request is in flight, so we don't flash "no results". */
+  searching: boolean;
   setSearchQuery: (q: string) => void;
   setDropdownOpen: (open: boolean) => void;
   closeDropdown: () => void;
@@ -60,6 +63,7 @@ function SearchDropdown({
   trimmedQ,
   resultProducts,
   hasResults,
+  searching,
   setSearchQuery,
   setDropdownOpen,
   closeDropdown,
@@ -121,7 +125,12 @@ function SearchDropdown({
       {/* ── Active search results ── */}
       {trimmedQ.length >= 2 && (
         <div className="max-h-[420px] overflow-y-auto">
-          {!hasResults ? (
+          {searching && !hasResults ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+              <p className="text-xs text-gray-400">Searching medicines…</p>
+            </div>
+          ) : !hasResults ? (
             <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
               <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <Search className="w-6 h-6 opacity-40" />
@@ -227,14 +236,11 @@ export default function Header() {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
-  /* derived search results */
+  /* Search results, fetched from the API rather than filtered in memory.
+     This used to substring-match the full product array, which is why the app
+     downloaded the entire catalogue up front. */
   const trimmedQ = searchQuery.trim();
-  const sourceProducts = products || [];
-  const resultProducts = trimmedQ.length >= 2 ? sourceProducts.filter(
-    (p) =>
-      p.name.toLowerCase().includes(trimmedQ.toLowerCase()) ||
-      (p.salt && p.salt.toLowerCase().includes(trimmedQ.toLowerCase()))
-  ).slice(0, 5) : [];
+  const { results: resultProducts, searching } = useProductSearch(searchQuery, 5);
   const hasResults = resultProducts.length > 0;
 
   const closeDropdown = useCallback(() => {
@@ -407,6 +413,7 @@ export default function Header() {
                     trimmedQ={trimmedQ}
                     resultProducts={resultProducts}
                     hasResults={hasResults}
+                    searching={searching}
                     setSearchQuery={setSearchQuery}
                     setDropdownOpen={setDropdownOpen}
                     closeDropdown={closeDropdown}
@@ -588,6 +595,7 @@ export default function Header() {
                     trimmedQ={trimmedQ}
                     resultProducts={resultProducts}
                     hasResults={hasResults}
+                    searching={searching}
                     setSearchQuery={setSearchQuery}
                     setDropdownOpen={setDropdownOpen}
                     closeDropdown={closeDropdown}

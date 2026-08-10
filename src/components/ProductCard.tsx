@@ -3,6 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { Product } from "@/types";
 import { Heart, ShoppingCart, Star, Eye, ShieldCheck } from "lucide-react";
 import SafeImage from "@/components/SafeImage";
+import { IMAGE_WIDTHS } from "@/lib/imageUrl";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, wishlist, toggleWishlist, setActivePage, setSelectedProductId } = useApp();
@@ -47,6 +48,7 @@ export default function ProductCard({ product }: { product: Product }) {
             src={product.image}
             alt={product.name}
             fill
+            cldWidth={IMAGE_WIDTHS.card}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-contain mix-blend-multiply dark:mix-blend-normal dark:opacity-90"
           />

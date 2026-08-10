@@ -1,48 +1,48 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const env = require('../config/env');
+const ApiError = require('../utils/ApiError');
+const asyncHandler = require('../utils/asyncHandler');
 
-// Protect routes - requires a valid JWT
-const protect = async (req, res, next) => {
-  let token;
+/**
+ * Require a valid bearer token and attach the user to the request.
+ */
+const protect = asyncHandler(async (req, res, next) => {
+  const header = req.headers.authorization || '';
 
-  // Check Authorization header for Bearer token
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+  if (!header.startsWith('Bearer ')) {
+    throw ApiError.unauthorized('Not authorized, no token provided');
+  }
 
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkeyformedicalcareapp123!');
+  const token = header.slice(7).trim();
+  if (!token) throw ApiError.unauthorized('Not authorized, no token provided');
 
-      // Get user from the token (exclude password field)
-      req.user = await User.findById(decoded.id).select('-password');
-      
-      if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
-      }
-
-      next();
-    } catch (error) {
-      console.error('Token verification error:', error.message);
-      return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+  let decoded;
+  try {
+    decoded = jwt.verify(token, env.jwtSecret);
+  } catch (err) {
+    // Distinguish an expired session from a bad token so the client can
+    // prompt a fresh login rather than showing a generic failure.
+    if (err.name === 'TokenExpiredError') {
+      throw ApiError.unauthorized('Session expired, please sign in again');
     }
+    throw ApiError.unauthorized('Not authorized, token failed');
   }
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: 'Not authorized, no token provided' });
+  const user = await User.findById(decoded.id).select('-password').lean();
+  if (!user) {
+    // The account was deleted after the token was issued.
+    throw ApiError.unauthorized('Not authorized, user no longer exists');
   }
-};
 
-// Admin middleware - requires admin role
+  req.user = user;
+  next();
+});
+
+/** Require the authenticated user to be an administrator. */
 const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    return res.status(403).json({ success: false, message: 'Access denied: Admin authorization required' });
-  }
+  if (req.user?.role === 'admin') return next();
+  next(ApiError.forbidden('Access denied: administrator authorization required'));
 };
 
-module.exports = {
-  protect,
-  adminOnly,
-};
+module.exports = { protect, adminOnly };

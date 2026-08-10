@@ -1,154 +1,125 @@
 const Prescription = require('../models/Prescription');
-const crypto = require('crypto');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const { assertImageReference } = require('../utils/imageUrl');
+const { getPagination, paginatedResponse } = require('../utils/pagination');
 
 /**
- * @desc    Upload a new prescription
+ * @desc    Record an uploaded prescription
  * @route   POST /api/prescriptions
  * @access  Private
+ *
+ * The file itself is uploaded by the browser straight to Cloudinary using a
+ * signature from POST /api/uploads/signature; this endpoint only stores the
+ * resulting URL. Previously the client sent the whole image inline as base64,
+ * which express.json() rejected at its 100 KB default — every real photo
+ * failed with a 413 before any of this code ran.
  */
-const uploadPrescription = async (req, res) => {
-  const { name, url: fileData } = req.body;
+const uploadPrescription = asyncHandler(async (req, res) => {
+  const { name } = req.body;
 
-  try {
-    let finalUrl = fileData;
+  // Throws a descriptive 400 for a `data:` URI rather than persisting the blob.
+  const url = assertImageReference(req.body.url, 'url');
+  if (!url) throw ApiError.badRequest('A prescription file URL is required');
 
-    // If fileData is base64 file format, upload to Cloudinary using signed upload
-    if (fileData && fileData.startsWith('data:')) {
-      try {
-        const timestamp = Math.round(new Date().getTime() / 1000);
-        const apiSecret = 'CYKdNnUYfA4RwwGvKtsrI47TMoo';
-        const apiKey = '618684992729621';
-        const cloudName = 'dqy6dki64';
+  const prescription = await Prescription.create({
+    user: req.user._id,
+    name,
+    url,
+    status: 'Processing (OCR)',
+  });
 
-        // Generate SHA-1 signature for Cloudinary upload
-        const signature = crypto
-          .createHash('sha1')
-          .update(`timestamp=${timestamp}${apiSecret}`)
-          .digest('hex');
+  // NOTE: there used to be a setTimeout here that flipped the record to
+  // "Verified" after 5 seconds and attached two hardcoded medicine names. That
+  // was wrong twice over. On Vercel the instance is frozen once the response is
+  // sent, so the callback often never ran and records stuck in
+  // "Processing (OCR)" forever. Worse, when it did run it marked a real medical
+  // document verified without a pharmacist ever seeing it, and attached
+  // medicines the prescription may not contain. Verification is now solely the
+  // admin action below.
 
-        const fd = new FormData();
-        fd.append('file', fileData);
-        fd.append('timestamp', timestamp.toString());
-        fd.append('api_key', apiKey);
-        fd.append('signature', signature);
-
-        const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-          method: 'POST',
-          body: fd,
-        });
-
-        if (cloudinaryRes.ok) {
-          const cloudinaryData = await cloudinaryRes.json();
-          if (cloudinaryData.secure_url) {
-            finalUrl = cloudinaryData.secure_url;
-            console.log('Successfully uploaded prescription to Cloudinary from backend:', finalUrl);
-          }
-        } else {
-          const errText = await cloudinaryRes.text();
-          console.error('Cloudinary API upload failed on backend:', errText);
-        }
-      } catch (cloudinaryErr) {
-        console.error('Backend Cloudinary upload error:', cloudinaryErr.message);
-      }
-    }
-
-    const prescription = await Prescription.create({
-      user: req.user._id,
-      name,
-      url: finalUrl,
-      status: 'Processing (OCR)',
-    });
-
-    // Simulate OCR processing in background (adds simulated results after 5 seconds)
-    setTimeout(async () => {
-      try {
-        const doc = await Prescription.findById(prescription._id);
-        if (doc && doc.status === 'Processing (OCR)') {
-          doc.status = 'Verified';
-          doc.extractedMedicines = ['Mofecon-S 360mg Tablet', 'Metformin Glycomet 500mg SR'];
-          await doc.save();
-          console.log(`Simulated OCR completed for prescription: ${doc._id}`);
-        }
-      } catch (err) {
-        console.error('Simulated OCR Job Failed:', err.message);
-      }
-    }, 5000);
-
-    return res.status(201).json({
-      success: true,
-      message: 'Prescription uploaded successfully. OCR parsing started.',
-      data: prescription,
-    });
-  } catch (error) {
-    console.error('Upload Prescription Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error uploading prescription' });
-  }
-};
+  return res.status(201).json({
+    success: true,
+    message: 'Prescription uploaded successfully. Our pharmacist will review it shortly.',
+    data: prescription,
+  });
+});
 
 /**
- * @desc    Get user prescription uploads
+ * @desc    List the signed-in user's prescriptions
  * @route   GET /api/prescriptions/myprescriptions
  * @access  Private
  */
-const getMyPrescriptions = async (req, res) => {
-  try {
-    const prescriptions = await Prescription.find({ user: req.user._id }).sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, count: prescriptions.length, data: prescriptions });
-  } catch (error) {
-    console.error('Get User Prescriptions Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error fetching prescriptions' });
-  }
-};
+const getMyPrescriptions = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req, { defaultLimit: 20 });
+  const filter = { user: req.user._id };
+
+  const [data, total] = await Promise.all([
+    Prescription.find(filter).sort({ createdAt: -1, _id: 1 }).skip(skip).limit(limit).lean(),
+    Prescription.countDocuments(filter),
+  ]);
+
+  return res.status(200).json(paginatedResponse({ data, total, page, limit }));
+});
 
 /**
- * @desc    Get all prescriptions (Admin-only list)
+ * @desc    List all prescriptions
  * @route   GET /api/prescriptions
  * @access  Private/Admin
  */
-const getAllPrescriptions = async (req, res) => {
-  try {
-    const prescriptions = await Prescription.find({})
-      .populate('user', 'name email phone')
-      .sort({ createdAt: -1 });
+const getAllPrescriptions = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req, { defaultLimit: 20 });
 
-    return res.status(200).json({ success: true, count: prescriptions.length, data: prescriptions });
-  } catch (error) {
-    console.error('Admin Get Prescriptions Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error fetching prescriptions' });
-  }
-};
+  const filter = {};
+  if (req.query.status) filter.status = req.query.status;
+
+  const [data, total] = await Promise.all([
+    Prescription.find(filter)
+      .populate('user', 'name email phone')
+      .sort({ createdAt: -1, _id: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Prescription.countDocuments(filter),
+  ]);
+
+  return res.status(200).json(paginatedResponse({ data, total, page, limit }));
+});
 
 /**
- * @desc    Update prescription status or OCR details (Admin-only)
+ * @desc    Update prescription status / extracted medicines
  * @route   PUT /api/prescriptions/:id/status
  * @access  Private/Admin
  */
-const updatePrescriptionStatus = async (req, res) => {
-  const { id } = req.params;
+const updatePrescriptionStatus = asyncHandler(async (req, res) => {
   const { status, extractedMedicines } = req.body;
 
-  try {
-    const prescription = await Prescription.findById(id);
+  const prescription = await Prescription.findById(req.params.id);
+  if (!prescription) throw ApiError.notFound('Prescription not found');
 
-    if (!prescription) {
-      return res.status(404).json({ success: false, message: 'Prescription not found' });
+  if (status !== undefined) {
+    const allowed = Prescription.schema.path('status').enumValues;
+    if (!allowed.includes(status)) {
+      throw ApiError.badRequest(`Status must be one of: ${allowed.join(', ')}`);
     }
-
-    if (status) prescription.status = status;
-    if (extractedMedicines) prescription.extractedMedicines = extractedMedicines;
-
-    await prescription.save();
-
-    return res.status(200).json({
-      success: true,
-      message: 'Prescription state updated successfully!',
-      data: prescription,
-    });
-  } catch (error) {
-    console.error('Update Prescription Status Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error updating prescription state' });
+    prescription.status = status;
   }
-};
+
+  if (extractedMedicines !== undefined) {
+    if (!Array.isArray(extractedMedicines)) {
+      throw ApiError.badRequest('extractedMedicines must be an array of strings');
+    }
+    prescription.extractedMedicines = extractedMedicines.map(String);
+  }
+
+  await prescription.save();
+
+  return res.status(200).json({
+    success: true,
+    message: 'Prescription updated successfully',
+    data: prescription,
+  });
+});
 
 module.exports = {
   uploadPrescription,

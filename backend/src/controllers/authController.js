@@ -1,132 +1,122 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const env = require('../config/env');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
 
-// Helper function to generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretkeyformedicalcareapp123!', {
-    expiresIn: '30d',
-  });
-};
+const generateToken = (id) =>
+  jwt.sign({ id }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+
+/** Shape a user document for a response. Never includes the password hash. */
+const authPayload = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role,
+  token: generateToken(user._id),
+});
 
 /**
- * @desc    Register a new user (role can be 'user' or 'admin' depending on request)
+ * @desc    Register a new user
  * @route   POST /api/auth/register
  * @access  Public
  */
-const registerUser = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+const registerUser = asyncHandler(async (req, res) => {
+  const { name, email, password, phone } = req.body;
 
-  try {
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ success: false, message: 'User already exists with this email' });
-    }
+  // SECURITY: `role` is deliberately NOT read from the request body.
+  //
+  // This endpoint used to do `role: role || 'user'`, and the validator
+  // explicitly permitted `role: 'admin'`. That meant anyone on the internet
+  // could POST to /api/auth/register with {"role":"admin"} and receive an
+  // administrator token — granting full product CRUD, every customer's address
+  // and phone number, all orders, and every uploaded prescription.
+  //
+  // New accounts are always ordinary users. Promote an administrator
+  // deliberately and out of band, never from an unauthenticated public request.
+  const normalisedEmail = String(email).toLowerCase().trim();
 
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      phone,
-      role: role || 'user', // Default to normal user
-    });
-
-    if (user) {
-      return res.status(201).json({
-        success: true,
-        data: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          token: generateToken(user._id),
-        },
-      });
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid user data provided' });
-    }
-  } catch (error) {
-    console.error('Register Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error occurred during registration' });
+  const userExists = await User.findOne({ email: normalisedEmail }).select('_id').lean();
+  if (userExists) {
+    throw ApiError.conflict('An account with this email already exists');
   }
-};
+
+  const user = await User.create({
+    name,
+    email: normalisedEmail,
+    password,
+    phone,
+    role: 'user',
+  });
+
+  return res.status(201).json({ success: true, data: authPayload(user) });
+});
 
 /**
- * @desc    Auth user & get token (Normal User Login)
+ * @desc    Authenticate a user and issue a token
  * @route   POST /api/auth/login
  * @access  Public
  */
-const loginUser = async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    // Find user by email
-    const user = await User.findOne({ email });
+  const user = await User.findOne({ email: String(email).toLowerCase().trim() });
 
-    if (user && (await user.matchPassword(password))) {
-      return res.status(200).json({
-        success: true,
-        data: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          token: generateToken(user._id),
-        },
-      });
-    } else {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-  } catch (error) {
-    console.error('Login Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error occurred during login' });
+  // One message covers both "no such account" and "wrong password", so the
+  // response cannot be used to enumerate which emails are registered.
+  if (!user || !(await user.matchPassword(password))) {
+    throw ApiError.unauthorized('Invalid email or password');
   }
-};
+
+  return res.status(200).json({ success: true, data: authPayload(user) });
+});
 
 /**
- * @desc    Auth admin & get token (Admin Login Guarded)
+ * @desc    Authenticate an administrator
  * @route   POST /api/auth/admin/login
  * @access  Public
  */
-const loginAdmin = async (req, res) => {
+const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    // Find user by email
-    const user = await User.findOne({ email });
+  const user = await User.findOne({ email: String(email).toLowerCase().trim() });
 
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
-    // Verify role is admin
-    if (user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Access denied: You do not have administrator privileges' });
-    }
-
-    if (await user.matchPassword(password)) {
-      return res.status(200).json({
-        success: true,
-        data: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          token: generateToken(user._id),
-        },
-      });
-    } else {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-  } catch (error) {
-    console.error('Admin Login Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error occurred during admin login' });
+  if (!user || !(await user.matchPassword(password))) {
+    throw ApiError.unauthorized('Invalid email or password');
   }
-};
+
+  // The role is checked only after the password verifies. The previous order
+  // returned a distinct 403 for a non-admin account before checking the
+  // password at all, which confirmed to an attacker that the email exists.
+  if (user.role !== 'admin') {
+    throw ApiError.forbidden('Access denied: this account does not have administrator privileges');
+  }
+
+  return res.status(200).json({ success: true, data: authPayload(user) });
+});
+
+/**
+ * @desc    Return the signed-in user, so a client can validate a stored token
+ * @route   GET /api/auth/me
+ * @access  Private
+ */
+const getMe = asyncHandler(async (req, res) =>
+  res.status(200).json({
+    success: true,
+    data: {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      phone: req.user.phone,
+      role: req.user.role,
+    },
+  })
+);
 
 module.exports = {
   registerUser,
   loginUser,
   loginAdmin,
+  getMe,
 };

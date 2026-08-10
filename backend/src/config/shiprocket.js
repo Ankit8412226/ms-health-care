@@ -5,12 +5,15 @@
  */
 
 const https = require('https');
+const env = require('./env');
 
-// ── Shiprocket Credentials (hardcoded as per project requirements) ─────────
-// NOTE: These are the Shiprocket ACCOUNT login credentials, not a bare API key.
-// The client must provide their Shiprocket portal email + password.
-const SHIPROCKET_EMAIL = 'mohdaffanahmad007@gmail.com';
-const SHIPROCKET_PASSWORD = 'fbggKvwZFrQ40Dk6EUgPKw&#O#Ea&dZf';
+// ── Shiprocket credentials ────────────────────────────────────────────────
+// The Shiprocket ACCOUNT login email and password (not a scoped API key).
+// Resolved through config/env.js, which keeps the working values as built-in
+// defaults so nothing needs configuring on Vercel, and lets
+// SHIPROCKET_EMAIL / SHIPROCKET_PASSWORD override them.
+const SHIPROCKET_EMAIL = env.shiprocket.email;
+const SHIPROCKET_PASSWORD = env.shiprocket.password;
 const SHIPROCKET_BASE = 'apiv2.shiprocket.in';
 const SHIPROCKET_API_BASE = '/v1/external';
 
@@ -57,6 +60,12 @@ function shiprocketRequest(method, path, body = null, token = null) {
  * Authenticate with Shiprocket and cache the JWT token (valid 24h).
  */
 async function getToken() {
+  if (!env.shiprocket.configured) {
+    throw new Error(
+      'Shiprocket is not configured. Set SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD.'
+    );
+  }
+
   const now = Date.now();
   if (cachedToken && now < tokenExpiry) {
     return cachedToken;

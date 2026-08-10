@@ -6,6 +6,8 @@ import { Order, Prescription } from "@/context/AppContext";
 import { Product } from "@/types";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
+import { uploadImage, validateUploadFile } from "@/lib/uploadImage";
+import { API_URL } from "@/context/AppContext";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -54,6 +56,43 @@ interface CustomerData {
 }
 
 type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers";
+
+/**
+ * Map an API product document to the frontend Product shape.
+ *
+ * The list endpoint omits the long prose fields (description, howToUse,
+ * benefits, sideEffects, storage) to keep responses small, so those default to
+ * empty here. The edit dialog refetches the full document before populating
+ * the form — see openEditModal.
+ */
+function mapAdminProduct(p: Record<string, any>): Product {
+  return {
+    id: p._id || p.id || "",
+    name: p.name || "",
+    slug: p.slug || "",
+    description: p.description || "",
+    shortDescription: p.shortDescription || "",
+    price: p.price ?? 0,
+    regularPrice: p.regularPrice ?? 0,
+    onSale: Boolean(p.onSale),
+    rating: p.rating ?? 0,
+    reviewCount: p.reviewCount ?? 0,
+    category: p.category || "",
+    categoryName: p.categoryName || "",
+    brand: p.brand || "",
+    images: p.images || [],
+    image: p.image || "",
+    salt: p.salt,
+    dosage: p.dosage,
+    manufacturer: p.manufacturer || "",
+    prescriptionRequired: Boolean(p.prescriptionRequired),
+    packSize: p.packSize || "",
+    storage: p.storage || "",
+    howToUse: p.howToUse || "",
+    sideEffects: p.sideEffects || [],
+    benefits: p.benefits || "",
+  };
+}
 
 export default function AdminPage() {
   // Authentication State
@@ -144,6 +183,9 @@ export default function AdminPage() {
   const [newProdSideEffects, setNewProdSideEffects] = useState("");
   const [newProdStorage, setNewProdStorage] = useState("Store below 25°C. Protect from light and moisture.");
 
+  // Which image slot is currently uploading ("main" or "gallery-<n>"), if any.
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+
   // Success message toast simulation
   const [toastMessage, setToastMessage] = useState<string>("");
 
@@ -222,18 +264,64 @@ export default function AdminPage() {
     });
   }, [prescriptions, searchTerm, statusFilter]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((prod) => {
-      const matchesSearch =
-        prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (prod.salt && prod.salt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        prod.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prod.brand.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter =
-        statusFilter === "all" || prod.category === statusFilter;
-      return matchesSearch && matchesFilter;
-    });
-  }, [products, searchTerm, statusFilter]);
+  // ── Products table (server-side paginated) ────────────────────────────
+  //
+  // The table used to filter and slice the products array held in context.
+  // That worked only because the app downloaded all 1,292 products up front,
+  // which was the single biggest cause of the site feeling slow. The catalogue
+  // is now paginated at the API, so this panel queries it directly — search
+  // and category filtering included, which also means they cover every
+  // product rather than only the ones already in memory.
+  const [adminProducts, setAdminProducts] = useState<Product[]>([]);
+  const [adminProductTotal, setAdminProductTotal] = useState(0);
+  const [productsLoading, setProductsLoading] = useState(false);
+  // Bumped after a create/update/delete to force a refetch.
+  const [productRefreshKey, setProductRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (activeTab !== "inventory" || !isAuthenticated) return;
+
+    let cancelled = false;
+    setProductsLoading(true);
+
+    // Debounced so typing in the search box does not fire a request per key.
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          page: String(productPage),
+          limit: String(itemsPerPage),
+          sort: "newest",
+        });
+        if (searchTerm.trim()) params.set("search", searchTerm.trim());
+        if (statusFilter !== "all") params.set("category", statusFilter);
+
+        const res = await fetch(`${API_URL}/products?${params.toString()}`);
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const json = await res.json();
+        if (cancelled) return;
+
+        if (json.success && Array.isArray(json.data)) {
+          setAdminProducts(json.data.map(mapAdminProduct));
+          setAdminProductTotal(json.total ?? json.data.length);
+        }
+      } catch (err) {
+        if (!cancelled) console.error("Admin product fetch failed:", err);
+      } finally {
+        if (!cancelled) setProductsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [activeTab, isAuthenticated, productPage, searchTerm, statusFilter, productRefreshKey]);
+
+  // Reset to the first page whenever the query changes, otherwise a search
+  // performed while on page 7 returns an empty table.
+  useEffect(() => {
+    setProductPage(1);
+  }, [searchTerm, statusFilter]);
 
   // Group orders by customer and calculate aggregates
   const customers = useMemo(() => {
@@ -300,15 +388,11 @@ export default function AdminPage() {
     setCustomerPage(1);
   };
 
-  // Paginated Products
-  const productMaxPages = useMemo(() => {
-    return Math.ceil(filteredProducts.length / itemsPerPage) || 1;
-  }, [filteredProducts]);
+  // Paginated Products — page count comes from the API's total, not from the
+  // length of a locally held array.
+  const productMaxPages = Math.max(1, Math.ceil(adminProductTotal / itemsPerPage));
   const activeProductPage = Math.min(productPage, productMaxPages);
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (activeProductPage - 1) * itemsPerPage;
-    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredProducts, activeProductPage]);
+  const paginatedProducts = adminProducts;
 
   // Paginated Orders
   const orderMaxPages = useMemo(() => {
@@ -455,6 +539,7 @@ export default function AdminPage() {
     if (res.success) {
       setEditingProductId(null);
       triggerToast(`Product price updated: Sale ₹${numPrice}, MRP ₹${numRegularPrice}`);
+      setProductRefreshKey((k) => k + 1);
     } else {
       triggerToast(`Error: ${res.message || "Failed to update price"}`);
     }
@@ -479,8 +564,28 @@ export default function AdminPage() {
     triggerToast(`Category "${cleanName}" created successfully!`);
   };
 
-  // Helper for starting product edit modal
-  const startEditProduct = (prod: Product) => {
+  /**
+   * Open the edit dialog for a product.
+   *
+   * The row came from the list endpoint, which omits the long prose fields to
+   * keep responses small — so the full document is fetched first. Without this
+   * the form would open with empty description / howToUse / benefits boxes and
+   * saving would blank those fields on a previously complete product.
+   */
+  const startEditProduct = async (row: Product) => {
+    let prod = row;
+    try {
+      const res = await fetch(`${API_URL}/products/${row.id}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) prod = mapAdminProduct(json.data);
+      }
+    } catch (err) {
+      console.error("Could not load full product for editing:", err);
+      triggerToast("Could not load the full product details. Please try again.");
+      return;
+    }
+
     setEditingProduct(prod);
     setNewProdName(prod.name);
     setNewProdSlug(prod.slug);
@@ -493,7 +598,7 @@ export default function AdminPage() {
     setNewProdBrand(prod.brand);
     setNewProdRxReq(prod.prescriptionRequired);
     setNewProdImage(prod.image);
-    setMainImageInputMode(prod.image.startsWith("data:") ? "upload" : "link");
+    setMainImageInputMode("link");
     
     // Map gallery images (filter out the main image if it exists in the array)
     const galleryUrls = prod.images ? prod.images.map(img => img.src).filter(src => src !== prod.image) : [];
@@ -531,31 +636,125 @@ export default function AdminPage() {
     setShowAddProductModal(true);
   };
 
-  // Close formulation modal safely
-  const closeModal = () => {
-    setShowAddProductModal(false);
-    setEditingProduct(null);
+  /**
+   * Has the admin actually entered anything worth protecting?
+   *
+   * For a new product, any filled field counts. For an edit, only a value that
+   * differs from the stored product counts — otherwise merely opening a
+   * product and closing it again would prompt.
+   */
+  const isProductFormDirty = () => {
+    if (editingProduct) {
+      return (
+        newProdName !== editingProduct.name ||
+        newProdSlug !== editingProduct.slug ||
+        newProdPrice !== String(editingProduct.price) ||
+        newProdRegularPrice !== String(editingProduct.regularPrice) ||
+        newProdCategory !== editingProduct.category ||
+        newProdDosage !== (editingProduct.dosage || "") ||
+        newProdPack !== editingProduct.packSize ||
+        newProdMfg !== editingProduct.manufacturer ||
+        newProdBrand !== editingProduct.brand ||
+        newProdRxReq !== editingProduct.prescriptionRequired ||
+        newProdImage !== editingProduct.image ||
+        newProdSalt !== (editingProduct.salt || "") ||
+        newProdDesc !== editingProduct.description ||
+        newProdShortDesc !== editingProduct.shortDescription ||
+        newProdStorage !== editingProduct.storage ||
+        newProdSideEffects !== editingProduct.sideEffects.join(", ")
+      );
+    }
+    return Boolean(
+      newProdName || newProdSlug || newProdPrice || newProdRegularPrice ||
+      newProdDosage || newProdBrand || newProdImage || newProdGallery.length ||
+      newProdSalt || newProdDesc || newProdShortDesc || newProdSideEffects
+    );
   };
 
-  // File upload handler to base64
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+  /**
+   * Close the product modal.
+   *
+   * The backdrop used to be wired straight to this with no guard, so a stray
+   * click anywhere outside the dialog discarded a part-filled product form
+   * instantly — the most annoying thing in the admin panel, and easy to do
+   * while reaching for a field. Closing now confirms first if anything has
+   * been entered, and is refused outright while an image is still uploading
+   * (which would otherwise orphan the upload and lose the URL).
+   *
+   * @param force skip the confirmation, e.g. after a successful save
+   */
+  const closeModal = (force = false) => {
+    if (!force) {
+      if (uploadingImage) {
+        triggerToast("Please wait for the image upload to finish.");
+        return;
+      }
+      if (isProductFormDirty() && !confirm("Discard your changes to this product?")) {
+        return;
+      }
+    }
+    setShowAddProductModal(false);
+    setEditingProduct(null);
+    setUploadingImage(null);
+  };
+
+  // Escape closes the modal, through the same guard as the backdrop.
+  useEffect(() => {
+    if (!showAddProductModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
+  /**
+   * Upload a product image straight to Cloudinary and store the returned URL.
+   *
+   * This previously read the file into a base64 data URI and put that string
+   * into form state, so the whole image was sent inside the product JSON.
+   * Express rejected anything over 100 KB with a 413, which is why saving a
+   * product with a real photo failed — and on the occasions the request did
+   * get through, the base64 blob was written into MongoDB.
+   */
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
+    // Let the same file be re-selected after a failure.
+    e.target.value = "";
+
+    if (!user?.token) {
+      triggerToast("Your session has expired. Please sign in again.");
+      return;
+    }
+
+    const validationError = validateUploadFile(file);
+    if (validationError) {
+      triggerToast(validationError);
+      return;
+    }
+
+    const key = index !== undefined ? `gallery-${index}` : "main";
+    setUploadingImage(key);
+
+    try {
+      const url = await uploadImage(file, "product", user.token);
       if (index !== undefined) {
         setNewProdGallery((prev) => {
           const updated = [...prev];
-          updated[index] = base64String;
+          updated[index] = url;
           return updated.filter(Boolean);
         });
       } else {
-        setNewProdImage(base64String);
+        setNewProdImage(url);
       }
-    };
-    reader.readAsDataURL(file);
+      triggerToast("Image uploaded successfully");
+    } catch (err) {
+      triggerToast(err instanceof Error ? err.message : "Image upload failed. Please try again.");
+    } finally {
+      setUploadingImage(null);
+    }
   };
 
   const removeGalleryImage = (index: number) => {
@@ -584,9 +783,28 @@ export default function AdminPage() {
       ? newProdSideEffects.split(",").map(s => s.trim()).filter(Boolean)
       : ["Mild nausea", "Headache"];
 
+    // Both of these are required by the API and rejected when blank. The
+    // short description used to fall back to a slice of the long description,
+    // which is itself optional in the form — leave both empty and the request
+    // failed with "Product short description is required" pointing at a field
+    // the admin had no obvious reason to fill in.
+    const finalDescription =
+      newProdDesc.trim() ||
+      `Clinical formulation for ${newProdCategory} indications.`;
+    const finalShortDescription =
+      newProdShortDesc.trim() || finalDescription.slice(0, 120);
+
     const defaultImage = "/default-product.png";
     const finalImage = newProdImage.trim() || defaultImage;
-    const finalSlug = newProdSlug.trim() || newProdName.toLowerCase().replace(/\s+/g, "-");
+    // Collapse every run of non-alphanumeric characters, matching the server's
+    // slugify. This previously only replaced whitespace, so a name like
+    // "Mofecon-S 360mg (10 Tab)" produced a slug containing brackets that
+    // disagreed with the one the server derived — its duplicate check looked
+    // up a different value than the one being inserted, and the write failed
+    // on the unique index as an opaque "Server Error creating product".
+    const slugify = (value: string) =>
+      value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    const finalSlug = slugify(newProdSlug.trim() || newProdName);
     const finalBrand = newProdBrand.trim() || newProdMfg;
 
     // Construct images array
@@ -609,8 +827,8 @@ export default function AdminPage() {
         ...editingProduct,
         name: newProdName,
         slug: finalSlug,
-        description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
-        shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
+        description: finalDescription,
+        shortDescription: finalShortDescription,
         price: priceNum,
         regularPrice: regularPriceNum,
         category: newProdCategory,
@@ -629,8 +847,10 @@ export default function AdminPage() {
 
       const res = await updateProduct(updatedProduct);
       if (res.success) {
-        closeModal();
+        closeModal(true); // saved — nothing to discard
         triggerToast(`Updated ${newProdName} successfully!`);
+        // The table reads from the API, so refetch to show the saved values.
+        setProductRefreshKey((k) => k + 1);
       } else {
         triggerToast(`Error: ${res.message || "Failed to update product"}`);
       }
@@ -639,8 +859,8 @@ export default function AdminPage() {
         id: `p_${Date.now()}`,
         name: newProdName,
         slug: finalSlug,
-        description: newProdDesc.trim() || `Clinical immunosuppressant formulation for ${newProdCategory} indications.`,
-        shortDescription: newProdShortDesc.trim() || newProdDesc.trim().slice(0, 120),
+        description: finalDescription,
+        shortDescription: finalShortDescription,
         price: priceNum,
         regularPrice: regularPriceNum,
         onSale: true,
@@ -664,7 +884,8 @@ export default function AdminPage() {
 
       const res = await addProduct(newProduct);
       if (res.success) {
-        closeModal();
+        closeModal(true); // saved — nothing to discard
+        setProductRefreshKey((k) => k + 1);
         // Clear all fields
         setNewProdName("");
         setNewProdSlug("");
@@ -1425,7 +1646,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs">
-                    {filteredProducts.length === 0 ? (
+                    {paginatedProducts.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-12 text-center text-slate-450 font-semibold">
                           No products match search criteria.
@@ -1541,10 +1762,18 @@ export default function AdminPage() {
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => {
-                                  if (confirm(`Are you sure you want to delete ${prod.name} from catalog?`)) {
-                                    deleteProduct(prod.id);
+                                onClick={async () => {
+                                  if (!confirm(`Are you sure you want to delete ${prod.name} from catalog?`)) return;
+                                  // Report what actually happened. This used
+                                  // to announce success unconditionally, so a
+                                  // rejected delete still showed "Deleted…"
+                                  // and the row only reappeared on refresh.
+                                  const res = await deleteProduct(prod.id);
+                                  if (res.success) {
                                     triggerToast(`Deleted ${prod.name} from product catalog.`);
+                                    setProductRefreshKey((k) => k + 1);
+                                  } else {
+                                    triggerToast(`Could not delete: ${res.message || "unknown error"}`);
                                   }
                                 }}
                                 className="p-1.5 hover:bg-red-50 hover:text-red-500 rounded-lg text-slate-400 transition-all cursor-pointer"
@@ -1560,7 +1789,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
-              {renderPagination(productPage, productMaxPages, filteredProducts.length, setProductPage)}
+              {renderPagination(productPage, productMaxPages, adminProductTotal, setProductPage)}
             </div>
           )}
 
@@ -2179,7 +2408,7 @@ export default function AdminPage() {
       {/* ── [MODAL] LAUNCH NEW PRODUCT (Expanded medical fields) ───────── */}
       {showAddProductModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={closeModal} />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => closeModal()} />
           
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 animate-scale-in text-slate-800 flex flex-col max-h-[90vh]">
             {/* Modal Header */}
@@ -2193,7 +2422,7 @@ export default function AdminPage() {
                 </p>
               </div>
               <button
-                onClick={closeModal}
+                onClick={() => closeModal()}
                 className="p-1.5 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -2388,19 +2617,25 @@ export default function AdminPage() {
                 </div>
 
                 {mainImageInputMode === "upload" ? (
-                  <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                  <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                     <input
                       type="file"
                       accept="image/*"
+                      disabled={uploadingImage === "main"}
                       onChange={(e) => handleImageFileChange(e)}
-                      className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-750 file:hover:bg-emerald-100 cursor-pointer w-full"
+                      className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-750 file:hover:bg-emerald-100 cursor-pointer w-full disabled:opacity-50"
                     />
+                    {uploadingImage === "main" && (
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 shrink-0">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <input
                     type="text"
                     placeholder="e.g. https://domain.com/image.jpg"
-                    value={newProdImage.startsWith("data:") ? "" : newProdImage}
+                    value={newProdImage}
                     onChange={(e) => setNewProdImage(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-250 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white font-semibold text-slate-800 placeholder:text-slate-350"
                   />
@@ -2417,9 +2652,10 @@ export default function AdminPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold text-slate-700 truncate">Main Image Loaded</p>
-                      <p className="text-[9px] text-slate-400 font-semibold truncate">
-                        {newProdImage.startsWith("data:") ? "Uploaded Base64 Data" : newProdImage}
-                      </p>
+                      {/* Always a hosted URL now — images are uploaded to
+                          Cloudinary before the product is saved, so there is
+                          no "Uploaded Base64 Data" state to describe. */}
+                      <p className="text-[9px] text-slate-400 font-semibold truncate">{newProdImage}</p>
                     </div>
                     <button
                       type="button"
@@ -2468,16 +2704,24 @@ export default function AdminPage() {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center gap-1 w-full h-full">
-                            <span className="text-[10px] text-slate-400 font-bold">Image Slot {index + 1}</span>
-                            <label className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-650 rounded-lg cursor-pointer transition-all shadow-xs">
-                              Select File
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageFileChange(e, index)}
-                                className="hidden"
-                              />
-                            </label>
+                            {uploadingImage === `gallery-${index}` ? (
+                              <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…
+                              </span>
+                            ) : (
+                              <>
+                                <span className="text-[10px] text-slate-400 font-bold">Image Slot {index + 1}</span>
+                                <label className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-650 rounded-lg cursor-pointer transition-all shadow-xs">
+                                  Select File
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageFileChange(e, index)}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2532,7 +2776,7 @@ export default function AdminPage() {
               <div className="pt-4 border-t border-slate-150 flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={closeModal}
+                  onClick={() => closeModal()}
                   className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-550 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200"
                 >
                   Cancel

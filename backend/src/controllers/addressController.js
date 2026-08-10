@@ -1,99 +1,111 @@
 const Address = require('../models/Address');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const { getPagination, paginatedResponse } = require('../utils/pagination');
+
+/** Fields a client may write. `user` is set from the token, never the body. */
+const WRITABLE_FIELDS = ['name', 'phone', 'flat', 'area', 'city', 'pincode', 'isDefault'];
+
+const pickWritable = (body) => {
+  const out = {};
+  for (const field of WRITABLE_FIELDS) {
+    if (body[field] !== undefined) out[field] = body[field];
+  }
+  return out;
+};
 
 /**
- * @desc    Get all addresses for logged-in user
+ * Keep at most one default address per user.
+ *
+ * Without this, marking a second address default left two flagged, and
+ * checkout picked whichever the database happened to return first.
+ */
+const clearOtherDefaults = (userId, exceptId) =>
+  Address.updateMany(
+    { user: userId, isDefault: true, ...(exceptId ? { _id: { $ne: exceptId } } : {}) },
+    { $set: { isDefault: false } }
+  );
+
+/**
+ * @desc    List the caller's addresses
  * @route   GET /api/addresses
  * @access  Private
  */
-const getAddresses = async (req, res) => {
-  try {
-    const addresses = await Address.find({ user: req.user._id });
-    return res.status(200).json({ success: true, count: addresses.length, data: addresses });
-  } catch (error) {
-    console.error('Get Addresses Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error fetching addresses' });
-  }
-};
+const getAddresses = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req, { defaultLimit: 50 });
+  const filter = { user: req.user._id };
+
+  const [data, total] = await Promise.all([
+    Address.find(filter).sort({ isDefault: -1, createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Address.countDocuments(filter),
+  ]);
+
+  return res.status(200).json(paginatedResponse({ data, total, page, limit }));
+});
 
 /**
- * @desc    Add a new address for logged-in user
+ * @desc    Add an address
  * @route   POST /api/addresses
  * @access  Private
  */
-const addAddress = async (req, res) => {
-  try {
-    const addressData = {
-      ...req.body,
-      user: req.user._id,
-    };
+const addAddress = asyncHandler(async (req, res) => {
+  const payload = pickWritable(req.body);
 
-    const address = await Address.create(addressData);
-    return res.status(201).json({ success: true, data: address });
-  } catch (error) {
-    console.error('Add Address Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error adding address' });
-  }
-};
+  // The first address a user saves becomes their default automatically.
+  const existingCount = await Address.countDocuments({ user: req.user._id });
+  if (existingCount === 0) payload.isDefault = true;
+
+  const address = await Address.create({ ...payload, user: req.user._id });
+
+  if (address.isDefault) await clearOtherDefaults(req.user._id, address._id);
+
+  return res.status(201).json({ success: true, data: address });
+});
 
 /**
- * @desc    Update address details
+ * @desc    Update an address
  * @route   PUT /api/addresses/:id
  * @access  Private
  */
-const updateAddress = async (req, res) => {
-  const { id } = req.params;
+const updateAddress = asyncHandler(async (req, res) => {
+  // Scoping the query by user makes ownership part of the lookup, so there is
+  // no window between "find" and "check owner" and no way to confirm that
+  // another user's address id exists.
+  const address = await Address.findOne({ _id: req.params.id, user: req.user._id });
+  if (!address) throw ApiError.notFound('Address not found');
 
-  try {
-    let address = await Address.findById(id);
+  Object.assign(address, pickWritable(req.body));
+  await address.save();
 
-    if (!address) {
-      return res.status(404).json({ success: false, message: 'Address not found' });
-    }
+  if (address.isDefault) await clearOtherDefaults(req.user._id, address._id);
 
-    // Ensure user owns this address
-    if (address.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Unauthorized access to address' });
-    }
-
-    address = await Address.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    return res.status(200).json({ success: true, data: address });
-  } catch (error) {
-    console.error('Update Address Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error updating address' });
-  }
-};
+  return res.status(200).json({ success: true, data: address });
+});
 
 /**
- * @desc    Delete user address
+ * @desc    Delete an address
  * @route   DELETE /api/addresses/:id
  * @access  Private
  */
-const deleteAddress = async (req, res) => {
-  const { id } = req.params;
+const deleteAddress = asyncHandler(async (req, res) => {
+  const address = await Address.findOneAndDelete({ _id: req.params.id, user: req.user._id }).lean();
+  if (!address) throw ApiError.notFound('Address not found');
 
-  try {
-    const address = await Address.findById(id);
-
-    if (!address) {
-      return res.status(404).json({ success: false, message: 'Address not found' });
+  // Promote another address so the user is never left without a default.
+  if (address.isDefault) {
+    const next = await Address.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+    if (next) {
+      next.isDefault = true;
+      await next.save();
     }
-
-    // Ensure user owns this address
-    if (address.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Unauthorized access to address' });
-    }
-
-    await Address.findByIdAndDelete(id);
-    return res.status(200).json({ success: true, message: 'Address deleted successfully' });
-  } catch (error) {
-    console.error('Delete Address Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server Error deleting address' });
   }
-};
+
+  return res.status(200).json({
+    success: true,
+    message: 'Address deleted successfully',
+    data: { id: address._id },
+  });
+});
 
 module.exports = {
   getAddresses,

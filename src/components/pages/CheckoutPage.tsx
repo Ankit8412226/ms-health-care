@@ -3,8 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   CreditCard, ShieldCheck, PlusCircle, CheckCircle,
-  FileText, Landmark, Wallet, Banknote, MapPin, X, AlertCircle
+  FileText, Landmark, Wallet, Banknote, MapPin, X, AlertCircle, Loader2
 } from "lucide-react";
+import { uploadImage, validateUploadFile } from "@/lib/uploadImage";
 
 // Helper function to load Razorpay SDK dynamically
 const loadRazorpayScript = () => {
@@ -30,7 +31,8 @@ export default function CheckoutPage() {
     prescriptions,
     setActivePage,
     user,
-    discountPercentage
+    discountPercentage,
+    uploadPrescription
   } = useApp();
 
   const [selectedAddrId, setSelectedAddrId] = useState(addresses[0]?.id || "");
@@ -38,6 +40,50 @@ export default function CheckoutPage() {
   const [selectedRxUrl, setSelectedRxUrl] = useState("");
   const [isAddrModalOpen, setIsAddrModalOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Inline prescription upload, so checkout is never left mid-flow.
+  const [rxUploading, setRxUploading] = useState(false);
+  const [rxProgress, setRxProgress] = useState(0);
+  const [rxError, setRxError] = useState("");
+
+  /**
+   * Upload a prescription without leaving checkout, then select it.
+   */
+  const handleInlineRxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // allow re-picking the same file after a failure
+
+    setRxError("");
+
+    const validationError = validateUploadFile(file);
+    if (validationError) {
+      setRxError(validationError);
+      return;
+    }
+    if (!user?.token) {
+      setRxError("Please sign in to upload a prescription.");
+      return;
+    }
+
+    setRxUploading(true);
+    setRxProgress(0);
+    try {
+      const url = await uploadImage(file, "prescription", user.token, setRxProgress);
+      const result = await uploadPrescription(file.name, url);
+      if (!result.success) {
+        setRxError(result.message || "Could not save your prescription. Please try again.");
+        return;
+      }
+      // Select it immediately — the whole point is that the customer can carry
+      // straight on to placing the order.
+      setSelectedRxUrl(url);
+    } catch (err) {
+      setRxError(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setRxUploading(false);
+    }
+  };
 
   // Address Form fields
   const [name, setName] = useState("");
@@ -102,7 +148,10 @@ export default function CheckoutPage() {
     }
 
     if (selectedPayment === "cod") {
-      placeOrder(selectedAddrId, selectedPayment, selectedRxUrl);
+      // placeOrder now reports failure instead of silently faking a placed
+      // order, so surface anything that goes wrong.
+      const res = await placeOrder(selectedAddrId, selectedPayment, selectedRxUrl);
+      if (!res.success) alert(res.message || "Could not place your order. Please try again.");
       return;
     }
 
@@ -165,13 +214,24 @@ export default function CheckoutPage() {
 
             const verifyJson = await verifyRes.json();
             if (verifyJson.success) {
-              // Finalize order local placement
-              placeOrder(selectedAddrId, selectedPayment, selectedRxUrl, {
+              // The signature is forwarded so the server can verify the
+              // payment itself when creating the order. It previously received
+              // only `paymentStatus: "Paid"` and took the client's word for
+              // it, which meant an order could be marked paid without any
+              // money changing hands.
+              const placed = await placeOrder(selectedAddrId, selectedPayment, selectedRxUrl, {
                 transactionId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
-                paymentStatus: "Paid",
+                razorpaySignature: response.razorpay_signature,
               });
+              if (!placed.success) {
+                alert(
+                  `Your payment succeeded but the order could not be saved: ${placed.message}\n\n` +
+                  `Payment reference: ${response.razorpay_payment_id}\n` +
+                  `Please contact support with this reference — you have not been charged twice.`
+                );
+              }
             } else {
               alert(`Payment verification failed: ${verifyJson.message}`);
             }
@@ -242,14 +302,46 @@ export default function CheckoutPage() {
                     </span>
                   </button>
                 ))}
-                <button
-                  onClick={() => setActivePage("upload")}
-                  className="p-4 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-center hover:border-blue-500 hover:text-blue-500 transition-colors flex flex-col items-center justify-center gap-1.5"
+                {/* Inline upload.
+                    This used to be `setActivePage("upload")`, which threw the
+                    customer out of checkout onto a separate page. After
+                    uploading, that page's only exit was "Continue Shopping",
+                    so they had to find their way back to checkout and redo
+                    their address and payment selections — and the prescription
+                    they had just uploaded was not even selected when they got
+                    there. Uploading happens here now; the new slip is selected
+                    automatically and checkout is never left. */}
+                <label
+                  className={`p-4 rounded-2xl border-2 border-dashed text-center transition-colors flex flex-col items-center justify-center gap-1.5 ${
+                    rxUploading
+                      ? "border-blue-400 text-blue-500 cursor-wait"
+                      : "border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-500 cursor-pointer"
+                  }`}
                 >
-                  <PlusCircle className="w-5 h-5 text-gray-400" />
-                  <span className="text-xs font-bold">Upload New Prescription</span>
-                </button>
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif"
+                    className="hidden"
+                    disabled={rxUploading}
+                    onChange={handleInlineRxUpload}
+                  />
+                  {rxUploading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                      <span className="text-xs font-bold">Uploading… {rxProgress}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="w-5 h-5 text-gray-400" />
+                      <span className="text-xs font-bold">Upload New Prescription</span>
+                    </>
+                  )}
+                </label>
               </div>
+
+              {rxError && (
+                <p className="text-xs font-semibold text-red-600 dark:text-red-400">{rxError}</p>
+              )}
             </div>
           )}
 

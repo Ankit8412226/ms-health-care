@@ -1,18 +1,22 @@
 "use client";
 import { useState, useRef } from "react";
 import { useApp } from "@/context/AppContext";
+import { uploadImage, validateUploadFile, MAX_UPLOAD_BYTES } from "@/lib/uploadImage";
 import {
-  Upload, FileText, CheckCircle, Sparkles,
+  Upload, FileText, CheckCircle,
   ArrowRight, ShieldCheck, RefreshCw
 } from "lucide-react";
 
 export default function UploadPage() {
-  const { uploadPrescription, setActivePage } = useApp();
+  const { uploadPrescription, setActivePage, user, cart } = useApp();
+
+  // True when the cart holds something that cannot ship without a prescription.
+  const cartNeedsRx = cart.some((item) => item.product.prescriptionRequired);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [ocrSuccess, setOcrSuccess] = useState(false);
-  const [ocrData, setOcrData] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,55 +30,63 @@ export default function UploadPage() {
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
+  /**
+   * Upload one prescription.
+   *
+   * What this replaces: the file was read into a base64 data URI and POSTed as
+   * JSON to our API, which rejected anything over 100 KB — so every real
+   * photo failed. The failure was then swallowed and the success screen shown
+   * regardless, complete with two hardcoded "detected" medicine names that had
+   * nothing to do with the uploaded document.
+   *
+   * Now the file goes straight to Cloudinary and the record is only marked
+   * uploaded once the API confirms it saved.
+   */
   const processFile = async (file: File) => {
-    setSelectedFile(file);
-    setScanning(true);
-    setOcrSuccess(false);
     setErrorMsg("");
+    setUploadSuccess(false);
+    setProgress(0);
+
+    // Validate before showing any progress UI. Drag-and-drop bypasses the
+    // input's `accept` filter, so this is the only real check.
+    const validationError = validateUploadFile(file);
+    if (validationError) {
+      setSelectedFile(file);
+      setErrorMsg(validationError);
+      return;
+    }
+
+    if (!user?.token) {
+      setSelectedFile(file);
+      setErrorMsg("Please sign in before uploading a prescription.");
+      return;
+    }
+
+    setSelectedFile(file);
+    setUploading(true);
 
     try {
-      // Convert file to Base64 to send to backend for signed upload
-      let fileData = "";
-      try {
-        fileData = await fileToBase64(file);
-      } catch (base64Err) {
-        console.error("Base64 conversion failed:", base64Err);
-        setErrorMsg("Failed to read the prescription file.");
-        setScanning(false);
+      const url = await uploadImage(file, "prescription", user.token, setProgress);
+
+      const result = await uploadPrescription(file.name, url);
+      if (!result.success) {
+        setErrorMsg(result.message || "Could not save your prescription. Please try again.");
         return;
       }
 
-      // 2. Perform OCR simulation and upload prescription
-      setTimeout(async () => {
-        try {
-          const mockMeds = ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"];
-          setOcrData(mockMeds);
-          
-          await uploadPrescription(file.name, fileData);
-          
-          setScanning(false);
-          setOcrSuccess(true);
-        } catch (err: any) {
-          console.error("Prescription record insertion failed:", err);
-          setErrorMsg(err.message || "Failed to save prescription to database.");
-          setScanning(false);
-        }
-      }, 2000);
-
-    } catch (err: any) {
-      console.error("Upload process error:", err);
-      setErrorMsg(err.message || "Failed to process prescription upload.");
-      setScanning(false);
+      setUploadSuccess(true);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const retry = () => {
+    setErrorMsg("");
+    setSelectedFile(null);
+    setProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -110,18 +122,21 @@ export default function UploadPage() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all flex flex-col items-center justify-center min-h-[300px] cursor-pointer ${
+            className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all flex flex-col items-center justify-center min-h-[300px] ${
+              uploading ? "cursor-wait opacity-60" : "cursor-pointer"
+            } ${
               dragActive
                 ? "border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20"
                 : "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-emerald-400"
             }`}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !uploading && fileInputRef.current?.click()}
           >
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif"
               className="hidden"
+              disabled={uploading}
               onChange={handleFileChange}
             />
 
@@ -130,9 +145,18 @@ export default function UploadPage() {
             </div>
 
             <h3 className="text-base font-bold text-gray-800 dark:text-white mb-1">Drag and drop your file here</h3>
-            <p className="text-xs text-gray-400 max-w-xs mb-4">Supports PDF, JPEG, PNG formats. Maximum size 8MB.</p>
-            <button className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20">
-              Browse Files
+            {/* The stated limit now matches what the code actually enforces —
+                it previously advertised 8MB while the API rejected anything
+                over 100KB. */}
+            <p className="text-xs text-gray-400 max-w-xs mb-4">
+              Supports PDF, JPEG, PNG and WEBP. Maximum size {MAX_UPLOAD_BYTES / 1024 / 1024}MB.
+            </p>
+            <button
+              type="button"
+              disabled={uploading}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20"
+            >
+              {uploading ? "Uploading…" : "Browse Files"}
             </button>
           </div>
 
@@ -160,34 +184,75 @@ export default function UploadPage() {
                   </div>
                 </div>
 
-                {scanning && (
+                {uploading && (
                   <div className="space-y-3 text-center">
                     <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
-                    <span className="text-xs font-bold text-gray-850 dark:text-gray-200 block">Uploading Prescription...</span>
-                    <p className="text-[10px] text-gray-400">Please wait while your document is securely transmitted.</p>
+                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                      Uploading Prescription… {progress}%
+                    </span>
+                    {/* Real progress from the upload itself. A large photo on a
+                        phone connection takes a while; a bare spinner gave no
+                        indication anything was happening. */}
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-600 transition-all duration-200"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-400">Your document is being transmitted securely.</p>
                   </div>
                 )}
- 
-                {errorMsg && (
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl text-xs text-red-805 text-red-600 dark:text-red-400 text-center space-y-2 font-medium">
+
+                {errorMsg && !uploading && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl text-xs text-red-600 dark:text-red-400 text-center space-y-3 font-medium">
                     <span className="font-bold block">Upload Failed</span>
                     <p>{errorMsg}</p>
+                    <button
+                      onClick={retry}
+                      className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Try Again
+                    </button>
                   </div>
                 )}
- 
-                {ocrSuccess && (
+
+                {uploadSuccess && (
                   <div className="space-y-4 text-center">
                     <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
                       <CheckCircle className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-gray-800 dark:text-white">Prescription Uploaded</h3>
-                      <p className="text-[11px] text-gray-400 mt-1">Our clinical experts will review your prescription slip and package the correct items.</p>
+                      {/* No longer claims the prescription has been "verified"
+                          or lists detected medicines. Those were hardcoded
+                          placeholders shown before any pharmacist had looked
+                          at the document. */}
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Saved successfully. Our pharmacist will review it and contact you if anything needs clarifying.
+                      </p>
                     </div>
- 
+
+
+                    {/* If there is a prescription-only item waiting in the
+                        cart, the customer almost certainly came here from
+                        checkout — offer the way back rather than dropping them
+                        on the shop page to find it themselves. */}
+                    {cartNeedsRx && (
+                      <button
+                        onClick={() => setActivePage("checkout")}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
+                      >
+                        Return to Checkout <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setActivePage("shop")}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
+                      className={`w-full flex items-center justify-center gap-2 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        cartNeedsRx
+                          ? "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200"
+                          : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md"
+                      }`}
                     >
                       Continue Shopping <ArrowRight className="w-4 h-4" />
                     </button>

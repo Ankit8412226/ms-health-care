@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const orderItemSchema = new mongoose.Schema({
   product: {
@@ -117,9 +118,16 @@ const orderSchema = new mongoose.Schema(
 // Pre-validate to auto-generate formatted order ID if not present
 orderSchema.pre('validate', function (next) {
   if (!this.orderId) {
-    this.orderId = `OD-${Math.floor(100000 + Math.random() * 900000)}`;
+    // A 6-digit random number over a unique index collides sooner than it
+    // looks: by the birthday bound there is a ~50% chance of at least one
+    // clash within roughly 1,100 orders, and each clash surfaced as a failed
+    // checkout. Seconds-since-epoch makes the value monotonic, and 4 random
+    // base-36 characters separate orders placed in the same second.
+    const stamp = Math.floor(Date.now() / 1000).toString(36).toUpperCase();
+    const rand = crypto.randomBytes(3).toString('hex').slice(0, 4).toUpperCase();
+    this.orderId = `OD-${stamp}${rand}`;
   }
-  
+
   // Set default prescription status if prescriptionUrl exists
   if (this.prescriptionUrl && !this.prescriptionStatus) {
     this.prescriptionStatus = 'Pending Review';
@@ -127,6 +135,15 @@ orderSchema.pre('validate', function (next) {
   
   next();
 });
+
+// Indexes matching how orders are actually queried. Without the compound
+// index, "my orders" was a full collection scan followed by an in-memory sort
+// on every dashboard load.
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+// Supports the review-eligibility check (has this user received this product?).
+orderSchema.index({ user: 1, status: 1, 'items.product': 1 });
 
 const Order = mongoose.model('Order', orderSchema);
 

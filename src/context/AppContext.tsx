@@ -125,8 +125,15 @@ interface AppContextType {
     addressId: string,
     paymentMethod: string,
     prescriptionUrl?: string,
-    paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
-  ) => void;
+    // `paymentStatus` is gone: the server derives it from the Razorpay
+    // signature rather than accepting a client-declared value.
+    paymentDetails?: {
+      transactionId?: string;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
+    }
+  ) => Promise<{ success: boolean; message?: string }>;
   trackOrder: (orderId: string) => Promise<{
     status: string;
     awbCode?: string;
@@ -135,7 +142,12 @@ interface AppContextType {
     trackingData?: unknown;
   } | null>;
   prescriptions: Prescription[];
-  uploadPrescription: (name: string, url: string) => void;
+  // Returns a result rather than void so callers can tell success from
+  // failure. It previously returned void and swallowed every error, which is
+  // why a failed upload still showed a success screen.
+  uploadPrescription: (name: string, url: string) => Promise<{ success: boolean; message?: string }>;
+  refreshPrescriptions: () => Promise<void>;
+  searchProducts: (query: string, limit?: number) => Promise<Product[]>;
   attachPrescriptionToOrder: (orderId: string, prescriptionUrl: string) => Promise<boolean>;
   couponCode: string;
   discountPercentage: number;
@@ -148,7 +160,7 @@ interface AppContextType {
   updateOrderStatus: (orderId: string, status?: Order["status"], prescriptionStatus?: Order["prescriptionStatus"]) => void;
   updatePrescriptionStatus: (rxId: string, status: Prescription["status"], extractedMedicines?: string[]) => void;
   updateProductPrice: (productId: string, price: number, regularPrice: number) => Promise<{ success: boolean; message?: string }>;
-  deleteProduct: (productId: string) => void;
+  deleteProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
   addProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
   updateProduct: (product: Product) => Promise<{ success: boolean; message?: string }>;
   categories: { id: string; name: string; icon: string }[];
@@ -294,38 +306,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Fetch products & categories from API on mount ─────────────────────
+  //
+  // This used to load 24 products, then 800ms later re-fetch the ENTIRE
+  // catalogue with no limit — 1,292 products, 3.68 MB of JSON, on every single
+  // page load, on every page of the site. It was the dominant cost of a visit
+  // and the main reason the site felt slow on Vercel.
+  //
+  // Nothing actually needed the full list: the shop page paginates against the
+  // API itself, and the only other consumers were the header/hero search boxes
+  // (now server-side, see searchProducts) and the home page's featured strip.
+  // So we fetch one page of on-sale products and stop.
   const fetchProducts = useCallback(async () => {
     try {
-      // 1. Fetch initial limited products for instant load
-      const resLimit = await fetch(`${API_URL}/products?limit=24`);
-      if (resLimit.ok) {
-        const json = await resLimit.json();
+      const res = await fetch(`${API_URL}/products?limit=24&sort=popular`);
+      if (res.ok) {
+        const json = await res.json();
         if (json.success && json.data) {
-          const mapped = json.data.map(mapApiProduct);
-          setProducts(mapped);
+          setProducts(json.data.map(mapApiProduct));
         }
       }
-      setLoading(false); // Enable interactive state immediately
-
-      // 2. Fetch the remaining products in the background after page mounts
-      setTimeout(async () => {
-        try {
-          const resAll = await fetch(`${API_URL}/products`);
-          if (resAll.ok) {
-            const jsonAll = await resAll.json();
-            if (jsonAll.success && jsonAll.data) {
-              const mapped = jsonAll.data.map(mapApiProduct);
-              setProducts(mapped);
-            }
-          }
-        } catch (err) {
-          console.warn("Background progressive fetch failed:", err);
-        }
-      }, 800); // 800ms delay to let the initial animation/render complete smoothly
-
     } catch (err) {
       console.warn("API unreachable:", err);
+    } finally {
       setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Search the catalogue server-side.
+   *
+   * The header and hero search boxes used to filter the in-memory product
+   * array, which only worked because the whole catalogue had been downloaded
+   * up front. Querying the API instead means search covers all 1,292 products
+   * while the browser holds 24.
+   */
+  const searchProducts = useCallback(async (query: string, limit = 8): Promise<Product[]> => {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    try {
+      const res = await fetch(
+        `${API_URL}/products?search=${encodeURIComponent(q)}&limit=${limit}`
+      );
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data)) return [];
+      return json.data.map(mapApiProduct);
+    } catch {
+      return [];
     }
   }, []);
 
@@ -390,7 +417,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // If admin, load all orders & prescriptions
       if (user.role === "admin") {
         try {
-          const resOrders = await fetch(`${API_URL}/orders`, {
+          // Explicit limit: list endpoints are paginated now (default 20), and the
+          // admin panel expects the full working set in one go.
+          const resOrders = await fetch(`${API_URL}/orders?limit=100`, {
             headers: { Authorization: `Bearer ${user.token}` },
           });
           const jsonOrders = await resOrders.json();
@@ -435,7 +464,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setOrders(mappedOrders);
           }
 
-          const resRx = await fetch(`${API_URL}/prescriptions`, {
+          const resRx = await fetch(`${API_URL}/prescriptions?limit=100`, {
             headers: { Authorization: `Bearer ${user.token}` },
           });
           const jsonRx = await resRx.json();
@@ -461,7 +490,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Normal user: load my orders & my prescriptions
         try {
-          const resOrders = await fetch(`${API_URL}/orders/myorders`, {
+          const resOrders = await fetch(`${API_URL}/orders/myorders?limit=50`, {
             headers: { Authorization: `Bearer ${user.token}` },
           });
           const jsonOrders = await resOrders.json();
@@ -501,7 +530,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setOrders(mappedOrders);
           }
 
-          const resRx = await fetch(`${API_URL}/prescriptions/myprescriptions`, {
+          const resRx = await fetch(`${API_URL}/prescriptions/myprescriptions?limit=50`, {
             headers: { Authorization: `Bearer ${user.token}` },
           });
           const jsonRx = await resRx.json();
@@ -747,38 +776,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAddresses((prev) => prev.filter((a) => a.id !== id));
   };
 
-  // ── Orders (client-side for demo) ─────────────────────────────────────
+  // ── Orders ────────────────────────────────────────────────────────────
+  /**
+   * Place an order.
+   *
+   * An order exists only if the API says so. The previous version had a
+   * "fallback client-side placement" branch: whenever the request failed —
+   * network error, validation error, expired session — it pushed a fake order
+   * into local state, cleared the cart and navigated to the success page. The
+   * customer saw an order confirmation and an order number for something that
+   * was never recorded. That branch is gone; failures are returned to the
+   * caller and the cart is left untouched so the customer can retry.
+   *
+   * Note `discountPercentage` is no longer sent: the server resolves the
+   * coupon code itself, because a client-supplied percentage could be set to
+   * 100 to check out for free.
+   */
   const placeOrder = async (
     addressId: string,
     paymentMethod: string,
     prescriptionUrl?: string,
-    paymentDetails?: { transactionId?: string; razorpayOrderId?: string; razorpayPaymentId?: string; paymentStatus?: "Pending" | "Paid" }
-  ) => {
-    const address = addresses.find((a) => a.id === addressId) || addresses[0];
-    const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-    const discount = Math.round(subtotal * (discountPercentage / 100));
-    const deliveryFee = paymentMethod === "cod" ? 99 : (subtotal - discount >= 1100 ? 0 : 49);
-    const total = subtotal - discount + deliveryFee;
+    paymentDetails?: {
+      transactionId?: string;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
+    }
+  ): Promise<{ success: boolean; message?: string }> => {
+    if (!user?.token) {
+      return { success: false, message: "Please sign in to place an order." };
+    }
+    if (cart.length === 0) {
+      return { success: false, message: "Your cart is empty." };
+    }
 
-    const localNewOrder: Order = {
-      id: generateOrderId(),
-      items: [...cart],
-      subtotal,
-      discount,
-      deliveryFee,
-      total,
-      address: address || { id: "default", name: "Guest", phone: "", flat: "", area: "", city: "", pincode: "", isDefault: true },
-      paymentMethod,
-      date: new Date().toISOString().split("T")[0],
-      status: "Placed",
-      prescriptionUrl,
-      prescriptionStatus: prescriptionUrl ? "Pending Review" : undefined,
-      paymentStatus: paymentDetails?.paymentStatus || (paymentMethod === "cod" ? "Pending" : "Paid"),
-    };
-
-    if (user && user.token) {
-      try {
-        const payload = {
+    try {
+      const res = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
           addressId,
           items: cart.map((item) => ({
             productId: item.product.id,
@@ -787,143 +826,155 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           paymentMethod: paymentMethod === "cod" ? "COD" : "Online",
           prescriptionUrl,
           couponCode,
-          discountPercentage,
-          paymentDetails, // Pass actual Razorpay details (txId, paidAt) to DB
+          // Carries the Razorpay signature so the server can verify the
+          // payment itself rather than trusting a client-declared status.
+          paymentDetails,
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.success || !json?.data) {
+        const fieldError = Array.isArray(json?.errors)
+          ? json.errors.map((e: { message: string }) => e.message).join(", ")
+          : null;
+        return {
+          success: false,
+          message:
+            fieldError ||
+            json?.message ||
+            `Could not place your order (error ${res.status}). Your cart has not been changed.`,
         };
-
-        const res = await fetch(`${API_URL}/orders`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const json = await res.json();
-        if (json.success && json.data) {
-          const dbOrder: Order = {
-            id: json.data.orderId || json.data._id || json.data.id,
-            items: [...cart], // keep local resolved product list for frontend display
-            subtotal: json.data.subtotal,
-            discount: json.data.discount,
-            deliveryFee: json.data.deliveryFee,
-            total: json.data.total,
-            address: json.data.address,
-            paymentMethod: json.data.paymentMethod,
-            date: new Date(json.data.createdAt).toISOString().split("T")[0],
-            status: json.data.status,
-            prescriptionUrl: json.data.prescriptionUrl,
-            prescriptionStatus: json.data.prescriptionStatus,
-            paymentStatus: json.data.paymentStatus,
-            paymentDetails: json.data.paymentDetails, // Map real payment details
-            user: user ? {
-              name: user.name,
-              email: user.email,
-              phone: user.phone,
-            } : undefined,
-          };
-          setOrders((prev) => [dbOrder, ...prev]);
-          clearCart();
-          removeCoupon();
-          setActivePage("success");
-          return;
-        }
-      } catch (err) {
-        console.warn("API place order failed, placing client-side:", err);
       }
-    }
 
-    // fallback client-side placement
-    setOrders((prev) => [localNewOrder, ...prev]);
-    clearCart();
-    removeCoupon();
-    setActivePage("success");
+      const dbOrder: Order = {
+        id: json.data.orderId || json.data._id || json.data.id,
+        items: [...cart], // keep the locally resolved products for display
+        subtotal: json.data.subtotal,
+        discount: json.data.discount,
+        deliveryFee: json.data.deliveryFee,
+        total: json.data.total,
+        address: json.data.address,
+        paymentMethod: json.data.paymentMethod,
+        date: new Date(json.data.createdAt).toISOString().split("T")[0],
+        status: json.data.status,
+        prescriptionUrl: json.data.prescriptionUrl,
+        prescriptionStatus: json.data.prescriptionStatus,
+        paymentStatus: json.data.paymentStatus,
+        paymentDetails: json.data.paymentDetails,
+        user: { name: user.name, email: user.email, phone: user.phone },
+      };
+
+      setOrders((prev) => [dbOrder, ...prev]);
+      clearCart();
+      removeCoupon();
+      setActivePage("success");
+      return { success: true };
+    } catch (err) {
+      console.error("Place order failed:", err);
+      return {
+        success: false,
+        message: "Could not reach the server. Your cart has not been changed — please try again.",
+      };
+    }
   };
 
   // ── Prescriptions (Integrated with Backend) ───────────────────────────
-  const uploadPrescription = async (name: string, url: string) => {
-    const localNewRx: Prescription = {
-      id: `rx_${Date.now()}`,
-      name,
-      url,
-      date: new Date().toISOString().split("T")[0],
-      status: "Processing (OCR)",
-    };
+  /** Re-read the signed-in user's prescriptions from the API. */
+  const refreshPrescriptions = useCallback(async () => {
+    if (!user?.token) return;
+    try {
+      // The user-scoped route. This used to poll GET /api/prescriptions, which
+      // is admin-only — so for an ordinary customer it answered 403 every time
+      // and the status on screen never updated.
+      const res = await fetch(`${API_URL}/prescriptions/myprescriptions`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data)) return;
 
-    if (user && user.token) {
-      try {
-        const res = await fetch(`${API_URL}/prescriptions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({ name, url }),
-        });
-        const json = await res.json();
-        if (json.success && json.data) {
-          const dbRx: Prescription = {
-            id: json.data._id || json.data.id,
-            name: json.data.name,
-            url: json.data.url,
-            date: new Date(json.data.createdAt).toISOString().split("T")[0],
-            status: json.data.status,
-            extractedMedicines: json.data.extractedMedicines || [],
-          };
-          setPrescriptions((prev) => [dbRx, ...prev]);
+      setPrescriptions(
+        json.data.map((item: Record<string, any>) => ({
+          id: item._id || item.id,
+          name: item.name,
+          url: item.url,
+          date: new Date(item.createdAt).toISOString().split("T")[0],
+          status: item.status,
+          extractedMedicines: item.extractedMedicines || [],
+        }))
+      );
+    } catch (err) {
+      console.warn("Refresh prescriptions failed:", err);
+    }
+  }, [user]);
 
-          // Poll for OCR verification (since backend simulated it to finish in 5 seconds)
-          setTimeout(async () => {
-            try {
-              const checkRes = await fetch(`${API_URL}/prescriptions`, {
-                headers: { Authorization: `Bearer ${user.token}` },
-              });
-              const checkJson = await checkRes.json();
-              if (checkJson.success && checkJson.data) {
-                const found = checkJson.data.find((item: any) => item._id === dbRx.id || item.id === dbRx.id);
-                if (found) {
-                  setPrescriptions((prevList) =>
-                    prevList.map((item) =>
-                      item.id === dbRx.id
-                        ? {
-                            ...item,
-                            status: found.status,
-                            extractedMedicines: found.extractedMedicines || [],
-                          }
-                        : item
-                    )
-                  );
-                }
-              }
-            } catch (err) {
-              console.warn("OCR polling failed:", err);
-            }
-          }, 6000);
-
-          return;
-        }
-      } catch (err) {
-        console.warn("API upload prescription failed:", err);
-      }
+  /**
+   * Persist an already-uploaded prescription.
+   *
+   * `url` must be a hosted https URL — the file is sent straight to Cloudinary
+   * by lib/uploadImage before this is called.
+   *
+   * This function used to swallow every failure and insert a fabricated local
+   * record instead, then flip it to "Verified" after four seconds with two
+   * hardcoded medicine names. The customer saw "Prescription Uploaded" and a
+   * verified status while nothing had been saved and no pharmacist had seen
+   * anything. On a pharmacy that is the worst possible failure mode, so there
+   * is no longer any fallback: it either saves or it reports why not.
+   */
+  const uploadPrescription = async (
+    name: string,
+    url: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    if (!user?.token) {
+      return { success: false, message: "Please sign in to upload a prescription." };
     }
 
-    // Fallback client-side behavior
-    setPrescriptions((prev) => [localNewRx, ...prev]);
-    setTimeout(() => {
-      setPrescriptions((prevList) =>
-        prevList.map((item) => {
-          if (item.id === localNewRx.id) {
-            return {
-              ...item,
-              status: "Verified" as const,
-              extractedMedicines: ["Metformin Glycomet 500mg SR", "Atorvastatin Lipivas 10mg"],
-            };
-          }
-          return item;
-        })
-      );
-    }, 4000);
+    try {
+      const res = await fetch(`${API_URL}/prescriptions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ name, url }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.success || !json?.data) {
+        const fieldError = Array.isArray(json?.errors)
+          ? json.errors.map((e: { message: string }) => e.message).join(", ")
+          : null;
+        return {
+          success: false,
+          message:
+            fieldError ||
+            json?.message ||
+            `Could not save your prescription (error ${res.status}). Please try again.`,
+        };
+      }
+
+      setPrescriptions((prev) => [
+        {
+          id: json.data._id || json.data.id,
+          name: json.data.name,
+          url: json.data.url,
+          date: new Date(json.data.createdAt).toISOString().split("T")[0],
+          status: json.data.status,
+          extractedMedicines: json.data.extractedMedicines || [],
+        },
+        ...prev,
+      ]);
+
+      return { success: true };
+    } catch (err) {
+      console.error("Upload prescription failed:", err);
+      return {
+        success: false,
+        message: "Could not reach the server. Check your connection and try again.",
+      };
+    }
   };
 
   // ── Order Tracking via Shiprocket ──────────────────────────────────────
@@ -1077,20 +1128,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const deleteProduct = async (productId: string) => {
-    try {
-      if (user && user.role === "admin") {
-        await fetch(`${API_URL}/products/${productId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-      }
-    } catch (err) {
-      console.warn("API delete product failed:", err);
+  /**
+   * Delete a product.
+   *
+   * The row is removed from local state only when the API confirms the delete.
+   * Previously the response was ignored entirely and the row disappeared
+   * regardless — so a 403 or a network failure looked exactly like success
+   * until the admin refreshed and the product was still there.
+   */
+  const deleteProduct = async (
+    productId: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    if (!user || user.role !== "admin") {
+      return { success: false, message: "Not authorized as admin" };
     }
-    setProducts((prev) => prev.filter((prod) => prod.id !== productId));
+
+    try {
+      const res = await fetch(`${API_URL}/products/${productId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.success) {
+        return {
+          success: false,
+          message: json?.message || `Failed to delete product (error ${res.status})`,
+        };
+      }
+
+      setProducts((prev) => prev.filter((prod) => prod.id !== productId));
+      return { success: true };
+    } catch (err) {
+      console.error("API delete product failed:", err);
+      return { success: false, message: "Network error deleting product" };
+    }
   };
 
   const addProduct = async (product: Product): Promise<{ success: boolean; message?: string }> => {
@@ -1314,6 +1386,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         trackOrder,
         prescriptions,
         uploadPrescription,
+        refreshPrescriptions,
+        searchProducts,
         attachPrescriptionToOrder,
         couponCode,
         discountPercentage,

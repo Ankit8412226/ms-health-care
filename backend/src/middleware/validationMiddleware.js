@@ -34,10 +34,14 @@ const registerValidation = [
     .withMessage('Password is required')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
-  body('role')
-    .optional()
-    .isIn(['user', 'admin'])
-    .withMessage('Role must be either user or admin'),
+  body('phone')
+    .trim()
+    .notEmpty()
+    .withMessage('Phone number is required'),
+  // `role` is intentionally absent. It was previously accepted here with
+  // .isIn(['user','admin']), which let any anonymous caller register themselves
+  // as an administrator. The controller now hardcodes role: 'user'; validating
+  // the field would only imply it is still honoured.
   validateResult,
 ];
 
