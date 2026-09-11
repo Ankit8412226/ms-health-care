@@ -10,9 +10,10 @@ import {
   Search, ArrowRight, Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf,
   ShieldCheck, ShieldAlert, LayoutGrid, Folder, Truck, Clock, CreditCard, Upload,
   Star, ChevronRight, Smartphone, Play, CheckCircle2, TrendingUp, Tag, X,
-  Mail, MapPin, Bone, Droplet, Wind, Syringe, Heart, Moon
+  Mail, MapPin, Bone, Droplet, Wind, Syringe, Heart, Moon, BookOpen, User, Calendar
 } from "lucide-react";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   Pill, Activity, HeartPulse, Sparkles, Baby, Sun, Leaf, ShieldCheck, ShieldAlert, LayoutGrid, Folder,
@@ -309,7 +310,7 @@ const TESTIMONIALS = [
 ];
 
 export default function HomePage() {
-  const { setActivePage, setSelectedProductId, products, categories, subscribeNewsletter } = useApp();
+  const { setActivePage, setSelectedProductId, products, categories, blogs, subscribeNewsletter } = useApp();
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
@@ -1207,6 +1208,101 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== LATEST HEALTH ARTICLES & BLOGS SECTION ===== */}
+      <section className="py-20 bg-white dark:bg-gray-950 border-t border-gray-150 dark:border-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+            <div>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-2">
+                Medical &amp; Wellness Insights
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                Latest Health Articles <Sparkles className="w-5 h-5 text-emerald-500" />
+              </h2>
+            </div>
+            <button
+              onClick={() => setActivePage("blog")}
+              className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer group"
+            >
+              Explore All Articles <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {blogs.slice(0, 3).map((blog) => (
+              <div
+                key={blog.id}
+                onClick={() => setActivePage("blog")}
+                className="group bg-slate-50/50 dark:bg-gray-900/60 border border-slate-200/80 dark:border-gray-800 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 flex flex-col cursor-pointer"
+              >
+                {/* Featured Image or Gradient Badge for Text-Only Blogs */}
+                {blog.image ? (
+                  <div className="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-gray-800">
+                    <SafeImage
+                      src={blog.image}
+                      alt={blog.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 shadow-sm border border-white/20">
+                      {blog.category}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-48 w-full bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 p-6 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="bg-white/20 text-white backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-extrabold border border-white/20">
+                        {blog.category}
+                      </span>
+                      <span className="text-[10px] font-extrabold text-emerald-100 uppercase tracking-widest">
+                        Text Only Article
+                      </span>
+                    </div>
+                    <div className="relative z-10 space-y-1">
+                      <BookOpen className="w-6 h-6 text-emerald-200 mb-1" />
+                      <h4 className="text-base font-black text-white line-clamp-2 leading-snug">
+                        {blog.title}
+                      </h4>
+                    </div>
+                  </div>
+                )}
+
+                {/* Article Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3 text-emerald-500" /> {blog.author || "Dr. Admin"}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-emerald-500" /> {blog.readTime || "5 min read"}
+                      </span>
+                    </div>
+
+                    {blog.image && (
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                        {blog.title}
+                      </h3>
+                    )}
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed font-medium">
+                      {blog.desc || blog.content.replace(/[#*`]/g, "").slice(0, 120)}...
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-200/60 dark:border-gray-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <span>Read Full Article</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

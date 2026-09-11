@@ -11,6 +11,7 @@ const newsletterRoutes = require('./newsletterRoutes');
 const reviewRoutes = require('./reviewRoutes');
 const shiprocketRoutes = require('./shiprocketRoutes');
 const uploadRoutes = require('./uploadRoutes');
+const blogRoutes = require('./blogRoutes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -23,5 +24,6 @@ router.use('/newsletters', newsletterRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/shiprocket', shiprocketRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/blogs', blogRoutes);
 
 module.exports = router;

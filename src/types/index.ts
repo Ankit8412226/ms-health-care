@@ -37,3 +37,20 @@ export interface Category {
   name: string;
   icon: string;
 }
+
+export interface Blog {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  author: string;
+  readTime: string;
+  image?: string;
+  desc: string;
+  content: string;
+  tags: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  isPublished?: boolean;
+}
+

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import { Order, Prescription } from "@/context/AppContext";
-import { Product } from "@/types";
+import { Product, Blog } from "@/types";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
 import { uploadImage, validateUploadFile } from "@/lib/uploadImage";
@@ -43,7 +43,9 @@ import {
   Navigation,
   ExternalLink,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Upload
 } from "lucide-react";
 
 interface CustomerData {
@@ -55,7 +57,7 @@ interface CustomerData {
   orders: Order[];
 }
 
-type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers";
+type AdminTab = "overview" | "orders" | "prescriptions" | "inventory" | "categories" | "customers" | "blogs";
 
 /**
  * Map an API product document to the frontend Product shape.
@@ -147,6 +149,10 @@ export default function AdminPage() {
     orders,
     prescriptions,
     categories,
+    blogs,
+    createBlog,
+    updateBlog,
+    deleteBlog,
     updateOrderStatus,
     updatePrescriptionStatus,
     updateProductPrice,
@@ -182,6 +188,105 @@ export default function AdminPage() {
   const [newProdShortDesc, setNewProdShortDesc] = useState("");
   const [newProdSideEffects, setNewProdSideEffects] = useState("");
   const [newProdStorage, setNewProdStorage] = useState("Store below 25°C. Protect from light and moisture.");
+
+  // Blog Management State
+  const [showAddBlogModal, setShowAddBlogModal] = useState<boolean>(false);
+  const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
+  const [blogTitle, setBlogTitle] = useState("");
+  const [blogCategory, setBlogCategory] = useState("General");
+  const [blogAuthor, setBlogAuthor] = useState("Dr. Admin");
+  const [blogReadTime, setBlogReadTime] = useState("5 min read");
+  const [blogImage, setBlogImage] = useState("");
+  const [blogImageMode, setBlogImageMode] = useState<"upload" | "link">("upload");
+  const [blogDesc, setBlogDesc] = useState("");
+  const [blogContent, setBlogContent] = useState("");
+  const [blogTags, setBlogTags] = useState("");
+  const [blogSaving, setBlogSaving] = useState(false);
+
+  const openAddBlogModal = () => {
+    setEditingBlog(null);
+    setBlogTitle("");
+    setBlogCategory("General");
+    setBlogAuthor("Dr. Admin");
+    setBlogReadTime("5 min read");
+    setBlogImage("");
+    setBlogImageMode("upload");
+    setBlogDesc("");
+    setBlogContent("");
+    setBlogTags("");
+    setShowAddBlogModal(true);
+  };
+
+  const openEditBlogModal = (blog: Blog) => {
+    setEditingBlog(blog);
+    setBlogTitle(blog.title);
+    setBlogCategory(blog.category || "General");
+    setBlogAuthor(blog.author || "Dr. Admin");
+    setBlogReadTime(blog.readTime || "5 min read");
+    setBlogImage(blog.image || "");
+    setBlogImageMode(blog.image && !blog.image.includes("cloudinary") ? "link" : "upload");
+    setBlogDesc(blog.desc || "");
+    setBlogContent(blog.content || "");
+    setBlogTags(Array.isArray(blog.tags) ? blog.tags.join(", ") : "");
+    setShowAddBlogModal(true);
+  };
+
+  const handleSaveBlog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blogTitle.trim()) {
+      triggerToast("Please enter a blog title.");
+      return;
+    }
+    if (!blogContent.trim()) {
+      triggerToast("Please enter blog content.");
+      return;
+    }
+
+    setBlogSaving(true);
+    const tagsArr = blogTags.split(",").map(t => t.trim()).filter(Boolean);
+
+    const payload: Partial<Blog> = {
+      title: blogTitle.trim(),
+      category: blogCategory.trim() || "General",
+      author: blogAuthor.trim() || "Dr. Admin",
+      readTime: blogReadTime.trim() || "5 min read",
+      image: blogImage.trim(),
+      desc: blogDesc.trim(),
+      content: blogContent.trim(),
+      tags: tagsArr,
+    };
+
+    if (editingBlog) {
+      const res = await updateBlog(editingBlog.id, payload);
+      setBlogSaving(false);
+      if (res.success) {
+        setShowAddBlogModal(false);
+        triggerToast(`Blog post "${blogTitle}" updated successfully!`);
+      } else {
+        triggerToast(`Error: ${res.message || "Failed to update blog"}`);
+      }
+    } else {
+      const res = await createBlog(payload);
+      setBlogSaving(false);
+      if (res.success) {
+        setShowAddBlogModal(false);
+        triggerToast(`Blog post "${blogTitle}" published successfully!`);
+      } else {
+        triggerToast(`Error: ${res.message || "Failed to publish blog"}`);
+      }
+    }
+  };
+
+  const handleDeleteBlog = async (id: string, title: string) => {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      const res = await deleteBlog(id);
+      if (res.success) {
+        triggerToast(`Blog post deleted successfully.`);
+      } else {
+        triggerToast(`Error: ${res.message || "Failed to delete blog"}`);
+      }
+    }
+  };
 
   // Which image slot is currently uploading ("main" or "gallery-<n>"), if any.
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
@@ -1096,6 +1201,7 @@ export default function AdminPage() {
             { id: "inventory", label: "Product Inventory", icon: Pill },
             { id: "categories", label: "Category Manager", icon: Tag },
             { id: "customers", label: "Customer List", icon: User },
+            { id: "blogs", label: "Blog Posts", icon: BookOpen },
           ].map((item) => (
             <button
               key={item.id}
@@ -1945,8 +2051,357 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* ── [TAB] BLOG POSTS MANAGEMENT ───────────────────────────── */}
+          {activeTab === "blogs" && (
+            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-100 overflow-hidden space-y-6 p-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-emerald-600" /> Blog Articles Management
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 font-semibold">
+                    Create, edit, or publish health articles with or without featured images
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openAddBlogModal}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4" /> Publish New Blog
+                </button>
+              </div>
+
+              {/* Data Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <th className="py-3 pl-4">Article Info</th>
+                      <th className="py-3">Category</th>
+                      <th className="py-3">Author &amp; Read Time</th>
+                      <th className="py-3 text-center">Image Status</th>
+                      <th className="py-3 text-center pr-4">Operations</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {blogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-450 font-semibold">
+                          No blog posts found. Click &quot;Publish New Blog&quot; to add your first post!
+                        </td>
+                      </tr>
+                    ) : (
+                      blogs.map((b) => (
+                        <tr key={b.id} className="hover:bg-slate-50/40 group transition-colors">
+                          <td className="py-4 pl-4 max-w-xs">
+                            <div className="flex items-center gap-3">
+                              {b.image ? (
+                                <div className="w-12 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shrink-0 relative">
+                                  <SafeImage src={b.image} alt={b.title} fill className="object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-10 rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center shrink-0 text-[10px] font-black text-emerald-700">
+                                  TXT
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-slate-800 line-clamp-1">{b.title}</p>
+                                <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{b.desc || b.content.slice(0, 60)}...</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                              {b.category}
+                            </span>
+                          </td>
+                          <td className="py-4">
+                            <p className="font-semibold text-slate-700">{b.author}</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">{b.readTime}</p>
+                          </td>
+                          <td className="py-4 text-center">
+                            {b.image ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                With Image
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                Text Only
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 text-center pr-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => openEditBlogModal(b)}
+                                className="p-1.5 hover:bg-slate-100 text-slate-600 hover:text-emerald-600 rounded-lg border border-slate-200 cursor-pointer transition-colors"
+                                title="Edit Blog Post"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteBlog(b.id, b.title)}
+                                className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg border border-slate-200 cursor-pointer transition-colors"
+                                title="Delete Blog Post"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
+
+      {/* ── [MODAL] ADD / EDIT BLOG POST ─────────────────────────────────── */}
+      {showAddBlogModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddBlogModal(false)} />
+
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative z-10 animate-scale-in text-slate-700 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-150 flex items-center justify-between shrink-0 bg-slate-50/50">
+              <div>
+                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-emerald-600" />
+                  {editingBlog ? "Edit Blog Article" : "Publish New Health Article"}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-bold">
+                  Works with featured image or as a text-only article
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddBlogModal(false)}
+                className="p-1.5 hover:bg-slate-250 rounded-xl text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <form onSubmit={handleSaveBlog} className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    Blog Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={blogTitle}
+                    onChange={(e) => setBlogTitle(e.target.value)}
+                    placeholder="e.g. Understanding Type 2 Diabetes Management"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={blogCategory}
+                    onChange={(e) => setBlogCategory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold cursor-pointer"
+                  >
+                    <option value="General">General Health</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Cardio">Cardio &amp; Heart</option>
+                    <option value="Oncology">Oncology</option>
+                    <option value="Vitamins">Vitamins &amp; Supplements</option>
+                    <option value="Mental Health">Mental Health</option>
+                    <option value="Wellness">Wellness &amp; Lifestyle</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    Author Name
+                  </label>
+                  <input
+                    type="text"
+                    value={blogAuthor}
+                    onChange={(e) => setBlogAuthor(e.target.value)}
+                    placeholder="e.g. Dr. Sneha Sharma, MD"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    Estimated Read Time
+                  </label>
+                  <input
+                    type="text"
+                    value={blogReadTime}
+                    onChange={(e) => setBlogReadTime(e.target.value)}
+                    placeholder="e.g. 5 min read"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    Tags (Comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={blogTags}
+                    onChange={(e) => setBlogTags(e.target.value)}
+                    placeholder="e.g. Diabetes, Metformin, Wellness"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Image Mode Switcher */}
+              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    Featured Image (Optional)
+                  </label>
+                  <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setBlogImageMode("upload")}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        blogImageMode === "upload" ? "bg-emerald-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBlogImageMode("link")}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        blogImageMode === "link" ? "bg-emerald-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Image URL
+                    </button>
+                  </div>
+                </div>
+
+                {blogImageMode === "upload" ? (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const err = validateUploadFile(file);
+                        if (err) {
+                          triggerToast(err);
+                          return;
+                        }
+                        if (!user?.token) return;
+                        setUploadingImage("blog");
+                        try {
+                          const url = await uploadImage(file, "product", user.token);
+                          setBlogImage(url);
+                          triggerToast("Blog image uploaded successfully!");
+                        } catch (err: any) {
+                          triggerToast(`Upload error: ${err.message || "Failed to upload image"}`);
+                        } finally {
+                          setUploadingImage(null);
+                        }
+                      }}
+                      className="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                    />
+                    {uploadingImage === "blog" && <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />}
+                  </div>
+                ) : (
+                  <input
+                    type="url"
+                    value={blogImage}
+                    onChange={(e) => setBlogImage(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold"
+                  />
+                )}
+
+                {blogImage ? (
+                  <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200">
+                    <div className="w-16 h-12 rounded-lg overflow-hidden relative border border-slate-200">
+                      <SafeImage src={blogImage} alt="Preview" fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 text-[10px] text-slate-500 font-mono truncate">{blogImage}</div>
+                    <button
+                      type="button"
+                      onClick={() => setBlogImage("")}
+                      className="p-1 hover:bg-red-50 text-red-500 rounded cursor-pointer"
+                      title="Remove image (Switch to text-only)"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic">
+                    ℹ️ Leave empty to publish as a text-only article (will automatically render with clean typography card styling).
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  Short Description / Excerpt
+                </label>
+                <textarea
+                  rows={2}
+                  value={blogDesc}
+                  onChange={(e) => setBlogDesc(e.target.value)}
+                  placeholder="Brief summary of the article..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  Full Article Content <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={8}
+                  required
+                  value={blogContent}
+                  onChange={(e) => setBlogContent(e.target.value)}
+                  placeholder="Write full article body (Markdown supported)..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-mono leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-150 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddBlogModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={blogSaving}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  {blogSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {editingBlog ? "Save Changes" : "Publish Article"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── [MODAL] ORDER DETAIL VIEW & DELIVERY TRACKING HUD ────────────── */}
       {selectedOrder && (

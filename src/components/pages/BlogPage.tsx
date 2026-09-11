@@ -3,17 +3,18 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import {
   Search, BookOpen, Clock, User, ArrowRight, X,
   Share2, Heart, Sparkles, Calendar, MessageSquare, ChevronRight
 } from "lucide-react";
 
 interface Article {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   readTime: string;
-  image: string;
+  image?: string;
   desc: string;
   content: string;
   date: string;
@@ -128,14 +129,33 @@ These advanced oncology therapeutics are transforming outcomes, turning previous
 const CATEGORIES = ["All", "Oncology", "Diabetes", "Cardio", "Vitamins", "Mental Health"];
 
 export default function BlogPage() {
-  const { setActivePage } = useApp();
+  const { blogs, setActivePage } = useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<(number | string)[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+
+  // Combine dynamic backend blogs with default articles
+  const allArticles: Article[] = useMemo(() => {
+    if (!blogs || blogs.length === 0) {
+      return ARTICLES;
+    }
+    return blogs.map((b, idx) => ({
+      id: b.id || `blog-${idx}`,
+      title: b.title,
+      category: b.category || "General",
+      readTime: b.readTime || "5 min read",
+      image: b.image || "",
+      date: b.createdAt || "Recent",
+      author: b.author || "Dr. Admin",
+      tags: Array.isArray(b.tags) && b.tags.length > 0 ? b.tags : [b.category || "Health"],
+      desc: b.desc || b.content.replace(/[#*`]/g, "").slice(0, 120),
+      content: b.content,
+    }));
+  }, [blogs]);
 
   // Load favorites from local storage
   useEffect(() => {
@@ -153,17 +173,16 @@ export default function BlogPage() {
   useEffect(() => {
     const articleIdParam = searchParams.get("id");
     if (articleIdParam !== null) {
-      const id = parseInt(articleIdParam, 10);
-      const article = ARTICLES.find((a) => a.id === id);
+      const article = allArticles.find((a) => String(a.id) === articleIdParam);
       if (article) {
         setSelectedArticle(article);
       }
     } else {
       setSelectedArticle(null);
     }
-  }, [searchParams]);
+  }, [searchParams, allArticles]);
 
-  const toggleFavorite = (id: number, e: React.MouseEvent) => {
+  const toggleFavorite = (id: number | string, e: React.MouseEvent) => {
     e.stopPropagation();
     setFavorites((prev) => {
       const next = prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id];
@@ -173,7 +192,6 @@ export default function BlogPage() {
   };
 
   const handleOpenArticle = (article: Article) => {
-    // update url parameters smoothly
     const newParams = new URLSearchParams(window.location.search);
     newParams.set("id", article.id.toString());
     router.push(`/blog?${newParams.toString()}`);
@@ -186,7 +204,7 @@ export default function BlogPage() {
   };
 
   const filteredArticles = useMemo(() => {
-    return ARTICLES.filter((art) => {
+    return allArticles.filter((art) => {
       const matchesSearch =
         art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         art.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -194,16 +212,15 @@ export default function BlogPage() {
         art.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesCategory =
-        selectedCategory === "All" || art.category === selectedCategory;
+        selectedCategory === "All" || art.category.toLowerCase() === selectedCategory.toLowerCase();
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [allArticles, searchQuery, selectedCategory]);
 
   const featuredArticle = useMemo(() => {
-    // Immuno-oncology is the featured article
-    return ARTICLES.find((a) => a.id === 4) || ARTICLES[0];
-  }, []);
+    return allArticles[0] || ARTICLES[0];
+  }, [allArticles]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-12">
@@ -240,12 +257,11 @@ export default function BlogPage() {
 
           <div className="lg:col-span-5 relative">
             <div className="relative w-full aspect-[16/10] sm:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 bg-emerald-950">
-              <Image
-                src={featuredArticle.image}
+              <SafeImage
+                src={featuredArticle.image || "/image copy 4.png"}
                 alt={featuredArticle.title}
                 fill
                 className="object-cover"
-                priority
               />
             </div>
           </div>
@@ -315,31 +331,55 @@ export default function BlogPage() {
                   onClick={() => handleOpenArticle(art)}
                   className="group flex flex-col bg-white dark:bg-gray-900 rounded-3xl border border-gray-150/70 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="relative aspect-video overflow-hidden bg-gray-50">
-                    <Image
-                      src={art.image}
-                      alt={art.title}
-                      fill
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                    />
-                    
-                    {/* Category tag */}
-                    <span className="absolute top-4 left-4 bg-emerald-600 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">
-                      {art.category}
-                    </span>
+                  {art.image ? (
+                    <div className="relative aspect-video overflow-hidden bg-gray-50">
+                      <SafeImage
+                        src={art.image}
+                        alt={art.title}
+                        fill
+                        className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      />
+                      
+                      {/* Category tag */}
+                      <span className="absolute top-4 left-4 bg-emerald-600 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">
+                        {art.category}
+                      </span>
 
-                    {/* Favorite button */}
-                    <button
-                      onClick={(e) => toggleFavorite(art.id, e)}
-                      className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center border shadow backdrop-blur-md transition-all cursor-pointer ${
-                        isFav
-                          ? "bg-rose-500 border-rose-500 text-white"
-                          : "bg-white/90 hover:bg-white border-white/20 text-gray-505 dark:text-gray-800"
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${isFav ? "fill-white" : ""}`} />
-                    </button>
-                  </div>
+                      {/* Favorite button */}
+                      <button
+                        onClick={(e) => toggleFavorite(art.id, e)}
+                        className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center border shadow backdrop-blur-md transition-all cursor-pointer ${
+                          isFav
+                            ? "bg-rose-500 border-rose-500 text-white"
+                            : "bg-white/90 hover:bg-white border-white/20 text-gray-505 dark:text-gray-800"
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 ${isFav ? "fill-white" : ""}`} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 p-6 flex flex-col justify-between">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-white/20 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow backdrop-blur-md border border-white/20">
+                          {art.category}
+                        </span>
+                        <button
+                          onClick={(e) => toggleFavorite(art.id, e)}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center border shadow backdrop-blur-md transition-all cursor-pointer ${
+                            isFav
+                              ? "bg-rose-500 border-rose-500 text-white"
+                              : "bg-white/20 hover:bg-white/40 border-white/20 text-white"
+                          }`}
+                        >
+                          <Heart className={`w-4 h-4 ${isFav ? "fill-white" : ""}`} />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-extrabold text-emerald-100 uppercase tracking-widest block">Text Only Article</span>
+                        <h4 className="text-sm font-black text-white line-clamp-2">{art.title}</h4>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-2">
@@ -398,15 +438,24 @@ export default function BlogPage() {
 
             {/* Scrollable Document Body */}
             <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 select-text">
-              {/* Cover Image */}
-              <div className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden shadow bg-gray-100 border border-gray-150 dark:border-gray-800">
-                <Image
-                  src={selectedArticle.image}
-                  alt={selectedArticle.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              {/* Cover Image or Text-Only Banner */}
+              {selectedArticle.image ? (
+                <div className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden shadow bg-gray-100 border border-gray-150 dark:border-gray-800">
+                  <SafeImage
+                    src={selectedArticle.image || ""}
+                    alt={selectedArticle.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-full bg-gradient-to-r from-emerald-800 via-teal-800 to-cyan-900 rounded-2xl p-8 text-white shadow space-y-2 border border-white/10">
+                  <span className="inline-block bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-white/20">
+                    {selectedArticle.category} • Text Only Article
+                  </span>
+                  <h3 className="text-xl font-bold">{selectedArticle.title}</h3>
+                </div>
+              )}
 
               {/* Title & Metadata */}
               <div className="space-y-4">

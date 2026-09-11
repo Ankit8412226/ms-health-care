@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Product, Category } from "@/types";
+import { Product, Category, Blog } from "@/types";
 
 // ── API Base URL ────────────────────────────────────────────────────────
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
@@ -167,6 +167,12 @@ interface AppContextType {
   addCategory: (name: string) => void;
   subscribeNewsletter: (email: string) => Promise<{ success: boolean; message: string }>;
   getProductById: (id: string) => Promise<Product | null>;
+  blogs: Blog[];
+  blogsLoading: boolean;
+  fetchBlogs: () => Promise<void>;
+  createBlog: (data: Partial<Blog>) => Promise<{ success: boolean; blog?: Blog; message?: string }>;
+  updateBlog: (id: string, data: Partial<Blog>) => Promise<{ success: boolean; blog?: Blog; message?: string }>;
+  deleteBlog: (id: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -198,6 +204,25 @@ function mapApiProduct(p: Record<string, unknown>): Product {
     howToUse: (p.howToUse as string) || "",
     sideEffects: (p.sideEffects as string[]) || [],
     benefits: (p.benefits as string) || "",
+  };
+}
+
+// ── Helper: Map MongoDB doc → frontend Blog ─────────────────────────────
+function mapApiBlog(b: Record<string, any>): Blog {
+  return {
+    id: b._id || b.id || "",
+    title: b.title || "",
+    slug: b.slug || "",
+    category: b.category || "General",
+    author: b.author || "Dr. Admin",
+    readTime: b.readTime || "5 min read",
+    image: b.image || "",
+    desc: b.desc || "",
+    content: b.content || "",
+    tags: Array.isArray(b.tags) ? b.tags : [],
+    createdAt: b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+    updatedAt: b.updatedAt || "",
+    isPublished: b.isPublished ?? true,
   };
 }
 
@@ -277,6 +302,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState<boolean>(true);
 
   // ── Load user from localStorage on mount ──────────────────────────────
   useEffect(() => {
@@ -376,10 +403,109 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const fetchBlogs = useCallback(async () => {
+    setBlogsLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/blogs?limit=50`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setBlogs(json.data.map(mapApiBlog));
+        }
+      }
+    } catch (err) {
+      console.warn("Blogs API unreachable:", err);
+    } finally {
+      setBlogsLoading(false);
+    }
+  }, []);
+
+  const createBlog = useCallback(
+    async (data: Partial<Blog>): Promise<{ success: boolean; blog?: Blog; message?: string }> => {
+      if (!user || !user.token) {
+        return { success: false, message: "Not authenticated" };
+      }
+      try {
+        const res = await fetch(`${API_URL}/blogs`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          const newBlog = mapApiBlog(json.data);
+          setBlogs((prev) => [newBlog, ...prev]);
+          return { success: true, blog: newBlog };
+        }
+        return { success: false, message: json.message || "Failed to create blog post" };
+      } catch (err: any) {
+        return { success: false, message: err.message || "Network error" };
+      }
+    },
+    [user]
+  );
+
+  const updateBlog = useCallback(
+    async (id: string, data: Partial<Blog>): Promise<{ success: boolean; blog?: Blog; message?: string }> => {
+      if (!user || !user.token) {
+        return { success: false, message: "Not authenticated" };
+      }
+      try {
+        const res = await fetch(`${API_URL}/blogs/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          const updated = mapApiBlog(json.data);
+          setBlogs((prev) => prev.map((b) => (b.id === id ? updated : b)));
+          return { success: true, blog: updated };
+        }
+        return { success: false, message: json.message || "Failed to update blog post" };
+      } catch (err: any) {
+        return { success: false, message: err.message || "Network error" };
+      }
+    },
+    [user]
+  );
+
+  const deleteBlog = useCallback(
+    async (id: string): Promise<{ success: boolean; message?: string }> => {
+      if (!user || !user.token) {
+        return { success: false, message: "Not authenticated" };
+      }
+      try {
+        const res = await fetch(`${API_URL}/blogs/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          setBlogs((prev) => prev.filter((b) => b.id !== id));
+          return { success: true };
+        }
+        return { success: false, message: json.message || "Failed to delete blog post" };
+      } catch (err: any) {
+        return { success: false, message: err.message || "Network error" };
+      }
+    },
+    [user]
+  );
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [fetchProducts, fetchCategories]);
+    fetchBlogs();
+  }, [fetchProducts, fetchCategories, fetchBlogs]);
 
   // Load orders, prescriptions and addresses when user changes
   useEffect(() => {
@@ -1407,6 +1533,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addCategory,
         subscribeNewsletter,
         getProductById,
+        blogs,
+        blogsLoading,
+        fetchBlogs,
+        createBlog,
+        updateBlog,
+        deleteBlog,
       }}
     >
       {children}
