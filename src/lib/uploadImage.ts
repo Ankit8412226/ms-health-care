@@ -19,12 +19,21 @@ export type UploadType = "prescription" | "product" | "category";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const ACCEPTED_MIME = [
+  // Common raster formats
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/avif",
+  "image/gif",
+  "image/bmp",
+  "image/tiff",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  // Mobile/Apple formats
   "image/heic",
   "image/heif",
+  // Docs (prescriptions)
   "application/pdf",
 ];
 
@@ -45,14 +54,16 @@ export function validateUploadFile(file: File): string | null {
     const mb = (file.size / 1024 / 1024).toFixed(1);
     return `That file is ${mb} MB. Please upload an image under ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`;
   }
-  // Some browsers report an empty type for HEIC photos from iPhones, so fall
-  // back to the extension rather than rejecting a legitimate prescription.
-  const byExtension = /\.(jpe?g|png|webp|avif|heic|heif|pdf)$/i.test(file.name);
-  if (file.type && !ACCEPTED_MIME.includes(file.type) && !byExtension) {
-    return "Please upload a JPG, PNG, WEBP, AVIF or PDF file.";
+  // Some browsers report an empty MIME type (e.g. HEIC from iPhone) — fall
+  // back to extension matching rather than rejecting a legitimate file.
+  const byExtension = /\.(jpe?g|png|webp|avif|gif|bmp|tiff?|svg|ico|heic|heif|pdf)$/i.test(file.name);
+  // Accept any image/* MIME (covers exotic formats Cloudinary can handle)
+  const byMime = file.type.startsWith("image/") || ACCEPTED_MIME.includes(file.type);
+  if (file.type && !byMime && !byExtension) {
+    return "Unsupported file type. Please upload an image file (JPG, PNG, WEBP, AVIF, GIF, BMP, SVG, TIFF, HEIC, etc.)";
   }
   if (!file.type && !byExtension) {
-    return "Unsupported file type. Please upload a JPG, PNG, WEBP, AVIF or PDF file.";
+    return "Unsupported file type. Please upload an image file.";
   }
   return null;
 }

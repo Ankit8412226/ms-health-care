@@ -2304,7 +2304,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.gif,.bmp,.tiff,.tif,.svg,.heic,.heif"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -3082,7 +3082,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.gif,.bmp,.tiff,.tif,.svg,.heic,.heif"
                       disabled={uploadingImage === "main"}
                       onChange={(e) => handleImageFileChange(e)}
                       className="text-xs text-slate-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-750 file:hover:bg-emerald-100 cursor-pointer w-full disabled:opacity-50"
@@ -3177,7 +3177,7 @@ export default function AdminPage() {
                                   Select File
                                   <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.avif,.gif,.bmp,.tiff,.tif,.svg,.heic,.heif"
                                     onChange={(e) => handleImageFileChange(e, index)}
                                     className="hidden"
                                   />
