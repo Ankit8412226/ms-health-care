@@ -126,10 +126,10 @@ These advanced oncology therapeutics are transforming outcomes, turning previous
   }
 ];
 
-const CATEGORIES = ["All", "Oncology", "Diabetes", "Cardio", "Vitamins", "Mental Health"];
+
 
 export default function BlogPage() {
-  const { blogs, setActivePage } = useApp();
+  const { categories, blogs, setActivePage } = useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -156,6 +156,22 @@ export default function BlogPage() {
       content: b.content,
     }));
   }, [blogs]);
+
+  // Dynamic category list combining default categories, store categories, and blog categories
+  const dynamicCategories = useMemo(() => {
+    const list = ["All", "Oncology", "Diabetes", "Cardio", "Vitamins", "Mental Health"];
+    if (categories && categories.length > 0) {
+      categories.forEach((c) => {
+        if (!list.includes(c.name)) list.push(c.name);
+      });
+    }
+    if (allArticles && allArticles.length > 0) {
+      allArticles.forEach((a) => {
+        if (a.category && !list.includes(a.category)) list.push(a.category);
+      });
+    }
+    return list;
+  }, [categories, allArticles]);
 
   // Load favorites from local storage
   useEffect(() => {
@@ -292,7 +308,7 @@ export default function BlogPage() {
 
         {/* Category Sorting Chips */}
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 max-w-full">
-          {CATEGORIES.map((cat) => (
+          {dynamicCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}

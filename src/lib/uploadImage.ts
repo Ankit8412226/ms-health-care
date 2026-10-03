@@ -22,6 +22,7 @@ const ACCEPTED_MIME = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/avif",
   "image/heic",
   "image/heif",
   "application/pdf",
@@ -46,12 +47,12 @@ export function validateUploadFile(file: File): string | null {
   }
   // Some browsers report an empty type for HEIC photos from iPhones, so fall
   // back to the extension rather than rejecting a legitimate prescription.
-  const byExtension = /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(file.name);
+  const byExtension = /\.(jpe?g|png|webp|avif|heic|heif|pdf)$/i.test(file.name);
   if (file.type && !ACCEPTED_MIME.includes(file.type) && !byExtension) {
-    return "Please upload a JPG, PNG, WEBP or PDF file.";
+    return "Please upload a JPG, PNG, WEBP, AVIF or PDF file.";
   }
   if (!file.type && !byExtension) {
-    return "Unsupported file type. Please upload a JPG, PNG, WEBP or PDF file.";
+    return "Unsupported file type. Please upload a JPG, PNG, WEBP, AVIF or PDF file.";
   }
   return null;
 }

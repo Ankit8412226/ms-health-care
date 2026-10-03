@@ -320,7 +320,7 @@ export default function CheckoutPage() {
                 >
                   <input
                     type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.avif,.heic,.heif"
                     className="hidden"
                     disabled={rxUploading}
                     onChange={handleInlineRxUpload}

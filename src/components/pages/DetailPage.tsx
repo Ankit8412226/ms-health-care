@@ -196,35 +196,61 @@ export default function DetailPage() {
       .filter(w => w.length > 2 && !ignoredWords.has(w));
   };
 
-  // Find similar products based on matching salt composition AND exact dosage/strength
+  // Find similar products based on matching salt composition, category, or catalog fallback
   const getSimilarProducts = () => {
+    if (!product) return [];
+    const result: Product[] = [];
+    const addedIds = new Set<string | number>([product.id]);
+
+    // 1. Check if they share salt composition
     if (product.salt) {
       const currentSalts = getCleanSalts(product.salt);
       const currentDosage = product.dosage ? product.dosage.toLowerCase().replace(/\s+/g, "") : "";
-      
-      return sourceProducts.filter((p) => {
-        if (p.id === product.id) return false;
+
+      const saltMatches = sourceProducts.filter((p) => {
+        if (addedIds.has(p.id)) return false;
         if (!p.salt) return false;
-        
-        // 1. Check if they share at least one clean salt keyword
         const otherSalts = getCleanSalts(p.salt);
         const sharesSalt = currentSalts.some((s) => otherSalts.includes(s));
         if (!sharesSalt) return false;
-        
-        // 2. Check if dosage is same (if dosage exists on both)
         const otherDosage = p.dosage ? p.dosage.toLowerCase().replace(/\s+/g, "") : "";
-        if (currentDosage && otherDosage && currentDosage !== otherDosage) {
-          return false;
-        }
-        
+        if (currentDosage && otherDosage && currentDosage !== otherDosage) return false;
         return true;
-      }).slice(0, 4);
+      });
+
+      for (const p of saltMatches) {
+        if (result.length < 4) {
+          result.push(p);
+          addedIds.add(p.id);
+        }
+      }
     }
 
-    // Fallback: If no salt composition exists (e.g. devices/baby care), show other items in same category
-    return sourceProducts.filter(
-      (p) => p.category === product.category && p.id !== product.id
-    ).slice(0, 4);
+    // 2. Fallback: Match by category
+    if (result.length < 4 && product.category) {
+      const categoryMatches = sourceProducts.filter(
+        (p) => !addedIds.has(p.id) && p.category === product.category
+      );
+      for (const p of categoryMatches) {
+        if (result.length < 4) {
+          result.push(p);
+          addedIds.add(p.id);
+        }
+      }
+    }
+
+    // 3. Fallback: Other catalog items
+    if (result.length < 4) {
+      const remainingMatches = sourceProducts.filter((p) => !addedIds.has(p.id));
+      for (const p of remainingMatches) {
+        if (result.length < 4) {
+          result.push(p);
+          addedIds.add(p.id);
+        }
+      }
+    }
+
+    return result;
   };
 
   const similar = getSimilarProducts();

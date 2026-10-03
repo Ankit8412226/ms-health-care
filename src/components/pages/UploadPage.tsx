@@ -134,7 +134,7 @@ export default function UploadPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.avif,.heic,.heif"
               className="hidden"
               disabled={uploading}
               onChange={handleFileChange}

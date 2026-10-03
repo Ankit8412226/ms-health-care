@@ -22,14 +22,14 @@ const SLIDES: Slide[] = [
   {
     id: 1,
     tagline: "Exclusive First Order Offer",
-    title: "Flat 5% Discount on Health Essentials",
+    title: "Flat 2% Discount on Health Essentials",
     description: "Get genuine clinical medicines and daily vitamins delivered with maximum care and safety.",
     buttonText: "Shop & Save Now",
     pageTarget: "shop",
     image: "/image.png",
     gradient: "from-emerald-600/90 to-teal-800/90 dark:from-emerald-950/95 dark:to-teal-950/95",
     icon: Sparkles,
-    code: "HEALTH5",
+    code: "HEALTH2",
   },
   {
     id: 2,
@@ -56,14 +56,14 @@ const SLIDES: Slide[] = [
   {
     id: 6,
     tagline: "Refill Subscription",
-    title: "Chronic Care Refill at Flat 5% Off",
+    title: "Chronic Care Refill at Flat 2% Off",
     description: "Never run out of essential health treatments. Setup automatic monthly refills for diabetes, thyroid, or hypertension meds and save big.",
     buttonText: "Subscribe & Save",
     pageTarget: "shop",
     image: "/image copy 3.png",
     gradient: "from-amber-600/90 to-orange-850/90 dark:from-amber-950/95 dark:to-orange-950/95",
     icon: Calendar,
-    code: "REFILL5",
+    code: "REFILL2",
   },
   {
     id: 7,

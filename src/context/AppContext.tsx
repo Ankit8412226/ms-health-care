@@ -1428,17 +1428,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ── Coupons ───────────────────────────────────────────────────────────
   const applyCoupon = (code: string) => {
     const cleanCode = code.toUpperCase().trim();
-    if (cleanCode === "HEALTH5") {
-      setCouponCode("HEALTH5");
-      setDiscountPercentage(5);
+    if (cleanCode === "HEALTH2" || cleanCode === "HEALTH5") {
+      setCouponCode("HEALTH2");
+      setDiscountPercentage(2);
       return true;
-    } else if (cleanCode === "MSCARE20" || cleanCode === "MSCARE5") {
-      setCouponCode("MSCARE5");
-      setDiscountPercentage(5);
+    } else if (cleanCode === "MSCARE2" || cleanCode === "MSCARE20" || cleanCode === "MSCARE5") {
+      setCouponCode("MSCARE2");
+      setDiscountPercentage(2);
       return true;
-    } else if (cleanCode === "REFILL25" || cleanCode === "REFILL5") {
-      setCouponCode("REFILL5");
-      setDiscountPercentage(5);
+    } else if (cleanCode === "REFILL2" || cleanCode === "REFILL25" || cleanCode === "REFILL5") {
+      setCouponCode("REFILL2");
+      setDiscountPercentage(2);
       return true;
     }
     return false;

@@ -2222,6 +2222,13 @@ export default function AdminPage() {
                     <option value="Vitamins">Vitamins &amp; Supplements</option>
                     <option value="Mental Health">Mental Health</option>
                     <option value="Wellness">Wellness &amp; Lifestyle</option>
+                    {categories
+                      .filter((cat) => !["General", "Diabetes", "Cardio", "Oncology", "Vitamins", "Mental Health", "Wellness"].includes(cat.name))
+                      .map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
